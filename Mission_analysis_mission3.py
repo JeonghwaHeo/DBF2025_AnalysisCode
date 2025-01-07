@@ -123,7 +123,7 @@ def climb_simulation(h_max):
         t += dt
         time_list.append(t)
 
-        if (abs(z_pos - h_max) < 8):
+        if (abs(z_pos - h_max) < 10):
             theta_deg -= 0.5
             theta_deg = max(theta_deg, 10)
         else:
@@ -349,7 +349,7 @@ def run_mission():
     phase_index.append(len(time_list))
     
     # Phase 2: Climb to 30m
-    climb_simulation(30)
+    climb_simulation(70)
     print(f"Climb Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
