@@ -15,7 +15,7 @@ S = 0.6  # wing area (m^2)
 AR = 7.2  # aspect ratio
 lw = 0.2
 lh = 1
-CD0 = 0.02  # zero-lift drag coefficient
+CD0 = 0.1  # zero-lift drag coefficient
 CL0 = 0.0  # lift coefficient at zero angle of attack , OpenVSP 결과과
 CL_alpha = 0.086  # lift coefficient gradient per degree , OpenVSP 결과
 e = 0.8  # Oswald efficiency factor
@@ -84,7 +84,7 @@ def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos):
     a_z = (T_max * 0.9 * math.sin(math.radians(theta_deg)) + L * math.cos(math.radians(alpha_w_deg)) - D * math.sin(gamma_rad) - W) / m
     return np.array([a_x, 0, a_z])
 
-### Main Simulation Functions ###
+### Simulation Functions ###
 def takeoff_simulation():
     print("\nRunning Takeoff Simulation...")
     dt = 0.01
@@ -327,15 +327,15 @@ def turn_simulation(target_angle_deg, direction="right"):
         load_factor_list.append(load_factor)
         alpha_w_list.append(alpha_stall)
 
-        # if (step%20 == 0):
-        #     print(f"CL: {CL:.2f}")
-        #     print(f"L: {L:.2f} N")
-        #     print(f"phi_deg: {math.degrees(phi_rad):.2f} deg")
-        #     # print(f"radius: {R:.2f} m")
-        #     print(f"speed: {speed:.2f} m/s\n")
-        #     # print(f"omega: {omega:.2f} rad/s")
+        if (step%500 == 0):
+            print(f"CL: {CL:.2f}")
+            print(f"L: {L:.2f} N")
+            print(f"phi_deg: {math.degrees(phi_rad):.2f} deg")
+            # print(f"radius: {R:.2f} m")
+            print(f"speed: {speed:.2f} m/s\n")
+            # print(f"omega: {omega:.2f} rad/s")
 
-
+### Mission Function & Plotting ###
 def run_mission():
     phase_index.append(0)
 
