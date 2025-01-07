@@ -3,8 +3,20 @@ import math
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 
-### Constants ###
-rho = 1.2  # air density (kg/m^3)
+
+############ variable from previous block ###########
+
+m_x1 = 0.2          # glider weight
+m_empty = 5.0       # empty weight
+m_total = 9.0       #      
+
+
+
+
+
+############ Constants ###########
+
+rho = 1.20  # air density (kg/m^3)
 g = 9.81  # gravity (m/s^2)
 m_glider = 7  # glider mass (kg)
 m_payload = 2.5  # payload mass (kg)
@@ -124,7 +136,7 @@ def climb_simulation(h_max):
         time_list.append(t)
 
         theta_deg += 0.3
-        theta_deg = min(theta_deg, 15)
+        theta_deg = min(theta_deg, 50)
 
         # Calculate climb angle
         gamma_rad = math.atan2(abs(v[2]), abs(v[0]))
