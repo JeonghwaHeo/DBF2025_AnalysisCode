@@ -389,18 +389,15 @@ def plot_results():
     y_coords = [pos[1] for pos in position_list]
     z_coords = [pos[2] for pos in position_list]
     speeds = [magnitude(v) for v in v_list]
-
-    # Separate acceleration components
-    acc_x = [a[0] for a in a_list]
-    acc_y = [a[1] for a in a_list]
-    acc_z = [a[2] for a in a_list]
     
     plt.figure(figsize=(20, 10))
+
+    gridspec = plt.GridSpec(2, 2, width_ratios=[1, 1], height_ratios=[1, 1])
 
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple']  # Define colors for phases
 
     # 3D trajectory
-    ax1 = plt.subplot(221, projection='3d')
+    ax1 = plt.subplot(gridspec[:, 0], projection='3d')
     for i in range(len(phase_index) - 1):
         start, end = phase_index[i], phase_index[i + 1]
         ax1.plot(x_coords[start:end], y_coords[start:end], z_coords[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
@@ -411,7 +408,7 @@ def plot_results():
     ax1.set_zlabel('Z (m)')
 
     # Speed profile
-    ax2 = plt.subplot(222)
+    ax2 = plt.subplot(gridspec[0, 1])
     for i in range(len(phase_index) - 1):
         start, end = phase_index[i], phase_index[i + 1]
         ax2.plot(time_list[start:end], speeds[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
@@ -421,7 +418,7 @@ def plot_results():
     ax2.grid(True)
 
     # AOA profile
-    ax3 = plt.subplot(223)
+    ax3 = plt.subplot(gridspec[1, 1])
     for i in range(len(phase_index) - 1):
         start, end = phase_index[i], phase_index[i + 1]
         ax3.plot(time_list[start:end], alpha_w_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
@@ -429,19 +426,6 @@ def plot_results():
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('AOA (deg)')
     ax3.grid(True)
-
-    # Acc profile
-    ax4 = plt.subplot(224)
-    for i in range(len(phase_index) - 1):
-        start, end = phase_index[i], phase_index[i + 1]
-        ax4.plot(time_list[start:end], acc_x[start:end], color='r', label='acc_x')  # X acceleration
-        ax4.plot(time_list[start:end], acc_y[start:end], color='g', label='acc_y')  # Y acceleration
-        ax4.plot(time_list[start:end], acc_z[start:end], color='b', label='acc_z')  # Z acceleration
-    ax4.set_title('Acc vs Time')
-    ax4.set_xlabel('Time (s)')
-    ax4.set_ylabel('ACC (m/s^2)')
-    ax4.grid(True)
-    ax4.legend()  # Legend for acc_x, acc_y, acc_z
 
     plt.tight_layout()
     plt.show()
