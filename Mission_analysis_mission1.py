@@ -10,6 +10,7 @@ from scipy.optimize import fsolve
 g = 9.81        
 rho = 1.20     
 AOA_stall = 13              # stall AOA (degree)
+AOA_max = 10                # maximum AOA intended to be limited (degree)
 H_flap_transition = 5       # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 
 """ variable from previous block """ 
@@ -29,6 +30,7 @@ CD = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.06
 
 CL_max = 1.10           # maximum lift coefficient
 CL_max_flap = 1.75      # maximum lift coefficient with maximum flap deploy
+CD_max_flap = 0.26      # maximum drag coefficient with maximum flap deploy
 CL_zero_flap = 0.95     # 0 AOA lift coefficient with maximum flap deploy
 CD_zero_flap = 0.14     # 0 AOA drag coefficient with maximum flap deploy
 
@@ -53,9 +55,8 @@ V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
 V_takeoff = 1.1 * (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maximum flap deploy(m/s)
 
 
-# """
-# 이전 parameter들
-# """
+"""이전 parameter들"""
+
 # ### Constants ###
 # rho = 1.2  # air density (kg/m^3)
 # g = 9.81  # gravity (m/s^2)
@@ -73,7 +74,7 @@ CL0 = 0.0  # lift coefficient at zero angle of attack , OpenVSP 결과과
 CL_alpha = 0.086  # lift coefficient gradient per degree , OpenVSP 결과
 e = 0.8  # Oswald efficiency factor
 # T_max = 6.6 * g  # maximum thrust (N)
-# V_stall = 15.7  # stall speed (m/s) 15.7
+# V_stall = 15.7  # stall speed (m/s) 
 alpha_stall = 13
 h_flap = 5
 
@@ -105,14 +106,25 @@ a_list = []
 phase_index = []
 
 ### Acceleration Functions ###
-def calculate_acceleration_ground(v):
+def calculate_acceleration_groundroll(v):
     speed = magnitude(v)
 
     T = T_max * 0.9
     D = 0.5 * rho * speed**2 * S * CD_zero_flap
     L = 0.5 * rho * speed**2 * S * CL_zero_flap
-    a_x = -(T - D - 0.03*(W-L))/m_total
+    a_x = - (T - D - 0.03*(W-L)) / m_total            # calculate x direction acceleration 
     return np.array([a_x, 0, 0])
+
+def calculate_acceleration_groundtransition(v):
+    speed = magnitude(v)
+
+    T = T_max * 0.9
+    D = 0.5 * rho * speed**2 * S * CD_max_flap
+    L = 0.5 * rho * speed**2 * S * CL_max_flap
+    a_x = - (T - D - 0.03*(W-L)) / m_total            # calculate x direction acceleration 
+    return np.array([a_x, 0, 0])
+
+
 
 def calculate_acceleration_cruise(v, alpha_w_deg):
     speed = magnitude(v)
@@ -145,19 +157,35 @@ def takeoff_simulation():
     position = np.array([0.0, 0.0, 0.0])
     t = 0.0
     
-    # Ground roll until rotation speed
-    while magnitude(v) < V_takeoff:
+    # Ground roll until 0.9 times takeoff speed
+    while magnitude(v) < 0.9* V_takeoff:
         t += dt
         time_list.append(t)
         
-        a = calculate_acceleration_ground(v)
+        a = calculate_acceleration_groundroll(v)
         v += a * dt
         position += v * dt
         
         L = 0.5 * rho * magnitude(v)**2 * S * CL_zero_flap
-        load_factor_list.append(L / W)
+        load_factor_list.append(L/W)
         v_list.append(v.copy())
         AOA_list.append(0)
+        a_list.append(a)
+        position_list.append(tuple(position))
+        
+    # Ground transition until takeoff speed    
+    while 0.9* V_takeoff <= magnitude(v) <= V_takeoff:
+        t += dt
+        time_list.append(t)
+        
+        a = calculate_acceleration_groundtransition(v)
+        v += a * dt
+        position += v * dt
+        
+        L = 0.5 * rho * magnitude(v)**2 * S * CL_max_flap
+        load_factor_list.append(L / W)
+        v_list.append(v.copy())
+        AOA_list.append(AOA_max)
         a_list.append(a)
         position_list.append(tuple(position))
 
