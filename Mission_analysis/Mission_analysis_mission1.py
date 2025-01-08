@@ -213,7 +213,6 @@ def climb_simulation(h_target):
     d = distance_list[-1] if distance_list else 0
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
-    theta_deg = 0
 
     for step in range(n_steps):
         t += dt
