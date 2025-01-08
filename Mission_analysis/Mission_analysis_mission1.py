@@ -94,10 +94,10 @@ def calculate_induced_drag(C_L):
 
 def calculate_cruise_alpha_w(v):
     speed = magnitude(v)
-    def equation(alpha_w):
-        CL = CL0 + CL_alpha * alpha_w
+    def equation(alpha):
+        CL = CL0 + CL_alpha * alpha
         L = 0.5 * rho * speed**2 * S * CL
-        return L + T_max * 0.9 * math.sin(math.radians(alpha_w)) - W
+        return L + T_max * 0.9 * math.sin(math.radians(alpha)) - W
     alpha_w_solution = fsolve(equation, 5, xtol=1e-8, maxfev=1000)
     return alpha_w_solution[0]
 
