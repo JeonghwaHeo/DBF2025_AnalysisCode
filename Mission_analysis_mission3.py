@@ -3,20 +3,8 @@ import math
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 
-
-############ variable from previous block ###########
-
-m_x1 = 0.2          # glider weight
-m_empty = 5.0       # empty weight
-m_total = 9.0       #      
-
-
-
-
-
-############ Constants ###########
-
-rho = 1.20  # air density (kg/m^3)
+### Constants ###
+rho = 1.2  # air density (kg/m^3)
 g = 9.81  # gravity (m/s^2)
 m_glider = 7  # glider mass (kg)
 m_payload = 2.5  # payload mass (kg)
@@ -135,18 +123,13 @@ def climb_simulation(h_max):
         t += dt
         time_list.append(t)
 
-<<<<<<< HEAD
-        theta_deg += 0.3
-        theta_deg = min(theta_deg, 50)
-=======
-        if (abs(z_pos - h_max) < 8):
+        if (abs(z_pos - h_max) < 10):
             theta_deg -= 0.5
             theta_deg = max(theta_deg, 10)
         else:
             theta_deg += 0.5
         theta_deg = min(theta_deg, 40) 
         if (theta_deg == 50): print(step)
->>>>>>> 231f3224ce2cefe665b762f0b1290855543733e0
 
         # Calculate climb angle
         gamma_rad = math.atan2(abs(v[2]), abs(v[0]))
@@ -366,7 +349,7 @@ def run_mission():
     phase_index.append(len(time_list))
     
     # Phase 2: Climb to 30m
-    climb_simulation(30)
+    climb_simulation(70)
     print(f"Climb Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
