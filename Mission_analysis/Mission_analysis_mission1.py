@@ -11,8 +11,8 @@ g = 9.81
 rho = 1.20     
 AOA_stall = 13                      # stall AOA (degree)
 AOA_takeoff_max = 10                # maximum AOA intended to be limited at takeoff (degree)
-AOA_climb = 5                       # AOA at climb (degree)
-flap_transition_altitude = 5        # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
+AOA_climb = 8                       # AOA at climb (degree)
+h_flap_transition = 5        # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 
 """ variable from previous block """ 
 ## values below are the example (should be removed)
@@ -62,9 +62,11 @@ T_climb = 0.9 * T_max
 """ Lift, Drag Coefficient Calculating Function """
 ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
 # how to use : if you want to know CL at AOA 3.12, use float(CL(3.12)) 
+# multiply (lh-lw) / lh at CL to consider the effect from horizontal tail
+# interpolate CD using quadratic function 
 
-CL_func = interp1d(alpha_result,CL_result,kind = 'linear',bounds_error = False, fill_value = 'extrapolate')
-CD_func = interp1d(alpha_result,CD_result,kind = 'quadratic',bounds_error = False, fill_value = 'extrapolate')
+CL_func = interp1d(alpha_result, (lh-lw) / lh * np.array(CL_result), kind = 'linear', bounds_error = False, fill_value = 'extrapolate')
+CD_func = interp1d(alpha_result, CD_result, kind = 'quadratic', bounds_error = False, fill_value = 'extrapolate')
  
 
 """이전 parameter들"""
@@ -148,7 +150,7 @@ def calculate_acceleration_cruise(v, AOA):
 
 def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos):
     speed = magnitude(v)
-    if (z_pos > flap_transition_altitude) :
+    if (z_pos > h_flap_transition):
         CL = float(CL_func(alpha_w_deg))
         CD = float(CD_func(alpha_w_deg))
     else:
@@ -201,7 +203,7 @@ def takeoff_simulation():
         a_list.append(a)
         position_list.append(tuple(position))
 
-def climb_simulation(h_max):
+def climb_simulation(h_target):
     print("\nRunning Climb Simulation...")
     
     dt = 0.01
@@ -216,23 +218,26 @@ def climb_simulation(h_max):
         t += dt
         time_list.append(t)
 
-        if (abs(z_pos - h_max) < 8):
-            theta_deg -= 0.5
-            theta_deg = max(theta_deg, 10)
-        else:
-            theta_deg += 0.5
-        theta_deg = min(theta_deg, 30) 
-        # if (theta_deg == 50): print(step)
-
         # Calculate climb angle
-        gamma_rad = math.atan2(abs(v[2]), abs(v[0]))
-        alpha_w_deg = theta_deg - math.degrees(gamma_rad)
-
-        # Calculate load factor
-        if (z_pos > h_flap) :
-            CL = CL0 + CL_alpha * alpha_w_deg
+        gamma_rad = math.atan2(v[2], abs(v[0]))
+        
+        # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
+        if(z_pos < h_flap_transition):
+            alpha_w_deg = AOA_takeoff_max
+        elif(h_flap_transition <= z_pos < h_target):
+            alpha_w_deg = AOA_climb
         else:
-            CL = 0.99 + 0.06 * alpha_w_deg
+            alpha_w_deg -= 0.1
+            alpha_w_deg = max(alpha_w_deg , -3)
+        
+        # Calculate pitch angle
+        theta_deg = math.degrees(gamma_rad) + alpha_w_deg
+        
+        # Calculate load factor
+        if (z_pos < h_flap_transition):
+            CL = CL_max_flap
+        else:
+            CL = float(CL_func(alpha_w_deg))
         L = 0.5 * rho * magnitude(v)**2 * S * CL
         load_factor = L / W
         load_factor_list.append(load_factor)
@@ -249,11 +254,6 @@ def climb_simulation(h_max):
         a = (a1 + 2*a2 + 2*a3 + a4)/6
         v += a*dt
 
-        # Speed limiting
-        speed = magnitude(v)
-        if speed > 50:
-            v = v * (50 / speed)
-
         # Update position
         x_pos += v[0] * dt
         z_pos += v[2] * dt
@@ -266,7 +266,8 @@ def climb_simulation(h_max):
         a_list.append(a)
         distance_list.append(d)
 
-        if z_pos > h_max:
+        if gamma_rad < 0:
+            print(f"cruise altitude is {z_pos:.2f} m.")
             break
 
 def cruise_simulation(x_final, direction='+'):
