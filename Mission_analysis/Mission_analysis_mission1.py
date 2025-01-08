@@ -10,8 +10,8 @@ from scipy.optimize import fsolve
 g = 9.81        
 rho = 1.20     
 AOA_stall = 13              # stall AOA (degree)
-AOA_max = 10                # maximum AOA intended to be limited (degree)
-H_flap_transition = 5       # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
+AOA_takeoff_max = 10                # maximum AOA intended to be limited at takeoff (degree)
+flap_transition_altitude = 5       # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 
 """ variable from previous block """ 
 ## values below are the example (should be removed)
@@ -115,6 +115,7 @@ def calculate_acceleration_groundroll(v):
     a_x = - (T - D - 0.03*(W-L)) / m_total            # calculate x direction acceleration 
     return np.array([a_x, 0, 0])
 
+
 def calculate_acceleration_groundtransition(v):
     speed = magnitude(v)
 
@@ -125,7 +126,6 @@ def calculate_acceleration_groundtransition(v):
     return np.array([a_x, 0, 0])
 
 
-
 def calculate_acceleration_cruise(v, alpha_w_deg):
     speed = magnitude(v)
     CL = CL0 + CL_alpha * alpha_w_deg
@@ -134,6 +134,7 @@ def calculate_acceleration_cruise(v, alpha_w_deg):
     D = 0.5 * rho * speed**2 * S * CD
     a_x = (T_max * 0.9) / m_total * math.cos(math.radians(alpha_w_deg)) - D / m_total
     return np.array([a_x, 0, 0])
+
 
 def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos):
     speed = magnitude(v)
@@ -185,7 +186,7 @@ def takeoff_simulation():
         L = 0.5 * rho * magnitude(v)**2 * S * CL_max_flap
         load_factor_list.append(L / W)
         v_list.append(v.copy())
-        AOA_list.append(AOA_max)
+        AOA_list.append(AOA_takeoff_max)
         a_list.append(a)
         position_list.append(tuple(position))
 
@@ -209,8 +210,8 @@ def climb_simulation(h_max):
             theta_deg = max(theta_deg, 10)
         else:
             theta_deg += 0.5
-        theta_deg = min(theta_deg, 40) 
-        if (theta_deg == 50): print(step)
+        theta_deg = min(theta_deg, 30) 
+        # if (theta_deg == 50): print(step)
 
         # Calculate climb angle
         gamma_rad = math.atan2(abs(v[2]), abs(v[0]))
