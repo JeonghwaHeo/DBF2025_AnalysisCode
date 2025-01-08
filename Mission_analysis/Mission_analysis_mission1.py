@@ -266,6 +266,7 @@ def climb_simulation(h_target):
         a_list.append(a)
         distance_list.append(d)
 
+        # break when climb angle goes to zero
         if gamma_rad < 0:
             print(f"cruise altitude is {z_pos:.2f} m.")
             break
