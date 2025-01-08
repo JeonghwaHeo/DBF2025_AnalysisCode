@@ -135,10 +135,8 @@ def climb_simulation(h_max):
         t += dt
         time_list.append(t)
 
-<<<<<<< HEAD
         theta_deg += 0.3
         theta_deg = min(theta_deg, 50)
-=======
         if (abs(z_pos - h_max) < 8):
             theta_deg -= 0.5
             theta_deg = max(theta_deg, 10)
@@ -146,7 +144,6 @@ def climb_simulation(h_max):
             theta_deg += 0.5
         theta_deg = min(theta_deg, 40) 
         if (theta_deg == 50): print(step)
->>>>>>> 231f3224ce2cefe665b762f0b1290855543733e0
 
         # Calculate climb angle
         gamma_rad = math.atan2(abs(v[2]), abs(v[0]))
