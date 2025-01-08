@@ -5,74 +5,75 @@ from scipy.optimize import fsolve
 
 
 
-# """ constants """
-# ## constant values
-# g = 9.81        
-# rho = 1.20     
-# AOA_stall = 13              # stall AOA (degree)
-# H_flap_transition = 5       # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
+""" constants """
+## constant values
+g = 9.81        
+rho = 1.20     
+AOA_stall = 13              # stall AOA (degree)
+H_flap_transition = 5       # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 
-# """ variable from previous block """ 
-# ## values below are the example (should be removed)
+""" variable from previous block """ 
+## values below are the example (should be removed)
 
-# # values from sizing tool
+# values from sizing tool
 
-# m_total = 8.5       # total takeoff weight(kg)
-# m_x1 = 0.2          # X-1 test vehicle weight(kg)
+m_total = 8.5       # total takeoff weight(kg)
+m_x1 = 0.2          # X-1 test vehicle weight(kg)
 
-# # values from aerodynamic analysis block
-# alpha = [-3.5, -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
+# values from aerodynamic analysis block
+alpha = [-3.5, -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
 
-# CL = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, -0.02, 0.02, 0.06, 0.1, 0.14, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.02]
+CL = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, -0.02, 0.02, 0.06, 0.1, 0.14, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.02]
 
-# CD = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
+CD = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
 
-# CL_max = 1.10           # maximum lift coefficient
-# CL_max_flap = 1.75      # maximum lift coefficient with maximum flap deploy
-# CD_zero_flap = 0.14     # drag coefficient with zero flap deploy
+CL_max = 1.10           # maximum lift coefficient
+CL_max_flap = 1.75      # maximum lift coefficient with maximum flap deploy
+CL_zero_flap = 0.95     # 0 AOA lift coefficient with maximum flap deploy
+CD_zero_flap = 0.14     # 0 AOA drag coefficient with maximum flap deploy
 
-# # values from sizing parameter
+# values from sizing parameter
 
-# m_empty = 5.0       # empty weight(kg) 
-# S = 0.6             # wing area(m^2)
-# AR = 5.4            # wing aspect ratio    
-# lw = 0.08           # Distance from the aircraft's CG to the main wing AC (m)
-# lh = 0.93           # Distance from the aircraft's CG to the Horizontal Tail AC (m)
-
-
-# # values from propulsion block
-# T_max = 6.6 * g     # maximum thrust (N)
-
-# """ variables can be calculated from given parameters """
-# ## should not be removed
-
-# m_fuel = m_total - m_empty - m_x1               # fuel weight(kg)
-# W = m_total * g                                 # total takeoff weight(N)
-# V_stall = math.sqrt((2*W) / (rho*S*CL_max))     # stall speed(m/s)
+m_empty = 5.0       # empty weight(kg) 
+S = 0.6             # wing area(m^2)
+AR = 5.4            # wing aspect ratio    
+lw = 0.08           # Distance from the aircraft's CG to the main wing AC (m)
+lh = 0.93           # Distance from the aircraft's CG to the Horizontal Tail AC (m)
 
 
+# values from propulsion block
+T_max = 6.6 * g     # maximum thrust (N)
 
-"""
-이전 parameter들
-"""
-### Constants ###
-rho = 1.2  # air density (kg/m^3)
-g = 9.81  # gravity (m/s^2)
-m_glider = 7  # glider mass (kg)
-m_payload = 2.5  # payload mass (kg)
-m_x1 = 0.2  # additional mass (kg)
-W = (m_glider + m_payload + m_x1) * g  # total weight (N)
-m = m_glider + m_payload + m_x1  # total mass (kg)
-S = 0.6  # wing area (m^2)
-AR = 7.2  # aspect ratio
-lw = 0.2
-lh = 1
+""" variables can be calculated from given parameters """
+## should not be removed
+
+m_fuel = m_total - m_empty - m_x1                           # fuel weight(kg)
+W = m_total * g                                             # total takeoff weight(N)
+V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
+V_takeoff = 1.1 * (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maximum flap deploy(m/s)
+
+
+# """
+# 이전 parameter들
+# """
+# ### Constants ###
+# rho = 1.2  # air density (kg/m^3)
+# g = 9.81  # gravity (m/s^2)
+# m_glider = 7  # glider mass (kg)
+# m_payload = 2.5  # payload mass (kg)
+# m_x1 = 0.2  # additional mass (kg)
+# W = (m_glider + m_payload + m_x1) * g  # total weight (N)
+# m = m_glider + m_payload + m_x1  # total mass (kg)
+# S = 0.6  # wing area (m^2)
+# AR = 7.2  # aspect ratio
+# lw = 0.2
+# lh = 1
 CD0 = 0.1  # zero-lift drag coefficient
 CL0 = 0.0  # lift coefficient at zero angle of attack , OpenVSP 결과과
 CL_alpha = 0.086  # lift coefficient gradient per degree , OpenVSP 결과
 e = 0.8  # Oswald efficiency factor
-T_max = 6.6 * g  # maximum thrust (N)
-V_stall = 15.7  # stall speed (m/s) 15.7
+# T_max = 6.6 * g  # maximum thrust (N)
+# V_stall = 15.7  # stall speed (m/s) 15.7
 alpha_stall = 13
 h_flap = 5
 
@@ -97,7 +98,7 @@ def calculate_cruise_alpha_w(v):
 time_list = []
 distance_list = []
 load_factor_list = []
-alpha_w_list = []
+AOA_list = []
 position_list = []
 v_list = []
 a_list = []
@@ -106,12 +107,11 @@ phase_index = []
 ### Acceleration Functions ###
 def calculate_acceleration_ground(v):
     speed = magnitude(v)
-    CL = 0.99
-    CDi = calculate_induced_drag(CL)
-    CD = CD0 + CDi
-    D = 0.5 * rho * speed**2 * S * CD
-    L = 0.5 * rho * speed**2 * S * CL
-    a_x = -g/W * (T_max*0.9 - D - 0.03*(W-L))
+
+    T = T_max * 0.9
+    D = 0.5 * rho * speed**2 * S * CD_zero_flap
+    L = 0.5 * rho * speed**2 * S * CL_zero_flap
+    a_x = -(T - D - 0.03*(W-L))/m_total
     return np.array([a_x, 0, 0])
 
 def calculate_acceleration_cruise(v, alpha_w_deg):
@@ -120,7 +120,7 @@ def calculate_acceleration_cruise(v, alpha_w_deg):
     CDi = calculate_induced_drag(CL)
     CD = CD0 + CDi
     D = 0.5 * rho * speed**2 * S * CD
-    a_x = (T_max * 0.9) / m * math.cos(math.radians(alpha_w_deg)) - D / m
+    a_x = (T_max * 0.9) / m_total * math.cos(math.radians(alpha_w_deg)) - D / m_total
     return np.array([a_x, 0, 0])
 
 def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos):
@@ -133,8 +133,8 @@ def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos):
     CD = CD0 + CDi
     D = 0.5 * rho * speed**2 * S * CD
     L = 0.5 * rho * speed**2 * S * CL
-    a_x = -(T_max * 0.9 * math.cos(math.radians(theta_deg)) - L * math.sin(math.radians(alpha_w_deg)) - D * math.cos(gamma_rad)) / m
-    a_z = (T_max * 0.9 * math.sin(math.radians(theta_deg)) + L * math.cos(math.radians(alpha_w_deg)) - D * math.sin(gamma_rad) - W) / m
+    a_x = -(T_max * 0.9 * math.cos(math.radians(theta_deg)) - L * math.sin(math.radians(alpha_w_deg)) - D * math.cos(gamma_rad)) / m_total
+    a_z = (T_max * 0.9 * math.sin(math.radians(theta_deg)) + L * math.cos(math.radians(alpha_w_deg)) - D * math.sin(gamma_rad) - W) / m_total
     return np.array([a_x, 0, a_z])
 
 ### Simulation Functions ###
@@ -146,7 +146,7 @@ def takeoff_simulation():
     t = 0.0
     
     # Ground roll until rotation speed
-    while magnitude(v) < 1.3 * V_stall:
+    while magnitude(v) < V_takeoff:
         t += dt
         time_list.append(t)
         
@@ -154,10 +154,10 @@ def takeoff_simulation():
         v += a * dt
         position += v * dt
         
-        L = 0.5 * rho * magnitude(v)**2 * S * CL0
+        L = 0.5 * rho * magnitude(v)**2 * S * CL_zero_flap
         load_factor_list.append(L / W)
         v_list.append(v.copy())
-        alpha_w_list.append(0)
+        AOA_list.append(0)
         a_list.append(a)
         position_list.append(tuple(position))
 
@@ -222,7 +222,7 @@ def climb_simulation(h_max):
 
         # Store results
         v_list.append(v.copy())
-        alpha_w_list.append(alpha_w_deg)
+        AOA_list.append(alpha_w_deg)
         a_list.append(a)
         distance_list.append(d)
 
@@ -289,7 +289,7 @@ def cruise_simulation(x_final, direction='+'):
         # Store results
         load_factor_list.append(L / W)
         v_list.append(v.copy())
-        alpha_w_list.append(alpha_w_deg)
+        AOA_list.append(alpha_w_deg)
         a_list.append(a)
         distance_list.append(d)
         
@@ -330,14 +330,14 @@ def turn_simulation(target_angle_deg, direction="right"):
         CL = CL0 + CL_alpha * alpha_stall
         L = CL * (0.5 * rho * speed**2) * S
         phi_rad = math.acos(W/L)
-        a_centripetal = (L * math.sin(phi_rad)) / m
-        R = (m * speed**2)/(L * math.sin(phi_rad))
+        a_centripetal = (L * math.sin(phi_rad)) / m_total
+        R = (m_total * speed**2)/(L * math.sin(phi_rad))
         omega = speed / R
         load_factor = 1 / math.cos(phi_rad)
 
         CD = CD0 + calculate_induced_drag(CL)
         D = CD * (0.5 * rho * speed**2) * S
-        a_tangential = (T_max * 0.55 - D) / m
+        a_tangential = (T_max * 0.55 - D) / m_total
         speed += a_tangential * dt
 
         # Calculate turn center
@@ -382,7 +382,7 @@ def turn_simulation(target_angle_deg, direction="right"):
         v_list.append(v.copy())
         distance_list.append(d)
         load_factor_list.append(load_factor)
-        alpha_w_list.append(alpha_stall)
+        AOA_list.append(alpha_stall)
 
         # if (step%500 == 0):
         #     print(f"CL: {CL:.2f}")
@@ -509,7 +509,7 @@ def plot_results():
     ax3 = plt.subplot(gridspec[1, 1])
     for i in range(len(phase_index) - 1):
         start, end = phase_index[i], phase_index[i + 1]
-        ax3.plot(time_list[start:end], alpha_w_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
+        ax3.plot(time_list[start:end], AOA_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
     ax3.set_title('AOA vs Time')
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('AOA (deg)')
