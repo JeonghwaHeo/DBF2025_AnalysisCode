@@ -10,7 +10,7 @@ from scipy.optimize import fsolve
 g = 9.81        
 rho = 1.20     
 AOA_stall = 13              # stall AOA (degree)
-AOA_max = 10                # maximum AOA intended to be limited (degree)
+AOA_takeoff_max = 10                # maximum AOA intended to be limited at takeoff (degree)
 flap_transition_altitude = 5       # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 
 """ variable from previous block """ 
@@ -186,7 +186,7 @@ def takeoff_simulation():
         L = 0.5 * rho * magnitude(v)**2 * S * CL_max_flap
         load_factor_list.append(L / W)
         v_list.append(v.copy())
-        AOA_list.append(AOA_max)
+        AOA_list.append(AOA_takeoff_max)
         a_list.append(a)
         position_list.append(tuple(position))
 
