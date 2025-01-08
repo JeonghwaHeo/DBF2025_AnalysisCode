@@ -148,7 +148,7 @@ def calculate_acceleration_cruise(v, AOA):
     return np.array([a_x, 0, 0])
 
 
-def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos):
+def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, z_pos):
     speed = magnitude(v)
     if (z_pos > h_flap_transition):
         CL = float(CL_func(alpha_w_deg))
@@ -156,7 +156,8 @@ def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos):
     else:
         CL = CL_max_flap
         CD = CD_max_flap
-
+    theta_deg = math.degrees(gamma_rad) + alpha_w_deg
+    
     D = 0.5 * rho * speed**2 * S * CD
     L = 0.5 * rho * speed**2 * S * CL
     a_x = -(T_climb * math.cos(math.radians(theta_deg)) - L * math.sin(gamma_rad) - D * math.cos(gamma_rad)) / m_total
@@ -229,10 +230,7 @@ def climb_simulation(h_target):
         else:
             alpha_w_deg -= 0.1
             alpha_w_deg = max(alpha_w_deg , -3)
-        
-        # Calculate pitch angle
-        theta_deg = math.degrees(gamma_rad) + alpha_w_deg
-        
+       
         # Calculate load factor
         if (z_pos < h_flap_transition):
             CL = CL_max_flap
@@ -243,13 +241,13 @@ def climb_simulation(h_target):
         load_factor_list.append(load_factor)
 
         # RK4 integration
-        a1 = calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos)
+        a1 = calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, z_pos)
         v1 = v + (a1*dt/2)
-        a2 = calculate_acceleration_climb(v1, alpha_w_deg, gamma_rad, theta_deg, z_pos)
+        a2 = calculate_acceleration_climb(v1, alpha_w_deg, gamma_rad, z_pos)
         v2 = v + (a2*dt/2)
-        a3 = calculate_acceleration_climb(v2, alpha_w_deg, gamma_rad, theta_deg, z_pos)
+        a3 = calculate_acceleration_climb(v2, alpha_w_deg, gamma_rad,z_pos)
         v3 = v + a3*dt
-        a4 = calculate_acceleration_climb(v3, alpha_w_deg, gamma_rad, theta_deg, z_pos)
+        a4 = calculate_acceleration_climb(v3, alpha_w_deg, gamma_rad, z_pos)
         
         a = (a1 + 2*a2 + 2*a3 + a4)/6
         v += a*dt
