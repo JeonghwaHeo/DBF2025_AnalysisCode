@@ -9,15 +9,15 @@ from scipy.interpolate import interp1d
 ## constant values
 g = 9.81        
 rho = 1.20     
-AOA_stall = 13              # stall AOA (degree)
+AOA_stall = 13                      # stall AOA (degree)
 AOA_takeoff_max = 10                # maximum AOA intended to be limited at takeoff (degree)
-flap_transition_altitude = 5       # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
+AOA_climb = 5                       # AOA at climb (degree)
+flap_transition_altitude = 5        # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 
 """ variable from previous block """ 
 ## values below are the example (should be removed)
 
 # values from sizing tool
-
 m_total = 8.5       # total takeoff weight(kg)
 m_x1 = 0.2          # X-1 test vehicle weight(kg)
 
@@ -54,11 +54,17 @@ W = m_total * g                                             # total takeoff weig
 V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
 V_takeoff = 1.1 * (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maximum flap deploy(m/s)
 
+""" variables that we set at this block"""
+T_takeoff = 0.9 * T_max
+T_climb = 0.9 * T_max
+
 
 """ Lift, Drag Coefficient Calculating Function """
-## calulate lift, drag coefficient at a specific AOA using interpolation function
-CL = interp1d(alpha_result,CL_result,kind = 'linear',bounds_error = False, fill_value = 'extrapolate')
-CD = interp1d(alpha_result,CD_result,kind = 'quadratic',bounds_error = False, fill_value = 'extrapolate')
+## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
+# how to use : if you want to know CL at AOA 3.12, use float(CL(3.12)) 
+
+CL_func = interp1d(alpha_result,CL_result,kind = 'linear',bounds_error = False, fill_value = 'extrapolate')
+CD_func = interp1d(alpha_result,CD_result,kind = 'quadratic',bounds_error = False, fill_value = 'extrapolate')
  
 
 """이전 parameter들"""
@@ -115,20 +121,18 @@ phase_index = []
 def calculate_acceleration_groundroll(v):
     speed = magnitude(v)
 
-    T = T_max * 0.9
     D = 0.5 * rho * speed**2 * S * CD_zero_flap
     L = 0.5 * rho * speed**2 * S * CL_zero_flap
-    a_x = - (T - D - 0.03*(W-L)) / m_total            # calculate x direction acceleration 
+    a_x = - (T_takeoff - D - 0.03*(W-L)) / m_total            # calculate x direction acceleration 
     return np.array([a_x, 0, 0])
 
 
 def calculate_acceleration_groundtransition(v):
     speed = magnitude(v)
 
-    T = T_max * 0.9
     D = 0.5 * rho * speed**2 * S * CD_max_flap
     L = 0.5 * rho * speed**2 * S * CL_max_flap
-    a_x = - (T - D - 0.03*(W-L)) / m_total            # calculate x direction acceleration 
+    a_x = - (T_takeoff - D - 0.03*(W-L)) / m_total            # calculate x direction acceleration 
     return np.array([a_x, 0, 0])
 
 
@@ -144,16 +148,17 @@ def calculate_acceleration_cruise(v, AOA):
 
 def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos):
     speed = magnitude(v)
-    if (z_pos > h_flap) :
-        CL = CL0 + CL_alpha * alpha_w_deg
+    if (z_pos > flap_transition_altitude) :
+        CL = float(CL_func(alpha_w_deg))
+        CD = float(CD_func(alpha_w_deg))
     else:
-        CL = 0.99 + 0.06 * alpha_w_deg
-    CDi = calculate_induced_drag(CL)
-    CD = CD0 + CDi
+        CL = CL_max_flap
+        CD = CD_max_flap
+
     D = 0.5 * rho * speed**2 * S * CD
     L = 0.5 * rho * speed**2 * S * CL
-    a_x = -(T_max * 0.9 * math.cos(math.radians(theta_deg)) - L * math.sin(math.radians(alpha_w_deg)) - D * math.cos(gamma_rad)) / m_total
-    a_z = (T_max * 0.9 * math.sin(math.radians(theta_deg)) + L * math.cos(math.radians(alpha_w_deg)) - D * math.sin(gamma_rad) - W) / m_total
+    a_x = -(T_climb * math.cos(math.radians(theta_deg)) - L * math.sin(gamma_rad) - D * math.cos(gamma_rad)) / m_total
+    a_z = (T_climb * math.sin(math.radians(theta_deg)) + L * math.cos(gamma_rad) - D * math.sin(gamma_rad) - W) / m_total
     return np.array([a_x, 0, a_z])
 
 ### Simulation Functions ###
