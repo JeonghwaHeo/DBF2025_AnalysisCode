@@ -2,7 +2,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
-
+from scipy.interpolate import interp1d
 
 
 """ constants """
@@ -22,11 +22,11 @@ m_total = 8.5       # total takeoff weight(kg)
 m_x1 = 0.2          # X-1 test vehicle weight(kg)
 
 # values from aerodynamic analysis block
-alpha = [-3.5, -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
+alpha_result = [-3.5, -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
 
-CL = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, -0.02, 0.02, 0.06, 0.1, 0.14, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.02]
+CL_result  = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, -0.02, 0.02, 0.06, 0.1, 0.14, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.02]
 
-CD = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
+CD_result = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
 
 CL_max = 1.10           # maximum lift coefficient
 CL_max_flap = 1.75      # maximum lift coefficient with maximum flap deploy
@@ -54,6 +54,12 @@ W = m_total * g                                             # total takeoff weig
 V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
 V_takeoff = 1.1 * (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maximum flap deploy(m/s)
 
+
+""" Lift, Drag Coefficient Calculating Function """
+## calulate lift, drag coefficient at a specific AOA using interpolation function
+CL = interp1d(alpha_result,CL_result,kind = 'linear',bounds_error = False, fill_value = 'extrapolate')
+CD = interp1d(alpha_result,CD_result,kind = 'quadratic',bounds_error = False, fill_value = 'extrapolate')
+ 
 
 """이전 parameter들"""
 
@@ -126,13 +132,13 @@ def calculate_acceleration_groundtransition(v):
     return np.array([a_x, 0, 0])
 
 
-def calculate_acceleration_cruise(v, alpha_w_deg):
+def calculate_acceleration_cruise(v, AOA):
     speed = magnitude(v)
-    CL = CL0 + CL_alpha * alpha_w_deg
+    CL = CL0 + CL_alpha * AOA
     CDi = calculate_induced_drag(CL)
     CD = CD0 + CDi
     D = 0.5 * rho * speed**2 * S * CD
-    a_x = (T_max * 0.9) / m_total * math.cos(math.radians(alpha_w_deg)) - D / m_total
+    a_x = (T_max * 0.9) / m_total * math.cos(math.radians(AOA)) - D / m_total
     return np.array([a_x, 0, 0])
 
 
