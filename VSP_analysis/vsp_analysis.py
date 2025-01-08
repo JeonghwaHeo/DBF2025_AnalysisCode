@@ -22,10 +22,10 @@ vsp3_dir = os.path.join(os.getcwd(), "vsp3")
 analysis_dir = os.path.join(os.getcwd(), "analysis_results")
 ect_dir = os.path.join(os.getcwd(), "ect")
 
-# Example usage
+# analysis parameter
 vsp_file = os.path.join(vsp3_dir, "Mothership.vsp3")
-alpha_start = -2.0  # Starting angle of attack (degrees)
-alpha_end = 2.0     # Ending angle of attack (degrees)
+alpha_start = -2.0   # Starting angle of attack (degrees)
+alpha_end = 2.0      # Ending angle of attack (degrees)
 alpha_step = 1.0     # Step size (degrees)
 Re = 380000          # Reynolds number
 Mach = 0             # Mach number (subsonic)
