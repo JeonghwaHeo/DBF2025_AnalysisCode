@@ -28,11 +28,11 @@ CL_result  = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, -0.02, 0.02, 0.06, 
 
 CD_result = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
 
-CL_max = 1.10           # maximum lift coefficient
-CL_max_flap = 1.75      # maximum lift coefficient with maximum flap deploy
-CD_max_flap = 0.26      # maximum drag coefficient with maximum flap deploy
-CL_zero_flap = 0.95     # 0 AOA lift coefficient with maximum flap deploy
-CD_zero_flap = 0.14     # 0 AOA drag coefficient with maximum flap deploy
+CL_max = 0.94           # maximum lift coefficient
+CL_max_flap = 0.94      # maximum lift coefficient with maximum flap deploy
+CD_max_flap = 0.13     # maximum drag coefficient with maximum flap deploy
+CL_zero_flap = 0.02     # 0 AOA lift coefficient with maximum flap deploy
+CD_zero_flap = 0.065     # 0 AOA drag coefficient with maximum flap deploy
 
 # values from sizing parameter
 
@@ -61,7 +61,7 @@ T_climb = 0.9 * T_max
 
 """ Lift, Drag Coefficient Calculating Function """
 ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
-# how to use : if you want to know CL at AOA 3.12, use float(CL(3.12)) 
+# how to use : if you want to know CL at AOA 3.12, use float(CL_func(3.12)) 
 # multiply (lh-lw) / lh at CL to consider the effect from horizontal tail
 # interpolate CD using quadratic function 
 
