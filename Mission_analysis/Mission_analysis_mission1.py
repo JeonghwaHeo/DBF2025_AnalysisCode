@@ -15,7 +15,7 @@ AOA_climb = 8                       # intended AOA at climb (degree)
 AOA_turn = 8                        # intended AOA at turn (degree)
 h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 max_speed = 40                      # restricted maximum speed of aircraft (m/s)
-max_load_factor = 5                 # restricted maximum load factor (m/s)
+max_load_factor = 3.5                 # restricted maximum load factor (m/s)
 
 
 """ variable from previous block """ 
@@ -430,7 +430,7 @@ def turn_simulation(target_angle_deg, direction):
         v_list.append(v.copy())
         distance_list.append(d)
         load_factor_list.append(load_factor)
-        AOA_list.append(AOA_turn)
+        AOA_list.append(alpha_turn)
         bank_angle_list.append(math.degrees(phi_rad))
 
 
