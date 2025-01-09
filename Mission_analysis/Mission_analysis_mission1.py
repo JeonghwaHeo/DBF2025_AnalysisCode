@@ -15,6 +15,8 @@ AOA_climb = 8                       # intended AOA at climb (degree)
 AOA_turn = 8                        # intended AOA at turn (degree)
 h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 max_speed = 40                      # restricted maximum speed of aircraft (m/s)
+max_load_factor = 5                 # restricted maximum load factor (m/s)
+
 
 """ variable from previous block """ 
 ## values below are the example (should be removed)
@@ -70,7 +72,7 @@ T_turn = 0.55 * T_max
 
 CL_func = interp1d(alpha_result, (lh-lw) / lh * np.array(CL_result), kind = 'linear', bounds_error = False, fill_value = 'extrapolate')
 CD_func = interp1d(alpha_result, CD_result, kind = 'quadratic', bounds_error = False, fill_value = 'extrapolate')
- 
+alpha_func = interp1d((lh-lw) / lh * np.array(CL_result), alpha_result, kind='linear',bounds_error=False, fill_value='extrapolate') 
 
 """이전 parameter들"""
 
@@ -372,7 +374,8 @@ def turn_simulation(target_angle_deg, direction):
         t += dt
         time_list.append(t)
         
-        CL = float(CL_func(AOA_turn))
+        CL = min(float(CL_func(AOA_turn)), (2*max_load_factor*W)/(rho * speed**2 * S))
+        alpha_turn = float(alpha_func(CL)) 
         L = CL * (0.5 * rho * speed**2) * S
         phi_rad = math.acos(W/L)
         a_centripetal = (L * math.sin(phi_rad)) / m_total
@@ -380,7 +383,7 @@ def turn_simulation(target_angle_deg, direction):
         omega = speed / R
         load_factor = 1 / math.cos(phi_rad)
 
-        CD = float(CD_func(AOA_turn))
+        CD = float(CD_func(alpha_turn))
         D = CD * (0.5 * rho * speed**2) * S
         a_tangential = (T_turn - D) / m_total
         speed += a_tangential * dt
@@ -430,13 +433,6 @@ def turn_simulation(target_angle_deg, direction):
         AOA_list.append(AOA_turn)
         bank_angle_list.append(math.degrees(phi_rad))
 
-        # if (step%500 == 0):
-        #     print(f"CL: {CL:.2f}")
-        #     print(f"L: {L:.2f} N")
-        #     print(f"phi_deg: {math.degrees(phi_rad):.2f} deg")
-        #     # print(f"radius: {R:.2f} m")
-        #     print(f"speed: {speed:.2f} m/s\n")
-        #     # print(f"omega: {omega:.2f} rad/s")
 
 ### Mission Function & Plotting ###
 def run_mission():
