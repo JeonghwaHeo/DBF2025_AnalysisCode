@@ -11,7 +11,8 @@ g = 9.81
 rho = 1.20     
 AOA_stall = 13                      # stall AOA (degree)
 AOA_takeoff_max = 10                # maximum AOA intended to be limited at takeoff (degree)
-AOA_climb = 8                       # AOA at climb (degree)
+AOA_climb = 8                       # intended AOA at climb (degree)
+AOA_turn = 8                        # intended AOA at turn (degree)
 h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 max_speed = 40                      # restricted maximum speed of aircraft (m/s)
 
@@ -58,7 +59,8 @@ V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maxim
 """ variables that we set at this block"""
 T_takeoff = 0.9 * T_max
 T_climb = 0.9 * T_max
-T_cruise = 0.5 * T_max
+T_cruise = 0.7 * T_max
+T_turn = 0.55 * T_max
 
 """ Lift, Drag Coefficient Calculating Function """
 ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
@@ -344,7 +346,7 @@ def cruise_simulation(x_final, direction='+'):
             if x_pos <= x_final:
                 break
 
-def turn_simulation(target_angle_deg, direction="right"):
+def turn_simulation(target_angle_deg, direction):
     print("\nRunning Turn Simulation...")
     
     # 초기 설정
@@ -370,7 +372,7 @@ def turn_simulation(target_angle_deg, direction="right"):
         t += dt
         time_list.append(t)
         
-        CL = CL0 + CL_alpha * alpha_stall
+        CL = float(CL_func(AOA_turn))
         L = CL * (0.5 * rho * speed**2) * S
         phi_rad = math.acos(W/L)
         a_centripetal = (L * math.sin(phi_rad)) / m_total
@@ -378,9 +380,9 @@ def turn_simulation(target_angle_deg, direction="right"):
         omega = speed / R
         load_factor = 1 / math.cos(phi_rad)
 
-        CD = CD0 + calculate_induced_drag(CL)
+        CD = float(CD_func(AOA_turn))
         D = CD * (0.5 * rho * speed**2) * S
-        a_tangential = (T_max * 0.55 - D) / m_total
+        a_tangential = (T_turn - D) / m_total
         speed += a_tangential * dt
 
         # Calculate turn center
