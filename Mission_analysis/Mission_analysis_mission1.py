@@ -31,7 +31,6 @@ CL_zero_flap = 0.02     # 0 AOA lift coefficient with flap deploy
 CD_zero_flap = 0.065    # 0 AOA drag coefficient with flap deploy
 
 # values from sizing parameter
-
 m_empty = 5.0       # empty weight(kg) 
 S = 0.6             # wing area(m^2)
 AR = 5.4            # wing aspect ratio    
@@ -47,7 +46,7 @@ T_max = 6.6 * g     # maximum thrust (N)
 m_fuel = m_total - m_empty - m_x1                           # fuel weight(kg)
 W = m_total * g                                             # total takeoff weight(N)
 V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
-V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maximum flap deploy(m/s)
+V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))        # takeoff speed with maximum flap deploy(m/s)
 
 """ variables that we set at this block"""
 # set the thrust level at each phase
@@ -77,7 +76,7 @@ alpha_func = interp1d((lh-lw) / lh * np.array(CL_result), alpha_result, kind='li
 def magnitude(vector):
     return math.sqrt(sum(x*x for x in vector))
 
-def calculate_cruise_alpha_w(v):
+def calculate_cruise_alpha(v):
     speed = magnitude(v)
     def equation(alpha):
         CL = float(CL_func(alpha))
@@ -271,7 +270,7 @@ def cruise_simulation(x_final, direction='+'):
         time_list.append(t)
         
         # Calculate alpha_w first
-        alpha_w_deg = calculate_cruise_alpha_w(v)
+        alpha_w_deg = calculate_cruise_alpha(v)
         
         # RK4 integration
         a1 = calculate_acceleration_cruise(v, alpha_w_deg)
