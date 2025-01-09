@@ -427,7 +427,7 @@ def turn_simulation(target_angle_deg, direction):
         v_list.append(v.copy())
         distance_list.append(d)
         load_factor_list.append(load_factor)
-        AOA_list.append(alpha_stall)
+        AOA_list.append(AOA_turn)
         bank_angle_list.append(math.degrees(phi_rad))
 
         # if (step%500 == 0):
