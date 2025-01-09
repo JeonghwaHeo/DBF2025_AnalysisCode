@@ -9,14 +9,6 @@ from scipy.interpolate import interp1d
 ## constant values
 g = 9.81        
 rho = 1.20     
-AOA_stall = 13                      # stall AOA (degree)
-AOA_takeoff_max = 10                # maximum AOA intended to be limited at takeoff (degree)
-AOA_climb = 8                       # intended AOA at climb (degree)
-AOA_turn = 8                        # intended AOA at turn (degree)
-h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
-max_speed = 40                      # restricted maximum speed of aircraft (m/s)
-max_load_factor = 3.5                 # restricted maximum load factor (m/s)
-
 
 """ variable from previous block """ 
 ## values below are the example (should be removed)
@@ -33,10 +25,10 @@ CL_result  = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, 0.02, 0.04, 0.06, 0
 CD_result = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
 
 CL_max = 0.94           # maximum lift coefficient
-CL_max_flap = 0.94      # maximum lift coefficient with maximum flap deploy
-CD_max_flap = 0.13     # maximum drag coefficient with maximum flap deploy
-CL_zero_flap = 0.02     # 0 AOA lift coefficient with maximum flap deploy
-CD_zero_flap = 0.065     # 0 AOA drag coefficient with maximum flap deploy
+CL_max_flap = 0.94      # maximum lift coefficient with flap deploy
+CD_max_flap = 0.13      # maximum drag coefficient with flap deploy
+CL_zero_flap = 0.02     # 0 AOA lift coefficient with flap deploy
+CD_zero_flap = 0.065    # 0 AOA drag coefficient with flap deploy
 
 # values from sizing parameter
 
@@ -52,58 +44,38 @@ T_max = 6.6 * g     # maximum thrust (N)
 
 """ variables can be calculated from given parameters """
 ## should not be removed
-
 m_fuel = m_total - m_empty - m_x1                           # fuel weight(kg)
 W = m_total * g                                             # total takeoff weight(N)
 V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
 V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maximum flap deploy(m/s)
 
 """ variables that we set at this block"""
+# set the thrust level at each phase
 T_takeoff = 0.9 * T_max
 T_climb = 0.9 * T_max
 T_cruise = 0.7 * T_max
 T_turn = 0.55 * T_max
+
+AOA_stall = 13                      # stall AOA (degree)
+AOA_takeoff_max = 10                # maximum AOA intended to be limited at takeoff (degree)
+AOA_climb = 8                       # intended AOA at climb (degree)
+AOA_turn = 8                        # intended AOA at turn (degree)
+h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
+max_speed = 40                      # restricted maximum speed of aircraft (m/s)
+max_load_factor = 5.0               # restricted maximum load factor (m/s)
 
 """ Lift, Drag Coefficient Calculating Function """
 ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
 # how to use : if you want to know CL at AOA 3.12, use float(CL_func(3.12)) 
 # multiply (lh-lw) / lh at CL to consider the effect from horizontal tail
 # interpolate CD using quadratic function 
-
 CL_func = interp1d(alpha_result, (lh-lw) / lh * np.array(CL_result), kind = 'linear', bounds_error = False, fill_value = 'extrapolate')
 CD_func = interp1d(alpha_result, CD_result, kind = 'quadratic', bounds_error = False, fill_value = 'extrapolate')
 alpha_func = interp1d((lh-lw) / lh * np.array(CL_result), alpha_result, kind='linear',bounds_error=False, fill_value='extrapolate') 
 
-"""이전 parameter들"""
-
-# ### Constants ###
-# rho = 1.2  # air density (kg/m^3)
-# g = 9.81  # gravity (m/s^2)
-# m_glider = 7  # glider mass (kg)
-# m_payload = 2.5  # payload mass (kg)
-# m_x1 = 0.2  # additional mass (kg)
-# W = (m_glider + m_payload + m_x1) * g  # total weight (N)
-# m = m_glider + m_payload + m_x1  # total mass (kg)
-# S = 0.6  # wing area (m^2)
-# AR = 7.2  # aspect ratio
-# lw = 0.2
-# lh = 1
-CD0 = 0.1  # zero-lift drag coefficient
-CL0 = 0.0  # lift coefficient at zero angle of attack , OpenVSP 결과과
-CL_alpha = 0.086  # lift coefficient gradient per degree , OpenVSP 결과
-e = 0.8  # Oswald efficiency factor
-# T_max = 6.6 * g  # maximum thrust (N)
-# V_stall = 15.7  # stall speed (m/s) 
-alpha_stall = 13
-h_flap = 5
-
-
 ### Helper Functions ###
 def magnitude(vector):
     return math.sqrt(sum(x*x for x in vector))
-
-def calculate_induced_drag(C_L):
-    return (C_L**2) / (math.pi * AR * e)
 
 def calculate_cruise_alpha_w(v):
     speed = magnitude(v)
@@ -128,7 +100,6 @@ bank_angle_list = []
 ### Acceleration Functions ###
 def calculate_acceleration_groundroll(v):
     speed = magnitude(v)
-
     D = 0.5 * rho * speed**2 * S * CD_zero_flap
     L = 0.5 * rho * speed**2 * S * CL_zero_flap
     a_x = - (T_takeoff - D - 0.03*(W-L)) / m_total            # calculate x direction acceleration 
@@ -137,7 +108,6 @@ def calculate_acceleration_groundroll(v):
 
 def calculate_acceleration_groundtransition(v):
     speed = magnitude(v)
-
     D = 0.5 * rho * speed**2 * S * CD_max_flap
     L = 0.5 * rho * speed**2 * S * CL_max_flap
     a_x = - (T_takeoff - D - 0.03*(W-L)) / m_total            # calculate x direction acceleration 
