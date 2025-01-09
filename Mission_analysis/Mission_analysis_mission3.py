@@ -6,8 +6,8 @@ from scipy.optimize import fsolve
 ### Constants ###
 rho = 1.2  # air density (kg/m^3)
 g = 9.81  # gravity (m/s^2)
-m_glider = 7  # glider mass (kg)
-m_payload = 2.5  # payload mass (kg)
+m_glider = 4 # glider mass (kg)
+m_payload = 3  # payload mass (kg)
 m_x1 = 0.2  # additional mass (kg)
 W = (m_glider + m_payload + m_x1) * g  # total weight (N)
 m = m_glider + m_payload + m_x1  # total mass (kg)
@@ -20,8 +20,9 @@ CL0 = 0.0  # lift coefficient at zero angle of attack , OpenVSP 결과과
 CL_alpha = 0.086  # lift coefficient gradient per degree , OpenVSP 결과
 e = 0.8  # Oswald efficiency factor
 T_max = 6.6 * g  # maximum thrust (N)
-V_stall = 15.7  # stall speed (m/s) 15.7
-alpha_stall = 13
+alpha_stall = 10
+V_stall = math.sqrt(W/(alpha_stall * CL_alpha * 0.5 * rho * S))
+print(V_stall)
 h_flap = 5
 
 ### Helper Functions ###
@@ -49,6 +50,7 @@ position_list = []
 v_list = []
 a_list = []
 phase_index = []
+bank_angle_list = []
 
 ### Acceleration Functions ###
 def calculate_acceleration_ground(v):
@@ -72,10 +74,11 @@ def calculate_acceleration_cruise(v, alpha_w_deg):
 
 def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, theta_deg, z_pos):
     speed = magnitude(v)
-    if (z_pos > h_flap) :
-        CL = CL0 + CL_alpha * alpha_w_deg
-    else:
-        CL = 0.99 + 0.06 * alpha_w_deg
+    # if (z_pos > h_flap) :
+    #     CL = CL0 + CL_alpha * alpha_w_deg
+    # else:
+    #     CL = 0.99 + 0.06 * alpha_w_deg
+    CL = CL0 + CL_alpha * alpha_w_deg
     CDi = calculate_induced_drag(CL)
     CD = CD0 + CDi
     D = 0.5 * rho * speed**2 * S * CD
@@ -107,6 +110,7 @@ def takeoff_simulation():
         alpha_w_list.append(0)
         a_list.append(a)
         position_list.append(tuple(position))
+        bank_angle_list.append(math.degrees(0))
 
 def climb_simulation(h_max):
     print("\nRunning Climb Simulation...")
@@ -118,6 +122,7 @@ def climb_simulation(h_max):
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
     theta_deg = 0
+    bank_angle_list.append(math.degrees(0))
 
     for step in range(n_steps):
         t += dt
@@ -136,10 +141,11 @@ def climb_simulation(h_max):
         alpha_w_deg = theta_deg - math.degrees(gamma_rad)
 
         # Calculate load factor
-        if (z_pos > h_flap) :
-            CL = CL0 + CL_alpha * alpha_w_deg
-        else:
-            CL = 0.99 + 0.06 * alpha_w_deg
+        # if (z_pos > h_flap) :
+        #     CL = CL0 + CL_alpha * alpha_w_deg
+        # else:
+        #     CL = 0.99 + 0.06 * alpha_w_deg
+        CL = CL0 + CL_alpha * alpha_w_deg
         L = 0.5 * rho * magnitude(v)**2 * S * CL
         load_factor = L / W
         load_factor_list.append(load_factor)
@@ -172,6 +178,7 @@ def climb_simulation(h_max):
         alpha_w_list.append(alpha_w_deg)
         a_list.append(a)
         distance_list.append(d)
+        bank_angle_list.append(math.degrees(0))
 
         if z_pos > h_max:
             break
@@ -239,6 +246,7 @@ def cruise_simulation(x_final, direction='+'):
         alpha_w_list.append(alpha_w_deg)
         a_list.append(a)
         distance_list.append(d)
+        bank_angle_list.append(math.degrees(0))
         
         # Check if we've reached target x position
         if direction == '+':
@@ -330,6 +338,7 @@ def turn_simulation(target_angle_deg, direction="right"):
         distance_list.append(d)
         load_factor_list.append(load_factor)
         alpha_w_list.append(alpha_stall)
+        bank_angle_list.append(math.degrees(phi_rad))
 
         # if (step%500 == 0):
         #     print(f"CL: {CL:.2f}")
@@ -396,20 +405,9 @@ def plot_results():
     
     plt.figure(figsize=(20, 10))
 
-    gridspec = plt.GridSpec(2, 2, width_ratios=[1, 1], height_ratios=[1, 1])
+    gridspec = plt.GridSpec(2, 3, width_ratios=[1, 1, 1], height_ratios=[1, 1])
 
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple']  # Define colors for phases
-
-    # # 3D trajectory
-    # ax1 = plt.subplot(gridspec[:, 0], projection='3d')
-    # for i in range(len(phase_index) - 1):
-    #     start, end = phase_index[i], phase_index[i + 1]
-    #     ax1.plot(x_coords[start:end], y_coords[start:end], z_coords[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
-    # ax1.set_box_aspect([max(x_coords)-min(x_coords), max(y_coords)-min(y_coords), max(z_coords)-min(z_coords)])
-    # ax1.set_title('3D Flight Path')
-    # ax1.set_xlabel('X (m)')
-    # ax1.set_ylabel('Y (m)')
-    # ax1.set_zlabel('Z (m)')
 
     # 3D trajectory
     ax1 = plt.subplot(gridspec[:, 0], projection='3d')
@@ -461,6 +459,26 @@ def plot_results():
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('AOA (deg)')
     ax3.grid(True)
+
+    # Bank angle profile
+    ax4 = plt.subplot(gridspec[0, 2])
+    for i in range(len(phase_index) - 1):
+        start, end = phase_index[i], phase_index[i + 1]
+        ax4.plot(time_list[start:end], bank_angle_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
+    ax4.set_title('Bank Angle vs Time')
+    ax4.set_xlabel('Time (s)')
+    ax4.set_ylabel('Bank Angle (deg)')
+    ax4.grid(True)
+
+    # Load Factor profile
+    ax5 = plt.subplot(gridspec[1, 2])
+    for i in range(len(phase_index) - 1):
+        start, end = phase_index[i], phase_index[i + 1]
+        ax5.plot(time_list[start:end], load_factor_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
+    ax5.set_title('Load Factor vs Time')
+    ax5.set_xlabel('Time (s)')
+    ax5.set_ylabel('Load Factor')
+    ax5.grid(True)
 
     plt.tight_layout()
     plt.show()
