@@ -52,7 +52,7 @@ T_max = 6.6 * g     # maximum thrust (N)
 m_fuel = m_total - m_empty - m_x1                           # fuel weight(kg)
 W = m_total * g                                             # total takeoff weight(N)
 V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
-V_takeoff = 1.1 * (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maximum flap deploy(m/s)
+V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maximum flap deploy(m/s)
 
 """ variables that we set at this block"""
 T_takeoff = 0.9 * T_max
@@ -118,6 +118,7 @@ position_list = []
 v_list = []
 a_list = []
 phase_index = []
+bank_angle_list = []
 
 ### Acceleration Functions ###
 def calculate_acceleration_groundroll(v):
@@ -187,6 +188,7 @@ def takeoff_simulation():
         AOA_list.append(0)
         a_list.append(a)
         position_list.append(tuple(position))
+        bank_angle_list.append(math.degrees(0))
         
     # Ground transition until takeoff speed    
     while 0.9* V_takeoff <= magnitude(v) <= V_takeoff:
@@ -203,6 +205,7 @@ def takeoff_simulation():
         AOA_list.append(AOA_takeoff_max)
         a_list.append(a)
         position_list.append(tuple(position))
+        bank_angle_list.append(math.degrees(0))
 
 def climb_simulation(h_target):
     print("\nRunning Climb Simulation...")
@@ -213,7 +216,8 @@ def climb_simulation(h_target):
     d = distance_list[-1] if distance_list else 0
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
-
+ 
+    
     for step in range(n_steps):
         t += dt
         time_list.append(t)
@@ -262,6 +266,7 @@ def climb_simulation(h_target):
         AOA_list.append(alpha_w_deg)
         a_list.append(a)
         distance_list.append(d)
+        bank_angle_list.append(math.degrees(0))
 
         # break when climb angle goes to zero
         if gamma_rad < 0:
@@ -331,6 +336,7 @@ def cruise_simulation(x_final, direction='+'):
         AOA_list.append(alpha_w_deg)
         a_list.append(a)
         distance_list.append(d)
+        bank_angle_list.append(math.degrees(0))
         
         # Check if we've reached target x position
         if direction == '+':
@@ -422,6 +428,7 @@ def turn_simulation(target_angle_deg, direction="right"):
         distance_list.append(d)
         load_factor_list.append(load_factor)
         AOA_list.append(alpha_stall)
+        bank_angle_list.append(math.degrees(phi_rad))
 
         # if (step%500 == 0):
         #     print(f"CL: {CL:.2f}")
@@ -488,20 +495,9 @@ def plot_results():
     
     plt.figure(figsize=(20, 10))
 
-    gridspec = plt.GridSpec(2, 2, width_ratios=[1, 1], height_ratios=[1, 1])
+    gridspec = plt.GridSpec(2, 3, width_ratios=[1, 1, 1], height_ratios=[1, 1])
 
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple']  # Define colors for phases
-
-    # # 3D trajectory
-    # ax1 = plt.subplot(gridspec[:, 0], projection='3d')
-    # for i in range(len(phase_index) - 1):
-    #     start, end = phase_index[i], phase_index[i + 1]
-    #     ax1.plot(x_coords[start:end], y_coords[start:end], z_coords[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
-    # ax1.set_box_aspect([max(x_coords)-min(x_coords), max(y_coords)-min(y_coords), max(z_coords)-min(z_coords)])
-    # ax1.set_title('3D Flight Path')
-    # ax1.set_xlabel('X (m)')
-    # ax1.set_ylabel('Y (m)')
-    # ax1.set_zlabel('Z (m)')
 
     # 3D trajectory
     ax1 = plt.subplot(gridspec[:, 0], projection='3d')
@@ -553,6 +549,26 @@ def plot_results():
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('AOA (deg)')
     ax3.grid(True)
+
+    # Bank angle profile
+    ax4 = plt.subplot(gridspec[0, 2])
+    for i in range(len(phase_index) - 1):
+        start, end = phase_index[i], phase_index[i + 1]
+        ax4.plot(time_list[start:end], bank_angle_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
+    ax4.set_title('Bank Angle vs Time')
+    ax4.set_xlabel('Time (s)')
+    ax4.set_ylabel('Bank Angle (deg)')
+    ax4.grid(True)
+
+    # Load Factor profile
+    ax5 = plt.subplot(gridspec[1, 2])
+    for i in range(len(phase_index) - 1):
+        start, end = phase_index[i], phase_index[i + 1]
+        ax5.plot(time_list[start:end], load_factor_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
+    ax5.set_title('Load Factor vs Time')
+    ax5.set_xlabel('Time (s)')
+    ax5.set_ylabel('Load Factor')
+    ax5.grid(True)
 
     plt.tight_layout()
     plt.show()
