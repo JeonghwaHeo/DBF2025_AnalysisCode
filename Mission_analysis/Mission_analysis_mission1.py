@@ -12,7 +12,8 @@ rho = 1.20
 AOA_stall = 13                      # stall AOA (degree)
 AOA_takeoff_max = 10                # maximum AOA intended to be limited at takeoff (degree)
 AOA_climb = 8                       # AOA at climb (degree)
-h_flap_transition = 5        # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
+h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
+max_speed = 40                      # restricted maximum speed of aircraft (m/s)
 
 """ variable from previous block """ 
 ## values below are the example (should be removed)
@@ -24,7 +25,7 @@ m_x1 = 0.2          # X-1 test vehicle weight(kg)
 # values from aerodynamic analysis block
 alpha_result = [-3.5, -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
 
-CL_result  = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, -0.02, 0.02, 0.06, 0.1, 0.14, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.02]
+CL_result  = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, 0.02, 0.04, 0.06, 0.1, 0.14, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.02]
 
 CD_result = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
 
@@ -57,7 +58,7 @@ V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))  # takeoff speed with maxim
 """ variables that we set at this block"""
 T_takeoff = 0.9 * T_max
 T_climb = 0.9 * T_max
-
+T_cruise = 0.5 * T_max
 
 """ Lift, Drag Coefficient Calculating Function """
 ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
@@ -103,9 +104,9 @@ def calculate_induced_drag(C_L):
 def calculate_cruise_alpha_w(v):
     speed = magnitude(v)
     def equation(alpha):
-        CL = CL0 + CL_alpha * alpha
+        CL = float(CL_func(alpha))
         L = 0.5 * rho * speed**2 * S * CL
-        return L + T_max * 0.9 * math.sin(math.radians(alpha)) - W
+        return L + T_cruise * math.sin(math.radians(alpha)) - W
     alpha_w_solution = fsolve(equation, 5, xtol=1e-8, maxfev=1000)
     return alpha_w_solution[0]
 
@@ -139,13 +140,11 @@ def calculate_acceleration_groundtransition(v):
     return np.array([a_x, 0, 0])
 
 
-def calculate_acceleration_cruise(v, AOA):
+def calculate_acceleration_cruise(v, alpha):
     speed = magnitude(v)
-    CL = CL0 + CL_alpha * AOA
-    CDi = calculate_induced_drag(CL)
-    CD = CD0 + CDi
+    CD = float(CD_func(alpha))
     D = 0.5 * rho * speed**2 * S * CD
-    a_x = (T_max * 0.9) / m_total * math.cos(math.radians(AOA)) - D / m_total
+    a_x = (T_cruise * math.cos(math.radians(alpha)) - D) / m_total
     return np.array([a_x, 0, 0])
 
 
@@ -315,8 +314,8 @@ def cruise_simulation(x_final, direction='+'):
             
         # Speed limiting while maintaining direction
         speed = magnitude(v)
-        if speed > 50:  # Original speed limit
-            v = v * (50 / speed)
+        if speed > max_speed:  # Original speed limit
+            v = v * (max_speed / speed)
             
         # Update position
         dx = v[0] * dt
@@ -327,8 +326,7 @@ def cruise_simulation(x_final, direction='+'):
         position_list.append((x_pos, y_pos, z_pos))
         
         # Calculate and store results
-        CL = CL0 + CL_alpha * alpha_w_deg
-        L = 0.5 * rho * speed**2 * S * CL
+        L = 0.5 * rho * speed**2 * S * float(CL_func(alpha_w_deg))
         
         # Store results
         load_factor_list.append(L / W)
@@ -448,7 +446,7 @@ def run_mission():
     phase_index.append(len(time_list))
     
     # Phase 2: Climb to 30m
-    climb_simulation(30)
+    climb_simulation(20)
     print(f"Climb Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
@@ -573,31 +571,31 @@ def plot_results():
     plt.tight_layout()
     plt.show()
 
-def save_results():
-    import os
+# def save_results():
+#     import os
 
-    # Create a result directory if it does not exist
-    results = "results"
-    if not os.path.exists(results):
-        os.makedirs(results)
+#     # Create a result directory if it does not exist
+#     results = "results"
+#     if not os.path.exists(results):
+#         os.makedirs(results)
 
-    # Save data to a .npz file
-    np.savez(
-        os.path.join(results, "mission1.npz"), 
-        time_list=time_list, 
-        distance_list=distance_list, 
-        load_factor_list=load_factor_list, 
-        AOA_list=AOA_list, 
-        position_list=position_list, 
-        v_list=v_list, 
-        a_list=a_list, 
-        phase_index=phase_index,
-        bank_angle_list=bank_angle_list
-    )
+#     # Save data to a .npz file
+#     np.savez(
+#         os.path.join(results, "mission1.npz"), 
+#         time_list=time_list, 
+#         distance_list=distance_list, 
+#         load_factor_list=load_factor_list, 
+#         AOA_list=AOA_list, 
+#         position_list=position_list, 
+#         v_list=v_list, 
+#         a_list=a_list, 
+#         phase_index=phase_index,
+#         bank_angle_list=bank_angle_list
+#     )
 
-    print(f"\nData saved to {os.path.join(results, 'mission1.npz')}\n")
+#     print(f"\nData saved to {os.path.join(results, 'mission1.npz')}\n")
 
 if __name__ == "__main__":
     run_mission()
     plot_results()
-    save_results()
+    # save_results()
