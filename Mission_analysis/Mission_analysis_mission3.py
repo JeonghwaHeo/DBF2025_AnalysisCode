@@ -45,7 +45,7 @@ def calculate_cruise_alpha_w(v):
 time_list = []
 distance_list = []
 load_factor_list = []
-alpha_w_list = []
+AOA_list = []
 position_list = []
 v_list = []
 a_list = []
@@ -107,7 +107,7 @@ def takeoff_simulation():
         L = 0.5 * rho * magnitude(v)**2 * S * CL0
         load_factor_list.append(L / W)
         v_list.append(v.copy())
-        alpha_w_list.append(0)
+        AOA_list.append(0)
         a_list.append(a)
         position_list.append(tuple(position))
         bank_angle_list.append(math.degrees(0))
@@ -175,7 +175,7 @@ def climb_simulation(h_max):
 
         # Store results
         v_list.append(v.copy())
-        alpha_w_list.append(alpha_w_deg)
+        AOA_list.append(alpha_w_deg)
         a_list.append(a)
         distance_list.append(d)
         bank_angle_list.append(math.degrees(0))
@@ -243,7 +243,7 @@ def cruise_simulation(x_final, direction='+'):
         # Store results
         load_factor_list.append(L / W)
         v_list.append(v.copy())
-        alpha_w_list.append(alpha_w_deg)
+        AOA_list.append(alpha_w_deg)
         a_list.append(a)
         distance_list.append(d)
         bank_angle_list.append(math.degrees(0))
@@ -337,7 +337,7 @@ def turn_simulation(target_angle_deg, direction="right"):
         v_list.append(v.copy())
         distance_list.append(d)
         load_factor_list.append(load_factor)
-        alpha_w_list.append(alpha_stall)
+        AOA_list.append(alpha_stall)
         bank_angle_list.append(math.degrees(phi_rad))
 
         # if (step%500 == 0):
@@ -454,7 +454,7 @@ def plot_results():
     ax3 = plt.subplot(gridspec[1, 1])
     for i in range(len(phase_index) - 1):
         start, end = phase_index[i], phase_index[i + 1]
-        ax3.plot(time_list[start:end], alpha_w_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
+        ax3.plot(time_list[start:end], AOA_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
     ax3.set_title('AOA vs Time')
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('AOA (deg)')
@@ -483,6 +483,31 @@ def plot_results():
     plt.tight_layout()
     plt.show()
 
+def save_results():
+    import os
+
+    # Create a result directory if it does not exist
+    results = "results"
+    if not os.path.exists(results):
+        os.makedirs(results)
+
+    # Save data to a .npz file
+    np.savez(
+        os.path.join(results, "mission3.npz"), 
+        time_list=time_list, 
+        distance_list=distance_list, 
+        load_factor_list=load_factor_list, 
+        AOA_list=AOA_list, 
+        position_list=position_list, 
+        v_list=v_list, 
+        a_list=a_list, 
+        phase_index=phase_index,
+        bank_angle_list=bank_angle_list
+    )
+
+    print(f"\nData saved to {os.path.join(results, 'mission3.npz')}\n")
+
 if __name__ == "__main__":
     run_mission()
     plot_results()
+    save_results()
