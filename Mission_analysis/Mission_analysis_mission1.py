@@ -25,10 +25,10 @@ CL_result  = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, 0.02, 0.04, 0.06, 0
 CD_result = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
 
 CL_max = 0.94           # maximum lift coefficient
-CL_max_flap = 0.94      # maximum lift coefficient with flap deploy
-CD_max_flap = 0.13      # maximum drag coefficient with flap deploy
-CL_zero_flap = 0.02     # 0 AOA lift coefficient with flap deploy
-CD_zero_flap = 0.065    # 0 AOA drag coefficient with flap deploy
+CL_max_flap = 1.1       # maximum lift coefficient with flap deploy
+CD_max_flap = 0.20      # maximum drag coefficient with flap deploy
+CL_zero_flap = 0.04     # 0 AOA lift coefficient with flap deploy
+CD_zero_flap = 0.10    # 0 AOA drag coefficient with flap deploy
 
 # values from sizing parameter
 m_empty = 5.0       # empty weight(kg) 
@@ -39,7 +39,7 @@ lh = 0.93           # Distance from the aircraft's CG to the Horizontal Tail AC 
 
 
 # values from propulsion block
-T_max = 6.6 * g     # maximum thrust (N)
+T_max_kg = 6.6
 
 """ variables that we set at this block"""
 # set the thrust level at each phase
@@ -62,12 +62,11 @@ m_fuel = m_total - m_empty - m_x1                           # fuel weight(kg)
 W = m_total * g                                             # total takeoff weight(N)
 V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
 V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))        # takeoff speed with maximum flap deploy(m/s)
+T_max = T_max_kg * g                                        # maximum thrust (N)
 T_takeoff = T_percentage_takeoff_max * T_max
 T_climb = T_percentage_climb_max * T_max
 T_cruise = T_percentage_level_max * T_max
 T_turn = T_percentage_turn_max * T_max
-
-
 
 """ Lift, Drag Coefficient Calculating Function """
 ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
@@ -93,7 +92,6 @@ def calculate_cruise_alpha(v):
 
 ### Result Lists ###
 time_list = []
-distance_list = []
 load_factor_list = []
 AOA_list = []
 position_list = []
@@ -194,10 +192,8 @@ def climb_simulation(h_target,x_max_distance, direction):
     dt = 0.01
     n_steps = int(60 / dt)  # Max 60 seconds simulation
     v = v_list[-1].copy()
-    d = distance_list[-1] if distance_list else 0
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
-    x_start = x_pos
     alpha_w_deg = 0
     
     for step in range(n_steps):
@@ -264,14 +260,12 @@ def climb_simulation(h_target,x_max_distance, direction):
         # Update position
         x_pos += v[0] * dt
         z_pos += v[2] * dt
-        d += magnitude(v)*dt
         position_list.append((x_pos, y_pos, z_pos))
 
         # Store results
         v_list.append(v.copy())
         AOA_list.append(alpha_w_deg)
         a_list.append(a)
-        distance_list.append(d)
         bank_angle_list.append(math.degrees(0))
         T_percentage_list.append(T_percentage_climb_max)
 
@@ -297,7 +291,6 @@ def cruise_simulation(x_final, direction='+'):
         
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
-    d = distance_list[-1] if distance_list else 0
     
     while step < max_steps:
         step += 1
@@ -333,7 +326,6 @@ def cruise_simulation(x_final, direction='+'):
         dy = v[1] * dt
         x_pos += dx
         y_pos += dy
-        d += math.sqrt(dx*dx + dy*dy)
         position_list.append((x_pos, y_pos, z_pos))
         
         # Calculate and store results
@@ -344,7 +336,6 @@ def cruise_simulation(x_final, direction='+'):
         v_list.append(v.copy())
         AOA_list.append(alpha_w_deg)
         a_list.append(a)
-        distance_list.append(d)
         bank_angle_list.append(math.degrees(0))
         
         # Check if we've reached target x position
@@ -361,7 +352,6 @@ def turn_simulation(target_angle_deg, direction):
     # 초기 설정
     dt = 0.01
     v = v_list[-1].copy()
-    d = distance_list[-1] if distance_list else 0
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
     speed = magnitude(v)
@@ -432,10 +422,8 @@ def turn_simulation(target_angle_deg, direction):
         
         # Store results
         a_list.append(a)
-        d += speed * dt
         position_list.append((x_pos, y_pos, z_pos))
         v_list.append(v.copy())
-        distance_list.append(d)
         load_factor_list.append(load_factor)
         AOA_list.append(alpha_turn)
         bank_angle_list.append(math.degrees(phi_rad))
