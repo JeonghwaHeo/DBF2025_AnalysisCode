@@ -20,7 +20,7 @@ m_x1 = 0.2          # X-1 test vehicle weight(kg)
 # Values from aerodynamic analysis block
 alpha_result = [-3.5, -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
 
-CL_result  = [-0.3, -0.26, -0.22, -0.18, -0.14, -0.1, -0.06, 0.02, 0.04, 0.06, 0.1, 0.14, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.02]
+CL_result  = [-0.26, -0.22, -0.18, -0.14, -0.10, -0.06, -0.02, 0.02, 0.04, 0.06, 0.1, 0.14, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.02]
 
 CD_result = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
 
@@ -56,8 +56,8 @@ AOA_takeoff_max = 10                # maximum AOA intended to be limited at take
 AOA_climb_max = 8                   # intended maximum AOA at climb (degree)
 AOA_turn_max = 8                    # intended maximum AOA at turn (degree)
 h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
-max_speed = 35                      # restricted maximum speed of aircraft (m/s)
-max_load_factor = 3.0               # restricted maximum load factor (m/s)
+max_speed = 40                      # restricted maximum speed of aircraft (m/s)
+max_load_factor = 4.0               # restricted maximum load factor (m/s)
 
 """ variables can be calculated from given parameters """
 ## Should not be removed
@@ -109,6 +109,7 @@ phase_index = []
 bank_angle_list = []
 climb_pitch_angle_list = []
 T_percentage_list = []
+altitude_list = []
 
 ### Acceleration Functions ###
 def calculate_acceleration_groundroll(v):
@@ -185,6 +186,7 @@ def takeoff_simulation():
         bank_angle_list.append(0)
         T_percentage_list.append(T_percentage_takeoff_max)
         climb_pitch_angle_list.append(np.nan)
+        altitude_list.append(0)
         
     # Ground rotation until takeoff speed    
     while 0.9 * V_takeoff <= magnitude(v) <= V_takeoff:
@@ -206,6 +208,7 @@ def takeoff_simulation():
         bank_angle_list.append(0)
         T_percentage_list.append(T_percentage_takeoff_max)
         climb_pitch_angle_list.append(np.nan)
+        altitude_list.append(0)
         
 def climb_simulation(h_target, x_max_distance, direction):
     """
@@ -230,7 +233,7 @@ def climb_simulation(h_target, x_max_distance, direction):
         # Calculate climb angle
         gamma_rad = math.atan2(v[2], abs(v[0]))
         
-        if direction == '+':
+        if direction == 'right':
             # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
             if(z_pos < h_flap_transition and x_pos < x_max_distance):
                 alpha_w_deg = AOA_takeoff_max
@@ -243,7 +246,7 @@ def climb_simulation(h_target, x_max_distance, direction):
                 alpha_w_deg -= 0.1
                 alpha_w_deg = max(alpha_w_deg , -3)         
         
-        if direction == '-':
+        if direction == 'left':
             # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
             if(z_pos < h_flap_transition and x_pos > x_max_distance):
                 alpha_w_deg = AOA_takeoff_max
@@ -277,7 +280,7 @@ def climb_simulation(h_target, x_max_distance, direction):
         
         a = (a1 + 2*a2 + 2*a3 + a4)/6
         
-        if direction == '+':
+        if direction == 'right':
             v[0] += a[0]*dt
             v[2] += a[2]*dt
         else:
@@ -296,23 +299,30 @@ def climb_simulation(h_target, x_max_distance, direction):
         bank_angle_list.append(math.degrees(0))
         T_percentage_list.append(T_percentage_climb_max)
         climb_pitch_angle_list.append(alpha_w_deg + math.degrees(gamma_rad))
+        altitude_list.append(z_pos)
 
         # break when climb angle goes to zero
         if gamma_rad < 0:
             print(f"cruise altitude is {z_pos:.2f} m.")
             break
 
-def cruise_simulation(x_final, direction='+'):
+def level_flight_simulation(x_final, direction):
+    """
+    Args:
+        x_final (float): Restricted x-coordinate for level flight (m)
+        direction (string): The direction of movement. Must be either 'left' or 'right'.
+    """        
     print("\nRunning Cruise Simulation...")
+    
     dt = 0.1
-    max_steps = int(180/dt)
+    max_steps = int(180/dt) # max 3 minuites
     step = 0
     
     # Initialize vectors
     v = v_list[-1].copy()
     v[2] = 0  # Zero vertical velocity
     speed = magnitude(v)
-    if direction == '+':
+    if direction == 'right':
         v = np.array([speed, 0, 0])  # Align with x-axis
     else:
         v = np.array([-speed, 0, 0])
@@ -338,7 +348,7 @@ def cruise_simulation(x_final, direction='+'):
         a4 = calculate_acceleration_level(v3, alpha_w_deg)
         
         a = (a1 + 2 * a2 + 2 * a3 + a4) / 6
-        if direction == '+': v += a * dt
+        if direction == 'right': v += a * dt
         else: v -= a * dt
             
         # Speed limiting while maintaining direction
@@ -368,9 +378,10 @@ def cruise_simulation(x_final, direction='+'):
         a_list.append(a)
         bank_angle_list.append(math.degrees(0))
         climb_pitch_angle_list.append(np.nan)
+        altitude_list.append(z_pos)
         
         # Check if we've reached target x position
-        if direction == '+':
+        if direction == 'right':
             if x_pos >= x_final:
                 break
         else:
@@ -378,6 +389,11 @@ def cruise_simulation(x_final, direction='+'):
                 break
 
 def turn_simulation(target_angle_deg, direction):
+    """
+    Args:
+        target_angle_degree (float): Required angle of coordinate level turn (degree)
+        direction (string): The direction of movement. Must be either 'CW' or 'CCW'.
+    """     
     print("\nRunning Turn Simulation...")
     
     # 초기 설정
@@ -394,8 +410,6 @@ def turn_simulation(target_angle_deg, direction):
     # Get initial heading and setup turn center
     initial_angle_rad = math.atan2(v[1], v[0])
     current_angle_rad = initial_angle_rad
-
-    step = 0
 
     # Turn
     while abs(turned_angle_rad) < abs(target_angle_rad):
@@ -417,7 +431,7 @@ def turn_simulation(target_angle_deg, direction):
         speed += a_tangential * dt
 
         # Calculate turn center
-        if direction == "right":
+        if direction == "CCW":
             center_x = x_pos - R * math.sin(current_angle_rad)
             center_y = y_pos + R * math.cos(current_angle_rad)
         else:
@@ -425,7 +439,7 @@ def turn_simulation(target_angle_deg, direction):
             center_y = y_pos - R * math.cos(current_angle_rad)
 
         # Update heading based on angular velocity
-        if direction == "right":
+        if direction == "CCW":
             current_angle_rad += omega * dt
             turned_angle_rad += omega * dt
         else:
@@ -433,7 +447,7 @@ def turn_simulation(target_angle_deg, direction):
             turned_angle_rad -= omega * dt
         
         # Calculate new position relative to turn center
-        if direction == "right":
+        if direction == "CCW":
             x_pos = center_x + R * math.sin(current_angle_rad)
             y_pos = center_y - R * math.cos(current_angle_rad)
         else:
@@ -460,55 +474,120 @@ def turn_simulation(target_angle_deg, direction):
         bank_angle_list.append(math.degrees(phi_rad))
         T_percentage_list.append(T_percentage_turn_max)  
         climb_pitch_angle_list.append(np.nan)
+        altitude_list.append(z_pos)
         
 ### Mission Function & Plotting ###
 def run_mission():
     phase_index.append(0)
 
+    ### Lap 1 ###
     # Phase 1: Takeoff
     takeoff_simulation()
     print(f"Takeoff Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 2: Climb to 30m
-    climb_simulation(20, -160, direction = "-")
+    # Phase 2: Climb to 25m
+    climb_simulation(25, -140, direction="left")
     print(f"Climb Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 3: Initial cruise
-    cruise_simulation(-152, direction="-")
-    print(f"First Cruise Complete at position: {position_list[-1]}")
+    # Phase 3: Level flight
+    level_flight_simulation(-152, direction="left")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 4: First turn (180 degrees)
-    turn_simulation(180, direction="right")
-    print(f"First Turn Complete at position: {position_list[-1]}")
+    # Phase 4: Half turn (180 degrees)
+    turn_simulation(180, direction="CW")
+    print(f"Half Turn Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 5: Return cruise
-    cruise_simulation(0, direction="+")
-    print(f"Second Cruise Complete at position: {position_list[-1]}")
+    # Phase 5: Level flight
+    level_flight_simulation(0, direction="right")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
     # Phase 6: Full loop (360 degrees)
-    turn_simulation(360, direction="left")
+    turn_simulation(360, direction="CCW")
     print(f"Loop Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 7: Outbound cruise
-    cruise_simulation(152, direction="+")
-    print(f"Third Cruise Complete at position: {position_list[-1]}")
+    # Phase 7: Level flight
+    level_flight_simulation(152, direction="right")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 8: Final turn (180 degrees)
-    turn_simulation(180, direction="right")
-    print(f"Final Turn Complete at position: {position_list[-1]}")
+    # Phase 8: Half turn (180 degrees)
+    turn_simulation(180, direction="CW")
+    print(f"Half Turn Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 9: Return cruise
-    cruise_simulation(0, direction="-")
-    print(f"Final Cruise Complete at position: {position_list[-1]}")
+    # Phase 9: Level flight
+    level_flight_simulation(-152, direction="left")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
+    
+    ### Lap 2 ###
+    # Phase 10: Half turn (180 degrees)
+    turn_simulation(180, direction="CW")
+    print(f"Half Turn Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))   
+    
+    # Phase 11: Level flight
+    level_flight_simulation(0, direction="right")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))   
+    
+    # Phase 12: Full loop
+    turn_simulation(360, direction="CCW")
+    print(f"Loop Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))
+    
+    # Phase 13: Level flight
+    level_flight_simulation(152, direction="right")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))      
+    
+    # Phase 14: Half turn
+    turn_simulation(180, direction="CW")
+    print(f"Half Turn Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))     
+    
+    # Phase 15: Level flight
+    level_flight_simulation(-152, direction="left")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))    
+
+    ### Lap 3 ###
+    # Phase 16: Half turn
+    turn_simulation(180, direction="CW")
+    print(f"Half Turn Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))  
+    
+    # Phase 17: Level flight
+    level_flight_simulation(0, direction="right")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))      
+    
+    # Phase 18: Full loop
+    turn_simulation(360, direction="CCW")
+    print(f"Loop Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list)) 
+    
+    # Phase 19: Level flight
+    level_flight_simulation(152, direction="right")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))  
+    
+    # Phase 20: Half turn
+    turn_simulation(180, direction="CW")
+    print(f"Half Turn Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))      
+
+    # Phase 21: Level flight
+    level_flight_simulation(0, direction="left")
+    print(f"Level Flight Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))                
+    
 
 def plot_results():
     x_coords = [pos[0] for pos in position_list]
@@ -523,7 +602,7 @@ def plot_results():
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple']  # Define colors for phases
 
     # 3D trajectory
-    ax1 = plt.subplot(gridspec[:, 0], projection='3d')
+    ax1 = plt.subplot(gridspec[0:2, 0], projection='3d')
     for i in range(len(phase_index) - 1):
         start, end = phase_index[i], phase_index[i + 1]
         ax1.plot(x_coords[start:end], y_coords[start:end], z_coords[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
@@ -612,6 +691,16 @@ def plot_results():
     ax7.set_xlabel('Time (s)')
     ax7.set_ylabel('Pitch Angle (deg)')
     ax7.grid(True)
+    
+    # Altitude profile
+    ax8 = plt.subplot(gridspec[2, 0])
+    for i in range(len(phase_index) - 1):
+        start, end = phase_index[i], phase_index[i + 1]
+        ax8.plot(time_list[start:end], altitude_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
+    ax8.set_title('Altitude vs Time')
+    ax8.set_xlabel('Time (s)')
+    ax8.set_ylabel('Altitude (m)')
+    ax8.grid(True)    
 
     plt.tight_layout()
     plt.show()   
