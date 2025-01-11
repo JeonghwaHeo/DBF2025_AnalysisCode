@@ -41,27 +41,33 @@ lh = 0.93           # Distance from the aircraft's CG to the Horizontal Tail AC 
 # values from propulsion block
 T_max = 6.6 * g     # maximum thrust (N)
 
-""" variables can be calculated from given parameters """
-## should not be removed
-m_fuel = m_total - m_empty - m_x1                           # fuel weight(kg)
-W = m_total * g                                             # total takeoff weight(N)
-V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
-V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))        # takeoff speed with maximum flap deploy(m/s)
-
 """ variables that we set at this block"""
 # set the thrust level at each phase
-T_takeoff = 0.9 * T_max
-T_climb = 0.9 * T_max
-T_cruise = 0.6 * T_max
-T_turn = 0.55 * T_max
+T_percentage_takeoff_max = 0.9
+T_percentage_climb_max = 0.9
+T_percentage_level_max = 0.6
+T_percentage_turn_max = 0.55
 
 AOA_stall = 13                      # stall AOA (degree)
 AOA_takeoff_max = 10                # maximum AOA intended to be limited at takeoff (degree)
 AOA_climb = 8                       # intended AOA at climb (degree)
 AOA_turn = 8                        # intended AOA at turn (degree)
 h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
-max_speed = 40                     # restricted maximum speed of aircraft (m/s)
-max_load_factor = 3.0              # restricted maximum load factor (m/s)
+max_speed = 40                      # restricted maximum speed of aircraft (m/s)
+max_load_factor = 3.0               # restricted maximum load factor (m/s)
+
+""" variables can be calculated from given parameters """
+## should not be removed
+m_fuel = m_total - m_empty - m_x1                           # fuel weight(kg)
+W = m_total * g                                             # total takeoff weight(N)
+V_stall = math.sqrt((2*W) / (rho*S*CL_max))                 # stall speed(m/s)
+V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))        # takeoff speed with maximum flap deploy(m/s)
+T_takeoff = T_percentage_takeoff_max * T_max
+T_climb = T_percentage_climb_max * T_max
+T_cruise = T_percentage_level_max * T_max
+T_turn = T_percentage_turn_max * T_max
+
+
 
 """ Lift, Drag Coefficient Calculating Function """
 ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
@@ -95,6 +101,7 @@ v_list = []
 a_list = []
 phase_index = []
 bank_angle_list = []
+T_percentage_list = []
 
 ### Acceleration Functions ###
 def calculate_acceleration_groundroll(v):
@@ -161,6 +168,7 @@ def takeoff_simulation():
         a_list.append(a)
         position_list.append(tuple(position))
         bank_angle_list.append(math.degrees(0))
+        T_percentage_list.append(T_percentage_takeoff_max)
         
     # Ground transition until takeoff speed    
     while 0.9* V_takeoff <= magnitude(v) <= V_takeoff:
@@ -178,7 +186,8 @@ def takeoff_simulation():
         a_list.append(a)
         position_list.append(tuple(position))
         bank_angle_list.append(math.degrees(0))
-
+        T_percentage_list.append(T_percentage_takeoff_max)
+        
 def climb_simulation(h_target,x_max_distance, direction):
     print("\nRunning Climb Simulation...")
     
@@ -189,6 +198,7 @@ def climb_simulation(h_target,x_max_distance, direction):
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
     x_start = x_pos
+    alpha_w_deg = 0
     
     for step in range(n_steps):
         t += dt
@@ -208,7 +218,7 @@ def climb_simulation(h_target,x_max_distance, direction):
                     alpha_w_deg = float(alpha_func((2 * W * max_load_factor)/(rho * magnitude(v)**2 * S)))
             else:
                 alpha_w_deg -= 0.1
-                alpha_w_deg = max(alpha_w_deg , -3)        
+                alpha_w_deg = max(alpha_w_deg , -3)         
         
         if direction == '-':
             # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
@@ -263,6 +273,7 @@ def climb_simulation(h_target,x_max_distance, direction):
         a_list.append(a)
         distance_list.append(d)
         bank_angle_list.append(math.degrees(0))
+        T_percentage_list.append(T_percentage_climb_max)
 
         # break when climb angle goes to zero
         if gamma_rad < 0:
@@ -313,6 +324,9 @@ def cruise_simulation(x_final, direction='+'):
         speed = magnitude(v)
         if speed > max_speed:  # Original speed limit
             v = v * (max_speed / speed)
+            T_percentage_list.append((0.5 * rho * max_speed**2 * S * float(CD_func(alpha_w_deg))) / T_max)
+        else:
+            T_percentage_list.append(T_percentage_level_max)    
             
         # Update position
         dx = v[0] * dt
@@ -425,7 +439,7 @@ def turn_simulation(target_angle_deg, direction):
         load_factor_list.append(load_factor)
         AOA_list.append(alpha_turn)
         bank_angle_list.append(math.degrees(phi_rad))
-
+        T_percentage_list.append(T_percentage_turn_max)  
 
 ### Mission Function & Plotting ###
 def run_mission():
@@ -484,7 +498,7 @@ def plot_results():
     
     plt.figure(figsize=(20, 10))
 
-    gridspec = plt.GridSpec(2, 3, width_ratios=[1, 1, 1], height_ratios=[1, 1])
+    gridspec = plt.GridSpec(3, 3, width_ratios=[1, 1, 1], height_ratios=[1, 1, 1])
 
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple']  # Define colors for phases
 
@@ -540,7 +554,7 @@ def plot_results():
     ax3.grid(True)
 
     # Bank angle profile
-    ax4 = plt.subplot(gridspec[0, 2])
+    ax4 = plt.subplot(gridspec[2, 1])
     for i in range(len(phase_index) - 1):
         start, end = phase_index[i], phase_index[i + 1]
         ax4.plot(time_list[start:end], bank_angle_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
@@ -550,7 +564,7 @@ def plot_results():
     ax4.grid(True)
 
     # Load Factor profile
-    ax5 = plt.subplot(gridspec[1, 2])
+    ax5 = plt.subplot(gridspec[0, 2])
     for i in range(len(phase_index) - 1):
         start, end = phase_index[i], phase_index[i + 1]
         ax5.plot(time_list[start:end], load_factor_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
@@ -559,8 +573,18 @@ def plot_results():
     ax5.set_ylabel('Load Factor')
     ax5.grid(True)
 
+    # Thrust Percentage profile
+    ax6 = plt.subplot(gridspec[1, 2])
+    for i in range(len(phase_index) - 1):
+        start, end = phase_index[i], phase_index[i + 1]
+        ax6.plot(time_list[start:end], T_percentage_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
+    ax6.set_title('Thrust Percentage vs Time')
+    ax6.set_xlabel('Time (s)')
+    ax6.set_ylabel('Thrust Percentage')
+    ax6.grid(True)
+
     plt.tight_layout()
-    plt.show()
+    plt.show()    
 
 # def save_results():
 #     import os
