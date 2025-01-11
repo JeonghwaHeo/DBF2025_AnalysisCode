@@ -99,6 +99,7 @@ v_list = []
 a_list = []
 phase_index = []
 bank_angle_list = []
+climb_pitch_angle_list = []
 T_percentage_list = []
 
 ### Acceleration Functions ###
@@ -167,6 +168,7 @@ def takeoff_simulation():
         position_list.append(tuple(position))
         bank_angle_list.append(math.degrees(0))
         T_percentage_list.append(T_percentage_takeoff_max)
+        climb_pitch_angle_list.append(np.nan)
         
     # Ground transition until takeoff speed    
     while 0.9* V_takeoff <= magnitude(v) <= V_takeoff:
@@ -185,6 +187,7 @@ def takeoff_simulation():
         position_list.append(tuple(position))
         bank_angle_list.append(math.degrees(0))
         T_percentage_list.append(T_percentage_takeoff_max)
+        climb_pitch_angle_list.append(np.nan)
         
 def climb_simulation(h_target,x_max_distance, direction):
     print("\nRunning Climb Simulation...")
@@ -268,6 +271,7 @@ def climb_simulation(h_target,x_max_distance, direction):
         a_list.append(a)
         bank_angle_list.append(math.degrees(0))
         T_percentage_list.append(T_percentage_climb_max)
+        climb_pitch_angle_list.append(alpha_w_deg + math.degrees(gamma_rad))
 
         # break when climb angle goes to zero
         if gamma_rad < 0:
@@ -337,6 +341,7 @@ def cruise_simulation(x_final, direction='+'):
         AOA_list.append(alpha_w_deg)
         a_list.append(a)
         bank_angle_list.append(math.degrees(0))
+        climb_pitch_angle_list.append(np.nan)
         
         # Check if we've reached target x position
         if direction == '+':
@@ -428,7 +433,8 @@ def turn_simulation(target_angle_deg, direction):
         AOA_list.append(alpha_turn)
         bank_angle_list.append(math.degrees(phi_rad))
         T_percentage_list.append(T_percentage_turn_max)  
-
+        climb_pitch_angle_list.append(np.nan)
+        
 ### Mission Function & Plotting ###
 def run_mission():
     phase_index.append(0)
@@ -571,9 +577,18 @@ def plot_results():
     ax6.set_ylabel('Thrust Percentage')
     ax6.grid(True)
 
-    plt.tight_layout()
-    plt.show()    
+    # Thrust Percentage profile
+    ax7 = plt.subplot(gridspec[2, 2])
+    for i in range(len(phase_index) - 1):
+        start, end = phase_index[i], phase_index[i + 1]
+        ax7.plot(time_list[start:end], climb_pitch_angle_list[start:end], color=colors[i % len(colors)], label=f"Phase {i+1}")
+    ax7.set_title('Climb Pitch Angle vs Time')
+    ax7.set_xlabel('Time (s)')
+    ax7.set_ylabel('Pitch Angle (deg)')
+    ax7.grid(True)
 
+    plt.tight_layout()
+    plt.show()   
 # def save_results():
 #     import os
 
