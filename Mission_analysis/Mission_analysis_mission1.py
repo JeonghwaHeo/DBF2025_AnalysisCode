@@ -133,7 +133,7 @@ def calculate_acceleration_climb(v, alpha_w_deg, gamma_rad, z_pos):
     
     D = 0.5 * rho * speed**2 * S * CD
     L = 0.5 * rho * speed**2 * S * CL
-    a_x = -(T_climb * math.cos(math.radians(theta_deg)) - L * math.sin(gamma_rad) - D * math.cos(gamma_rad)) / m_total
+    a_x = (T_climb * math.cos(math.radians(theta_deg)) - L * math.sin(gamma_rad) - D * math.cos(gamma_rad)) / m_total
     a_z = (T_climb * math.sin(math.radians(theta_deg)) + L * math.cos(gamma_rad) - D * math.sin(gamma_rad) - W) / m_total
     return np.array([a_x, 0, a_z])
 
@@ -196,7 +196,7 @@ def climb_simulation(h_target,x_max_distance, direction):
         
         # Calculate climb angle
         gamma_rad = math.atan2(v[2], abs(v[0]))
-
+        
         if direction == '+':
             # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
             if(z_pos < h_flap_transition and x_pos < x_max_distance):
@@ -205,8 +205,8 @@ def climb_simulation(h_target,x_max_distance, direction):
                 alpha_w_deg = AOA_climb
             else:
                 alpha_w_deg -= 0.1
-                alpha_w_deg = max(alpha_w_deg , -3) 
-                
+                alpha_w_deg = max(alpha_w_deg , -3)        
+        
         if direction == '-':
             # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
             if(z_pos < h_flap_transition and x_pos > x_max_distance):
@@ -216,8 +216,8 @@ def climb_simulation(h_target,x_max_distance, direction):
             else:
                 alpha_w_deg -= 0.1
                 alpha_w_deg = max(alpha_w_deg , -3)
-        
-       
+                
+    
         # Calculate load factor
         if (z_pos < h_flap_transition):
             CL = CL_max_flap
@@ -232,13 +232,19 @@ def climb_simulation(h_target,x_max_distance, direction):
         v1 = v + (a1*dt/2)
         a2 = calculate_acceleration_climb(v1, alpha_w_deg, gamma_rad, z_pos)
         v2 = v + (a2*dt/2)
-        a3 = calculate_acceleration_climb(v2, alpha_w_deg, gamma_rad, z_pos)
+        a3 = calculate_acceleration_climb(v2, alpha_w_deg, gamma_rad,z_pos)
         v3 = v + a3*dt
         a4 = calculate_acceleration_climb(v3, alpha_w_deg, gamma_rad, z_pos)
         
         a = (a1 + 2*a2 + 2*a3 + a4)/6
-        v += a*dt
-
+        
+        if direction == '+':
+            v[0] += a[0]*dt
+            v[2] += a[2]*dt
+        else:
+            v[0] -= a[0]*dt
+            v[2] += a[2]*dt
+        
         # Update position
         x_pos += v[0] * dt
         z_pos += v[2] * dt
