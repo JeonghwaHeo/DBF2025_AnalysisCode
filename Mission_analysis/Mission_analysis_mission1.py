@@ -61,7 +61,7 @@ AOA_climb = 8                       # intended AOA at climb (degree)
 AOA_turn = 8                        # intended AOA at turn (degree)
 h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 max_speed = 40                     # restricted maximum speed of aircraft (m/s)
-max_load_factor = 3.0               # restricted maximum load factor (m/s)
+max_load_factor = 3.0              # restricted maximum load factor (m/s)
 
 """ Lift, Drag Coefficient Calculating Function """
 ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
@@ -202,7 +202,10 @@ def climb_simulation(h_target,x_max_distance, direction):
             if(z_pos < h_flap_transition and x_pos < x_max_distance):
                 alpha_w_deg = AOA_takeoff_max
             elif(h_flap_transition <= z_pos < h_target and x_pos < x_max_distance):
-                alpha_w_deg = AOA_climb
+                if 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb)) < W * max_load_factor:
+                    alpha_w_deg = AOA_climb
+                else:
+                    alpha_w_deg = float(alpha_func((2 * W * max_load_factor)/(rho * magnitude(v)**2 * S)))
             else:
                 alpha_w_deg -= 0.1
                 alpha_w_deg = max(alpha_w_deg , -3)        
@@ -212,7 +215,10 @@ def climb_simulation(h_target,x_max_distance, direction):
             if(z_pos < h_flap_transition and x_pos > x_max_distance):
                 alpha_w_deg = AOA_takeoff_max
             elif(h_flap_transition <= z_pos < h_target and x_pos > x_max_distance):
-                alpha_w_deg = AOA_climb
+                if 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb)) < W * max_load_factor:
+                    alpha_w_deg = AOA_climb
+                else:
+                    alpha_w_deg = float(alpha_func((2 * W * max_load_factor)/(rho * magnitude(v)**2 * S)))
             else:
                 alpha_w_deg -= 0.1
                 alpha_w_deg = max(alpha_w_deg , -3)
