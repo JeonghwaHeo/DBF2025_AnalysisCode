@@ -52,7 +52,7 @@ V_takeoff = (math.sqrt((2*W) / (rho*S*CL_max_flap)))        # takeoff speed with
 # set the thrust level at each phase
 T_takeoff = 0.9 * T_max
 T_climb = 0.9 * T_max
-T_cruise = 0.7 * T_max
+T_cruise = 0.6 * T_max
 T_turn = 0.55 * T_max
 
 AOA_stall = 13                      # stall AOA (degree)
@@ -60,8 +60,8 @@ AOA_takeoff_max = 10                # maximum AOA intended to be limited at take
 AOA_climb = 8                       # intended AOA at climb (degree)
 AOA_turn = 8                        # intended AOA at turn (degree)
 h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
-max_speed = 40                      # restricted maximum speed of aircraft (m/s)
-max_load_factor = 5.0               # restricted maximum load factor (m/s)
+max_speed = 40                     # restricted maximum speed of aircraft (m/s)
+max_load_factor = 3.0               # restricted maximum load factor (m/s)
 
 """ Lift, Drag Coefficient Calculating Function """
 ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
@@ -179,7 +179,7 @@ def takeoff_simulation():
         position_list.append(tuple(position))
         bank_angle_list.append(math.degrees(0))
 
-def climb_simulation(h_target):
+def climb_simulation(h_target,x_max_distance, direction):
     print("\nRunning Climb Simulation...")
     
     dt = 0.01
@@ -188,23 +188,35 @@ def climb_simulation(h_target):
     d = distance_list[-1] if distance_list else 0
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
- 
+    x_start = x_pos
     
     for step in range(n_steps):
         t += dt
         time_list.append(t)
-
+        
         # Calculate climb angle
         gamma_rad = math.atan2(v[2], abs(v[0]))
+
+        if direction == '+':
+            # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
+            if(z_pos < h_flap_transition and x_pos < x_max_distance):
+                alpha_w_deg = AOA_takeoff_max
+            elif(h_flap_transition <= z_pos < h_target and x_pos < x_max_distance):
+                alpha_w_deg = AOA_climb
+            else:
+                alpha_w_deg -= 0.1
+                alpha_w_deg = max(alpha_w_deg , -3) 
+                
+        if direction == '-':
+            # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
+            if(z_pos < h_flap_transition and x_pos > x_max_distance):
+                alpha_w_deg = AOA_takeoff_max
+            elif(h_flap_transition <= z_pos < h_target and x_pos > x_max_distance):
+                alpha_w_deg = AOA_climb
+            else:
+                alpha_w_deg -= 0.1
+                alpha_w_deg = max(alpha_w_deg , -3)
         
-        # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
-        if(z_pos < h_flap_transition):
-            alpha_w_deg = AOA_takeoff_max
-        elif(h_flap_transition <= z_pos < h_target):
-            alpha_w_deg = AOA_climb
-        else:
-            alpha_w_deg -= 0.1
-            alpha_w_deg = max(alpha_w_deg , -3)
        
         # Calculate load factor
         if (z_pos < h_flap_transition):
@@ -220,7 +232,7 @@ def climb_simulation(h_target):
         v1 = v + (a1*dt/2)
         a2 = calculate_acceleration_climb(v1, alpha_w_deg, gamma_rad, z_pos)
         v2 = v + (a2*dt/2)
-        a3 = calculate_acceleration_climb(v2, alpha_w_deg, gamma_rad,z_pos)
+        a3 = calculate_acceleration_climb(v2, alpha_w_deg, gamma_rad, z_pos)
         v3 = v + a3*dt
         a4 = calculate_acceleration_climb(v3, alpha_w_deg, gamma_rad, z_pos)
         
@@ -413,7 +425,7 @@ def run_mission():
     phase_index.append(len(time_list))
     
     # Phase 2: Climb to 30m
-    climb_simulation(20)
+    climb_simulation(20, -160, direction = "-")
     print(f"Climb Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
