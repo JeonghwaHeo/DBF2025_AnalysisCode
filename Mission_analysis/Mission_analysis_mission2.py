@@ -30,6 +30,13 @@ CD_max_flap = 0.20      # maximum drag coefficient with flap deploy
 CL_zero_flap = 0.04     # 0 AOA lift coefficient with flap deploy
 CD_zero_flap = 0.10    # 0 AOA drag coefficient with flap deploy
 
+# # Values from aerodynamic analysis block
+# csv_path = r"C:\Users\ksjsms\2025\AIAA\OpenVSP_ws\analysis_results\aero_result_span_1800.csv"
+# df = pd.read_csv(csv_path)
+# alpha_result = df["Alpha (deg)"].to_numpy()
+# CL_result    = df["C_L"].to_numpy() 
+# CD_result    = df["C_Dtot"].to_numpy()
+
 # Values from sizing parameter
 m_empty = 5.0       # empty weight(kg) 
 S = 0.6             # wing area(m^2)
@@ -715,9 +722,8 @@ def save_results():
 
     # Save data to a .npz file
     np.savez(
-        os.path.join(results, "mission1.npz"), 
+        os.path.join(results, "mission2.npz"), 
         time_list=time_list, 
-        distance_list=distance_list, 
         load_factor_list=load_factor_list, 
         AOA_list=AOA_list, 
         position_list=position_list, 
@@ -727,9 +733,9 @@ def save_results():
         bank_angle_list=bank_angle_list
     )
 
-    print(f"\nData saved to {os.path.join(results, 'mission1.npz')}\n")
+    print(f"\nData saved to {os.path.join(results, 'mission2.npz')}\n")
 
 if __name__ == "__main__":
     run_mission2()
     plot_results()
-    # save_results()
+    save_results()

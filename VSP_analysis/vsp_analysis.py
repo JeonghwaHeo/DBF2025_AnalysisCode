@@ -13,20 +13,30 @@ import io
 
 vsp.VSPCheckSetup()
 
+
+'''
+코드 실행을 위해서 해야하는 것
+1. airfoil data path 설정
+2. custom_dir를 vsp3 저장 위치로 설정
+'''
+
+
 # airfoil data path
-s9027_path = r"C:\Users\SAMSUNG\GyeongRak\AIAA\OpenVSP_ws\s9027.dat"
-naca0008_path = r"C:\Users\SAMSUNG\GyeongRak\AIAA\OpenVSP_ws\naca0008.dat"
+s9027_path = r"C:\Users\ksjsms\2025\AIAA\OpenVSP_ws\s9027.dat"
+naca0008_path = r"C:\Users\ksjsms\2025\AIAA\OpenVSP_ws\naca0008.dat"
+naca0009_path = r"C:\Users\ksjsms\2025\AIAA\OpenVSP_ws\naca0009.dat"
 
 # Create necessary directories
-vsp3_dir = os.path.join(os.getcwd(), "vsp3")
-analysis_dir = os.path.join(os.getcwd(), "analysis_results")
-ect_dir = os.path.join(os.getcwd(), "ect")
+custom_dir = r"C:\Users\ksjsms\2025\AIAA\OpenVSP_ws"
+vsp3_dir = os.path.join(custom_dir, "vsp3")
+analysis_dir = os.path.join(custom_dir, "analysis_results")
+ect_dir = os.path.join(custom_dir, "ect")
 
 # analysis parameter
 vsp_file = os.path.join(vsp3_dir, "Mothership.vsp3")
 alpha_start = -2.0   # Starting angle of attack (degrees)
-alpha_end = 2.0      # Ending angle of attack (degrees)
-alpha_step = 1.0     # Step size (degrees)
+alpha_end = 13      # Ending angle of attack (degrees)
+alpha_step = 0.5     # Step size (degrees)
 Re = 380000          # Reynolds number
 Mach = 0             # Mach number (subsonic)
 
@@ -39,21 +49,15 @@ if not os.path.exists(analysis_dir):
 if not os.path.exists(ect_dir):
     os.makedirs(ect_dir)
 
-################################################ Fuselage Parameters (변경 가능) ################################################
 
+
+"""Mother ship Parameters"""
 # Left/Right Boom Variable Parameters (mm)
 boom_diameter = 20      #Change Boom Diameter
 boom_length = 900.0    #Change Boom Length
 boom_xoffset = 15      #Boom Offset along the x-axis
 boom_yoffset = 285        #Boom Offset along the y-axis
-boom_zoffset = 25        #Boom Offset along the z-axis
-
-# Center Boom Variable Parameters (mm)
-boom_c_diameter = 20      #Change Boom Diameter
-boom_c_length = 500.0    #Change Boom Length
-boom_c_xoffset = 5      #Boom Offset along the x-axis
-boom_c_yoffset = 0        #Boom Offset along the y-axis
-boom_c_zoffset = 25        #Boom Offset along the z-axis
+boom_zoffset = 25        #Boom Offset along the z-axis   
 
 # Center Fuselage Parameters (mm)
 c_fuse_length = 750
@@ -70,16 +74,6 @@ lr_fuse_height = 90
 lr_fuse_xoffset = -50
 lr_fuse_yoffset = -285
 lr_fuse_zoffset = -20
-
-################################################ Wing Parameters (변경 가능) ################################################
-
-# Main Wing Boom Parameters (mm)
-boom_w_diameter = 20
-boom_w_length = 1700
-boom_w_xoffset = 165
-boom_w_yoffset = -850
-boom_w_zoffset = 0
-boom_w_zRotate = 90
 
 # Main Wing Parameters (mm)
 mainwing_span = 1700
@@ -118,8 +112,6 @@ verwing_option_tip = 3
 verwing_length_tip = 10
 verwing_offset_tip = 0
 
-################################################ Control Surface Parameters (변경 가능) ################################################
-
 # Flaperon Parameters
 aileron_start = 0.4
 aileron_end = 0.9
@@ -135,12 +127,14 @@ elevator_start = 0.2
 elevator_end = 0.9
 elevator_c_ratio = 0.35
 
-################################################ Create Wing ################################################
 
+
+
+"""Create Wing"""
 # Clear the current model
 vsp.ClearVSPModel()
 
-########## Create the main wing ##########
+### Create the main wing ###
 wing_id = vsp.AddGeom("WING", "")
 vsp.SetGeomName(wing_id,"Main Wing")
 
@@ -162,9 +156,8 @@ vsp.SetParmVal(wing_id, "CapUMaxOption", "EndCap" , mainwing_option_tip)
 vsp.SetParmVal(wing_id, "CapUMaxLength", "EndCap" , mainwing_length_tip)
 vsp.SetParmVal(wing_id, "CapUMaxOffset", "EndCap" , mainwing_offset_tip)
 
-# Create Aileron
+### Create Aileron ###
 aileron_id = vsp.AddSubSurf(wing_id,vsp.SS_CONTROL)
-vsp.SetGeomName(aileron_id,"Aileron")
 
 vsp.SetParmVal(wing_id,"EtaFlag","SS_Control_1",1)
 vsp.SetParmVal(wing_id,"EtaStart","SS_Control_1",aileron_start)
@@ -172,7 +165,7 @@ vsp.SetParmVal(wing_id,"EtaEnd","SS_Control_1",aileron_end)
 vsp.SetParmVal(wing_id,"Length_C_Start","SS_Control_1",aileron_c_ratio)
 vsp.Update()
 
-########## Create the horizonal tail wing ##########
+### Create the horizonal tail wing ###
 tailwing_id = vsp.AddGeom("WING", "")
 vsp.SetGeomName(tailwing_id,"Tail Wing")
 
@@ -195,7 +188,6 @@ vsp.SetParmVal(tailwing_id, "CapUMaxOffset", "EndCap" , tailwing_offset_tip)
 
 # Create Elevator
 elevator_id = vsp.AddSubSurf(tailwing_id,vsp.SS_CONTROL)
-vsp.SetGeomName(elevator_id,"Elevator")
 
 vsp.SetParmVal(tailwing_id,"EtaFlag","SS_Control_1",1)
 vsp.SetParmVal(tailwing_id,"EtaStart","SS_Control_1",elevator_start)
@@ -203,7 +195,7 @@ vsp.SetParmVal(tailwing_id,"EtaEnd","SS_Control_1",elevator_end)
 vsp.SetParmVal(tailwing_id,"Length_C_Start","SS_Control_1",elevator_c_ratio)
 vsp.Update()
 
-########## Create the vertical wing (Right) ##########
+### Create the vertical wing (Right) ###
 verwing_right_id = vsp.AddGeom("WING", "")
 vsp.SetGeomName(verwing_right_id,"Vertical Wing Right")
 
@@ -228,7 +220,6 @@ vsp.SetParmVal(verwing_right_id, "Sym_Planar_Flag","Sym", 0)
 
 # Create Rudder (Right)
 rudder_right_id = vsp.AddSubSurf(verwing_right_id,vsp.SS_CONTROL)
-vsp.SetGeomName(rudder_right_id,"Rudder Right")
 
 vsp.SetParmVal(verwing_right_id,"EtaFlag","SS_Control_1",1)
 vsp.SetParmVal(verwing_right_id,"EtaStart","SS_Control_1",rudder_start)
@@ -237,7 +228,7 @@ vsp.SetParmVal(verwing_right_id,"Length_C_Start","SS_Control_1",rudder_c_ratio)
 vsp.Update()
 
 
-########## Create the vertical wing (Left) ##########
+### Create the vertical wing (Left) ###
 verwing_left_id = vsp.AddGeom("WING", "")
 vsp.SetGeomName(verwing_left_id,"Vertical Wing Left")
 
@@ -262,7 +253,6 @@ vsp.SetParmVal(verwing_left_id, "Sym_Planar_Flag","Sym", 0)
 
 # Create Rudder (Left)
 rudder_left_id = vsp.AddSubSurf(verwing_left_id,vsp.SS_CONTROL)
-vsp.SetGeomName(rudder_left_id,"Rudder Left")
 
 vsp.SetParmVal(verwing_left_id,"EtaFlag","SS_Control_1",1)
 vsp.SetParmVal(verwing_left_id,"EtaStart","SS_Control_1",rudder_start)
@@ -271,15 +261,16 @@ vsp.SetParmVal(verwing_left_id,"Length_C_Start","SS_Control_1",rudder_c_ratio)
 vsp.Update()
 
 # Save the generated VSP files in the "vsp3" directory
-vsp.WriteVSPFile(os.path.join(vsp3_dir, "wingassemble.vsp3"))
+vsp.WriteVSPFile(os.path.join(vsp3_dir, "wing.vsp3"))
 print("Wing Created successfully!")
 
-################################################ Create Carbon Pipe ################################################
+
+"""Create Fuselage"""
 
 # Delete Wing
 vsp.VSPRenew()
 
-########### Create left boom ##########
+### Create left boom ###
 left_boom_id = vsp.AddGeom("FUSELAGE", "")
 vsp.SetGeomName(left_boom_id,"Left Boom")
 
@@ -306,7 +297,7 @@ for i in range(left_num_xsec_surfs):
         vsp.SetParmVal(left_dia, boom_diameter)  # Set the diameter value to 12.0
         vsp.ResetXSecSkinParms(left_xsec) #Reset all skinning options to 0 and OFF
 
-########## Create right boom ##########
+### Create right boom ###
 right_boom_id = vsp.AddGeom("FUSELAGE", "")
 vsp.SetGeomName(right_boom_id,"Right Boom")
 
@@ -334,9 +325,7 @@ for i in range(right_num_xsec_surfs):
         vsp.SetParmVal(right_dia, boom_diameter)  # Set the diameter value to 12.0
         vsp.ResetXSecSkinParms(right_xsec) #Reset all skinning options to 0 and OFF
 
-################################################ Create Fuselage ################################################
-
-########## Create the left fuselages ##########
+### Create the left motor mount ####
 left_fuse = vsp.AddGeom("FUSELAGE", "")
 vsp.SetGeomName(left_fuse,"Left Fuselage")
 
@@ -363,8 +352,8 @@ for i in range(leftfuse_num_xsec_surfs):
         leftfuse_hei=vsp.GetXSecParm(leftfuse_xsec, "Height") # Get the parameter for the height
         vsp.SetParmVal(leftfuse_wid, lr_fuse_width) 
         vsp.SetParmVal(leftfuse_hei, lr_fuse_height)
-       
-########## Create the right fuselage ##########
+
+### Create the right motor mount ###
 right_fuse = vsp.AddGeom("FUSELAGE", "")
 vsp.SetGeomName(right_fuse,"Right Fuselage")
 
@@ -392,7 +381,7 @@ for i in range(rightfuse_num_xsec_surfs):
         vsp.SetParmVal(rightfuse_wid, lr_fuse_width) 
         vsp.SetParmVal(rightfuse_hei, lr_fuse_height)
 
-########## Create the center fuselage ##########
+### Create the center fuselage ###
 c_fuse = vsp.AddGeom("FUSELAGE", "")
 vsp.SetGeomName(c_fuse,"Center Fuselage")
 
@@ -421,12 +410,12 @@ for i in range(cfuse_num_xsec_surfs):
         vsp.SetParmVal(cfuse_hei, c_fuse_height)
 
 # Save fuselageassemble and Mothership files similarly
-vsp.WriteVSPFile(os.path.join(vsp3_dir, "fuselageassemble.vsp3"))
+vsp.WriteVSPFile(os.path.join(vsp3_dir, "fuselage.vsp3"))
 print("Fuselage Created successfully!")
 
-################################################ Create Wing Again ################################################
 
-########## Create the main wing ##########
+"""Create wing again"""
+### Create the main wing ###
 wing_id = vsp.AddGeom("WING", "")
 vsp.SetGeomName(wing_id,"Main Wing")
 
@@ -450,7 +439,6 @@ vsp.SetParmVal(wing_id, "CapUMaxOffset", "EndCap" , mainwing_offset_tip)
 
 # Create Aileron
 aileron_id = vsp.AddSubSurf(wing_id,vsp.SS_CONTROL)
-vsp.SetGeomName(aileron_id,"Aileron")
 
 vsp.SetParmVal(wing_id,"EtaFlag","SS_Control_1",1)
 vsp.SetParmVal(wing_id,"EtaStart","SS_Control_1",aileron_start)
@@ -458,7 +446,7 @@ vsp.SetParmVal(wing_id,"EtaEnd","SS_Control_1",aileron_end)
 vsp.SetParmVal(wing_id,"Length_C_Start","SS_Control_1",aileron_c_ratio)
 vsp.Update()
 
-########## Create the horizonal tail wing ##########
+### Create the horizonal tail wing ###
 tailwing_id = vsp.AddGeom("WING", "")
 vsp.SetGeomName(tailwing_id,"Tail Wing")
 
@@ -476,7 +464,6 @@ vsp.SetParmVal(tailwing_id, "CapUMaxOffset", "EndCap" , tailwing_offset_tip)
 
 # Create Elevator
 elevator_id = vsp.AddSubSurf(tailwing_id,vsp.SS_CONTROL)
-vsp.SetGeomName(elevator_id,"Elevator")
 
 vsp.SetParmVal(tailwing_id,"EtaFlag","SS_Control_1",1)
 vsp.SetParmVal(tailwing_id,"EtaStart","SS_Control_1",elevator_start)
@@ -484,7 +471,7 @@ vsp.SetParmVal(tailwing_id,"EtaEnd","SS_Control_1",elevator_end)
 vsp.SetParmVal(tailwing_id,"Length_C_Start","SS_Control_1",elevator_c_ratio)
 vsp.Update()
 
-########## Create the vertical wing (Right) ##########
+### Create the vertical wing (Right) ###
 verwing_right_id = vsp.AddGeom("WING", "")
 vsp.SetGeomName(verwing_right_id,"Vertical Wing Right")
 
@@ -504,7 +491,6 @@ vsp.SetParmVal(verwing_right_id, "Sym_Planar_Flag","Sym", 0)
 
 # Create Rudder (Right)
 rudder_right_id = vsp.AddSubSurf(verwing_right_id,vsp.SS_CONTROL)
-vsp.SetGeomName(rudder_right_id,"Rudder Right")
 
 vsp.SetParmVal(verwing_right_id,"EtaFlag","SS_Control_1",1)
 vsp.SetParmVal(verwing_right_id,"EtaStart","SS_Control_1",rudder_start)
@@ -512,7 +498,7 @@ vsp.SetParmVal(verwing_right_id,"EtaEnd","SS_Control_1",rudder_end)
 vsp.SetParmVal(verwing_right_id,"Length_C_Start","SS_Control_1",rudder_c_ratio)
 vsp.Update()
 
-########## Create the vertical wing (Left) ##########
+### Create the vertical wing (Left) ###
 verwing_left_id = vsp.AddGeom("WING", "")
 vsp.SetGeomName(verwing_left_id,"Vertical Wing Left")
 
@@ -532,7 +518,6 @@ vsp.SetParmVal(verwing_left_id, "Sym_Planar_Flag","Sym", 0)
 
 # Create Rudder (Left)
 rudder_left_id = vsp.AddSubSurf(verwing_left_id,vsp.SS_CONTROL)
-vsp.SetGeomName(rudder_left_id,"Rudder Left")
 
 vsp.SetParmVal(verwing_left_id,"EtaFlag","SS_Control_1",1)
 vsp.SetParmVal(verwing_left_id,"EtaStart","SS_Control_1",rudder_start)
@@ -548,7 +533,6 @@ print("Mothership Created successfully!")
 def calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, Re, Mach):
     """
     Calculates the coefficients for a model using VSPAERO.
-
     Args:
         vsp_file (str): Path to the .vsp3 model file.
         alpha_start (float): Starting angle of attack (degrees).
@@ -556,7 +540,6 @@ def calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, Re, Mach
         alpha_step (float): Step size for angle of attack (degrees).
         Re (float): Reynolds number.
         Mach (float): Freestream Mach number.
-
     Returns:
         dict: A dictionary with angles of attack as keys and corresponding coefficients as values.
     """
@@ -598,19 +581,23 @@ def calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, Re, Mach
 
     #Calculate Wing Surface Area
     Sref = vsp.GetParmVal(vsp.GetParm(wing_id,"TotalArea","WingGeom"))
-   
+
     # Execute sweep analysis
     results_id = vsp.ExecAnalysis(sweep_analysis)
-
-    # Write results to CSV for reference
-    csv_file = os.path.join(analysis_dir, "analysis_results.csv")
-    vsp.WriteResultsCSVFile(results_id, csv_file)
-    print(f"Results saved to {csv_file}")
 
     # Move all files except .vsp3 from "vsp3" folder to "ect" folder
     for file in os.listdir(vsp3_dir):
         if not file.endswith(".vsp3"):
-            os.rename(os.path.join(vsp3_dir, file), os.path.join(ect_dir, file))
+            src = os.path.join(vsp3_dir, file)
+            dst = os.path.join(ect_dir, file)
+
+            # 파일 존재 여부 확인 후 처리
+            if os.path.exists(dst):
+                print(f"File already exists at destination: {dst}. Overwriting...")
+                os.remove(dst)  # 기존 파일 삭제
+
+            os.rename(src, dst) # 파일 이동
+            print(f"Moved {src} to {dst}")
 
     # Extract lift coefficient data
     sweepResults = vsp.GetStringResults(results_id, "ResultsVec")
@@ -630,10 +617,10 @@ def calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, Re, Mach
 
         cdi_vec = vsp.GetDoubleResults(sweepResults[i], "CDi")
         CDi_res[i] = cdi_vec[len(cdi_vec) - 1]
-        
+
         cdo_vec = vsp.GetDoubleResults(sweepResults[i], "CDo")
         CDo_res[i] = cdo_vec[len(cdo_vec) - 1]
-        
+
         cdtot_vec = vsp.GetDoubleResults(sweepResults[i], "CDtot")
         CDtot_res[i] = cdtot_vec[len(cdtot_vec) - 1]
 
@@ -650,6 +637,12 @@ data = pd.DataFrame({
     'C_Do': CDo,
     'C_Dtot': CDtot
 })
+
+# Create CSV file
+span = mainwing_span + mainwing_length_tip * 10
+filename = f"aero_result_span_{span}.csv"
+save_path = os.path.join(analysis_dir, filename)
+data.to_csv(save_path, index=False)
 
 # Display the DataFrame (optional)
 print("\nAerodynamic Coefficients:")
