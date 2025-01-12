@@ -349,7 +349,7 @@ def turn_simulation(target_angle_deg, direction="right"):
         #     # print(f"omega: {omega:.2f} rad/s")
 
 ### Mission Function & Plotting ###
-def run_mission():
+def run_mission3():
     phase_index.append(0)
 
     # Phase 1: Takeoff
@@ -508,6 +508,6 @@ def save_results():
     print(f"\nData saved to {os.path.join(results, 'mission3.npz')}\n")
 
 if __name__ == "__main__":
-    run_mission()
+    run_mission3()
     plot_results()
-    save_results()
+    # save_results()

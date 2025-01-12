@@ -477,7 +477,7 @@ def turn_simulation(target_angle_deg, direction):
         altitude_list.append(z_pos)
         
 ### Mission Function & Plotting ###
-def run_mission():
+def run_mission2():
     phase_index.append(0)
 
     ### Lap 1 ###
@@ -705,31 +705,31 @@ def plot_results():
     plt.tight_layout()
     plt.show()   
     
-# def save_results():
-#     import os
+def save_results():
+    import os
 
-#     # Create a result directory if it does not exist
-#     results = "results"
-#     if not os.path.exists(results):
-#         os.makedirs(results)
+    # Create a result directory if it does not exist
+    results = "results"
+    if not os.path.exists(results):
+        os.makedirs(results)
 
-#     # Save data to a .npz file
-#     np.savez(
-#         os.path.join(results, "mission1.npz"), 
-#         time_list=time_list, 
-#         distance_list=distance_list, 
-#         load_factor_list=load_factor_list, 
-#         AOA_list=AOA_list, 
-#         position_list=position_list, 
-#         v_list=v_list, 
-#         a_list=a_list, 
-#         phase_index=phase_index,
-#         bank_angle_list=bank_angle_list
-#     )
+    # Save data to a .npz file
+    np.savez(
+        os.path.join(results, "mission1.npz"), 
+        time_list=time_list, 
+        distance_list=distance_list, 
+        load_factor_list=load_factor_list, 
+        AOA_list=AOA_list, 
+        position_list=position_list, 
+        v_list=v_list, 
+        a_list=a_list, 
+        phase_index=phase_index,
+        bank_angle_list=bank_angle_list
+    )
 
-#     print(f"\nData saved to {os.path.join(results, 'mission1.npz')}\n")
+    print(f"\nData saved to {os.path.join(results, 'mission1.npz')}\n")
 
 if __name__ == "__main__":
-    run_mission()
+    run_mission2()
     plot_results()
     # save_results()
