@@ -715,9 +715,8 @@ def save_results():
 
     # Save data to a .npz file
     np.savez(
-        os.path.join(results, "mission1.npz"), 
+        os.path.join(results, "mission2.npz"), 
         time_list=time_list, 
-        distance_list=distance_list, 
         load_factor_list=load_factor_list, 
         AOA_list=AOA_list, 
         position_list=position_list, 
@@ -727,9 +726,9 @@ def save_results():
         bank_angle_list=bank_angle_list
     )
 
-    print(f"\nData saved to {os.path.join(results, 'mission1.npz')}\n")
+    print(f"\nData saved to {os.path.join(results, 'mission2.npz')}\n")
 
 if __name__ == "__main__":
     run_mission2()
     plot_results()
-    # save_results()
+    save_results()
