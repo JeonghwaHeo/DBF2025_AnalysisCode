@@ -22,12 +22,13 @@ vsp.VSPCheckSetup()
 
 
 # airfoil data path
-s9027_path = r"C:\Users\ksjsms\2025\AIAA\OpenVSP_ws\s9027.dat"
-naca0008_path = r"C:\Users\ksjsms\2025\AIAA\OpenVSP_ws\naca0008.dat"
-naca0009_path = r"C:\Users\ksjsms\2025\AIAA\OpenVSP_ws\naca0009.dat"
+print("현재 폴더: ", os.getcwd())
+s9027_path = r"./s9027.dat"
+naca0008_path = r"./naca0008.dat"
+naca0009_path = r"./naca0008.dat"
 
 # Create necessary directories
-custom_dir = r"C:\Users\ksjsms\2025\AIAA\OpenVSP_ws"
+custom_dir = r"./custom_dir"
 vsp3_dir = os.path.join(custom_dir, "vsp3")
 analysis_dir = os.path.join(custom_dir, "analysis_results")
 ect_dir = os.path.join(custom_dir, "ect")
@@ -48,7 +49,6 @@ if not os.path.exists(analysis_dir):
 
 if not os.path.exists(ect_dir):
     os.makedirs(ect_dir)
-
 
 
 """Mother ship Parameters"""
@@ -76,16 +76,18 @@ lr_fuse_yoffset = -285
 lr_fuse_zoffset = -20
 
 # Main Wing Parameters (mm)
-mainwing_span = 1700
-mainwing_c_root = 330
-mainwing_c_tip = 90
-mainwing_sweep = 0
+mainwing_span = 1700#
+mainwing_c_root = 330#
+mainwing_c_tip = 90#
+mainwing_sweep = 0#
 mainwing_xoffset = 0
 mainwing_yoffset = 0
 mainwing_zoffset = 0
 mainwing_option_tip = 3 #Edge option
 mainwing_length_tip = 10
 mainwing_offset_tip = 0
+# dihedral
+# twist
 
 # Horizonal Tail Wing Parameters (mm)
 tailwing_span = 590
