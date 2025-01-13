@@ -423,19 +423,37 @@ def turn_simulation(target_angle_deg, direction):
         t += dt
         time_list.append(t)
         
-        CL = min(float(CL_func(AOA_turn_max)), (2*max_load_factor*W)/(rho * speed**2 * S))
-        alpha_turn = float(alpha_func(CL)) 
-        L = CL * (0.5 * rho * speed**2) * S
-        phi_rad = math.acos(W/L)
-        a_centripetal = (L * math.sin(phi_rad)) / m_total
-        R = (m_total * speed**2)/(L * math.sin(phi_rad))
-        omega = speed / R
-        load_factor = 1 / math.cos(phi_rad)
+        if speed < max_speed:
+            CL = min(float(CL_func(AOA_turn_max)), (2*max_load_factor*W)/(rho * speed**2 * S))
+            alpha_turn = float(alpha_func(CL)) 
+            L = CL * (0.5 * rho * speed**2) * S
+            phi_rad = math.acos(W/L)
+            a_centripetal = (L * math.sin(phi_rad)) / m_total
+            R = (m_total * speed**2)/(L * math.sin(phi_rad))
+            omega = speed / R
+            load_factor = 1 / math.cos(phi_rad)
 
-        CD = float(CD_func(alpha_turn))
-        D = CD * (0.5 * rho * speed**2) * S
-        a_tangential = (T_turn - D) / m_total
-        speed += a_tangential * dt
+            CD = float(CD_func(alpha_turn))
+            D = CD * (0.5 * rho * speed**2) * S
+            a_tangential = (T_turn - D) / m_total
+            T_percentage_list.append(T_percentage_turn_max) 
+            speed += a_tangential * dt
+        
+        elif speed >= max_speed : 
+            speed = max_speed
+            CL = min(float(CL_func(AOA_turn_max)), (2*max_load_factor*W)/(rho * speed**2 * S))
+            alpha_turn = float(alpha_func(CL)) 
+            L = CL * (0.5 * rho * speed**2) * S
+            phi_rad = math.acos(W/L)
+            a_centripetal = (L * math.sin(phi_rad)) / m_total
+            R = (m_total * speed**2)/(L * math.sin(phi_rad))
+            omega = speed / R
+            load_factor = 1 / math.cos(phi_rad)
+
+            CD = float(CD_func(alpha_turn))
+            D = CD * (0.5 * rho * speed**2) * S
+            T_percentage_list.append(D/T_max)
+            a_tangential = 0              
 
         # Calculate turn center
         if direction == "CCW":
@@ -479,7 +497,6 @@ def turn_simulation(target_angle_deg, direction):
         load_factor_list.append(load_factor)
         AOA_list.append(alpha_turn)
         bank_angle_list.append(math.degrees(phi_rad))
-        T_percentage_list.append(T_percentage_turn_max)  
         climb_pitch_angle_list.append(np.nan)
         altitude_list.append(z_pos)
         
