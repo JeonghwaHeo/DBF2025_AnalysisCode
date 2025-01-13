@@ -23,12 +23,12 @@ vsp.VSPCheckSetup()
 
 # airfoil data path
 print("현재 폴더: ", os.getcwd())
-s9027_path = r"./s9027.dat"
-naca0008_path = r"./naca0008.dat"
-naca0009_path = r"./naca0008.dat"
+s9027_path = r"./VSP_analysis/s9027.dat"
+naca0008_path = r"./VSP_analysis/naca0008.dat"
+naca0009_path = r"./VSP_analysis/naca0008.dat"
 
 # Create necessary directories
-custom_dir = r"./custom_dir"
+custom_dir = r"./VSP_analysis/custom_dir"
 vsp3_dir = os.path.join(custom_dir, "vsp3")
 analysis_dir = os.path.join(custom_dir, "analysis_results")
 ect_dir = os.path.join(custom_dir, "ect")
