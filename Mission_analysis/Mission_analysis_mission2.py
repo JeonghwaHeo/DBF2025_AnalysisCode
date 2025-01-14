@@ -470,8 +470,10 @@ def turn_simulation(target_angle_deg, direction):
 
             CD = float(CD_func(alpha_turn))
             D = CD * (0.5 * rho * speed**2) * S
-            T_percentage_list.append(D/T_max)
-            a_tangential = 0              
+            T = min(D, T_turn)
+            T_percentage_list.append(T/T_max)
+            a_tangential = (T - D) / m_total
+            speed += a_tangential * dt           
 
         # Calculate turn center
         if direction == "CCW":
