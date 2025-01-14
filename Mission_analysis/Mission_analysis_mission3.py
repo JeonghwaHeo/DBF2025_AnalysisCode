@@ -686,8 +686,6 @@ def run_mission3():
 
                 return  # Exit the simulation
             
-        # After completing the lap, check again (optional)
-        # Not strictly necessary as we've checked after each phase
 
 def plot_results():
     x_coords = [pos[0] for pos in position_list]
