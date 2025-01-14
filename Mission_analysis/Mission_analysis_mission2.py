@@ -65,6 +65,7 @@ AOA_turn_max = 8                    # intended maximum AOA at turn (degree)
 h_flap_transition = 5               # altitude at which the aircraft transitions from flap-deployed to flap-retracted (m)
 max_speed = 40                      # restricted maximum speed of aircraft (m/s)
 max_load_factor = 4.0               # restricted maximum load factor (m/s)
+max_climb_angle = 40                # restricted maximum climb angle (degree)
 
 """ variables can be calculated from given parameters """
 ## Should not be removed
@@ -232,6 +233,7 @@ def climb_simulation(h_target, x_max_distance, direction):
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
     alpha_w_deg = 0
+    break_flag = 0
     
     for step in range(n_steps):
         t += dt
@@ -245,26 +247,42 @@ def climb_simulation(h_target, x_max_distance, direction):
             if(z_pos < h_flap_transition and x_pos < x_max_distance):
                 alpha_w_deg = AOA_takeoff_max
             elif(h_flap_transition <= z_pos < h_target and x_pos < x_max_distance):
-                if 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb_max)) < W * max_load_factor:
+                if 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb_max)) < W * max_load_factor and gamma_rad < math.radians(max_climb_angle):
                     alpha_w_deg = AOA_climb_max
-                else:
+                elif 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb_max)) >= W * max_load_factor and gamma_rad < math.radians(max_climb_angle):
                     alpha_w_deg = float(alpha_func((2 * W * max_load_factor)/(rho * magnitude(v)**2 * S)))
+                else:
+                    alpha_w_deg -= 1
+                    alpha_w_deg = max(alpha_w_deg, -5) 
             else:
-                alpha_w_deg -= 0.1
-                alpha_w_deg = max(alpha_w_deg , -3)         
+                break_flag = 1
+                if gamma_rad > math.radians(max_climb_angle):
+                    alpha_w_deg -= 1
+                    alpha_w_deg = max(alpha_w_deg, -5)
+                else:
+                    alpha_w_deg -= 0.1
+                    alpha_w_deg = max(alpha_w_deg , -5)         
         
         if direction == 'left':
             # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
             if(z_pos < h_flap_transition and x_pos > x_max_distance):
                 alpha_w_deg = AOA_takeoff_max
             elif(h_flap_transition <= z_pos < h_target and x_pos > x_max_distance):
-                if 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb_max)) < W * max_load_factor:
+                if 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb_max)) < W * max_load_factor and gamma_rad < math.radians(max_climb_angle):
                     alpha_w_deg = AOA_climb_max
-                else:
+                elif 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb_max)) >= W * max_load_factor and gamma_rad < math.radians(max_climb_angle):
                     alpha_w_deg = float(alpha_func((2 * W * max_load_factor)/(rho * magnitude(v)**2 * S)))
+                else:
+                    alpha_w_deg -= 1
+                    alpha_w_deg = max(alpha_w_deg, -5) 
             else:
-                alpha_w_deg -= 0.1
-                alpha_w_deg = max(alpha_w_deg , -3)
+                break_flag = 1
+                if gamma_rad > math.radians(max_climb_angle):
+                    alpha_w_deg -= 1
+                    alpha_w_deg = max(alpha_w_deg, -5)
+                else:
+                    alpha_w_deg -= 0.1
+                    alpha_w_deg = max(alpha_w_deg , -5)   
                 
     
         # Calculate load factor
@@ -309,7 +327,7 @@ def climb_simulation(h_target, x_max_distance, direction):
         altitude_list.append(z_pos)
 
         # break when climb angle goes to zero
-        if gamma_rad < 0:
+        if break_flag == 1 and gamma_rad < 0:
             print(f"cruise altitude is {z_pos:.2f} m.")
             break
 
