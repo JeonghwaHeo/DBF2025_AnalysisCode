@@ -664,7 +664,7 @@ def run_mission3():
         ("Level Flight", lambda: level_flight_simulation(0, direction="left")),
     ]
     
-    ### Repeat Lap2 Until Total Flight Time Exceeds 270 Seconds ###
+    ### Repeat Lap Until Total Flight Time Exceeds flight time ###
     while True:
         lap_start_time = time_list[-1]
         lap_start_index = len(time_list)
