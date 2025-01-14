@@ -470,8 +470,10 @@ def turn_simulation(target_angle_deg, direction):
 
             CD = float(CD_func(alpha_turn))
             D = CD * (0.5 * rho * speed**2) * S
-            T_percentage_list.append(D/T_max)
-            a_tangential = 0              
+            T = min(D, T_turn)
+            T_percentage_list.append(T/T_max)
+            a_tangential = (T - D) / m_total
+            speed += a_tangential * dt           
 
         # Calculate turn center
         if direction == "CCW":
@@ -542,90 +544,95 @@ def run_mission2():
     turn_simulation(180, direction="CW")
     print(f"Half Turn Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
-    
-    # Phase 5: Level flight
+ 
+    # Phase 5: Climb if it is not above 25m
+    climb_simulation(25, -10, direction="right")
+    print(f"Climb Complete at position: {position_list[-1]}")
+    phase_index.append(len(time_list))
+        
+    # Phase 6: Level flight
     level_flight_simulation(0, direction="right")
     print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 6: Full loop (360 degrees)
+    # Phase 7: Full loop (360 degrees)
     turn_simulation(360, direction="CCW")
     print(f"Loop Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 7: Level flight
+    # Phase 8: Level flight
     level_flight_simulation(152, direction="right")
     print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 8: Half turn (180 degrees)
+    # Phase 9: Half turn (180 degrees)
     turn_simulation(180, direction="CW")
     print(f"Half Turn Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 9: Level flight
+    # Phase 10: Level flight
     level_flight_simulation(-152, direction="left")
     print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
     ### Lap 2 ###
-    # Phase 10: Half turn (180 degrees)
+    # Phase 11: Half turn (180 degrees)
     turn_simulation(180, direction="CW")
     print(f"Half Turn Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))   
     
-    # Phase 11: Level flight
+    # Phase 12: Level flight
     level_flight_simulation(0, direction="right")
     print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))   
     
-    # Phase 12: Full loop
+    # Phase 13: Full loop
     turn_simulation(360, direction="CCW")
     print(f"Loop Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))
     
-    # Phase 13: Level flight
+    # Phase 14: Level flight
     level_flight_simulation(152, direction="right")
     print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))      
     
-    # Phase 14: Half turn
+    # Phase 15: Half turn
     turn_simulation(180, direction="CW")
     print(f"Half Turn Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))     
     
-    # Phase 15: Level flight
+    # Phase 16: Level flight
     level_flight_simulation(-152, direction="left")
     print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))    
 
     ### Lap 3 ###
-    # Phase 16: Half turn
+    # Phase 17: Half turn
     turn_simulation(180, direction="CW")
     print(f"Half Turn Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))  
     
-    # Phase 17: Level flight
+    # Phase 18: Level flight
     level_flight_simulation(0, direction="right")
     print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))      
     
-    # Phase 18: Full loop
+    # Phase 19: Full loop
     turn_simulation(360, direction="CCW")
     print(f"Loop Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list)) 
     
-    # Phase 19: Level flight
+    # Phase 20: Level flight
     level_flight_simulation(152, direction="right")
     print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))  
     
-    # Phase 20: Half turn
+    # Phase 21: Half turn
     turn_simulation(180, direction="CW")
     print(f"Half Turn Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))      
 
-    # Phase 21: Level flight
+    # Phase 22: Level flight
     level_flight_simulation(0, direction="left")
     print(f"Level Flight Complete at position: {position_list[-1]}")
     phase_index.append(len(time_list))                
