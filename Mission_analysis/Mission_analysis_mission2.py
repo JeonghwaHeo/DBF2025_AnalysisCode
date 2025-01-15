@@ -635,9 +635,12 @@ def run_mission2():
     # Phase 22: Level flight
     level_flight_simulation(0, direction="left")
     print(f"Level Flight Complete at position: {position_list[-1]}")
-    phase_index.append(len(time_list))                
-    
+    phase_index.append(len(time_list))
 
+    # Calulate Objective2 (fuel wight / flight time)
+    obj2 = m_fuel / time_list[-1]
+    print(f"\nObjective2 : {obj2}")
+    
 def plot_results():
     x_coords = [pos[0] for pos in position_list]
     y_coords = [pos[1] for pos in position_list]
@@ -780,4 +783,4 @@ def save_results():
 if __name__ == "__main__":
     run_mission2()
     plot_results()
-    save_results()
+    # save_results()

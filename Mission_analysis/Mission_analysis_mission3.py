@@ -537,8 +537,9 @@ def truncate_data(time_limit, lap_start_index):
     # Adjust phase_index to only include indices before lap_start_index
     phase_index[:] = [idx for idx in phase_index if idx <= lap_start_index]
     
-    print("Flight time limit exceeded. Removed the exceeding lap's data.")
+    print("\nFlight time limit exceeded. Removed the exceeding lap's data.")
 
+### Mission Function & Plotting ###
 def run_mission3():
     phase_index.append(0)
 
@@ -621,12 +622,16 @@ def run_mission3():
             if time_list[-1] > time_limit:
                 # Remove the entire lap's data
                 truncate_data(time_limit, lap_start_index)
-                print(f"Number of laps : {N_laps}")
+                print(f"\nNumber of laps : {N_laps}")
+
+                # Calulate Objective2 (N_laps + bonus / glider weight)
+                obj3 = N_laps + 2.5 / m_x1
+                print(f"Objective3 : {obj3}")
+
                 return  # Exit the simulation
             
         # After completing the lap, check again (optional)
         # Not strictly necessary as we've checked after each phase
-
 
 def plot_results():
     x_coords = [pos[0] for pos in position_list]
@@ -770,4 +775,4 @@ def save_results():
 if __name__ == "__main__":
     run_mission3()
     plot_results()
-    save_results()
+    # save_results()
