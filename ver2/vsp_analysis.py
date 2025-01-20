@@ -45,22 +45,13 @@ class VSPAnalyzer:
         vsp.Update()
         vsp.WriteVSPFile(os.path.join(self.outputPath,fileName),vsp.SET_ALL)
         
-    def calculateCoefficients(self,fileName:str = "Mothership.vsp3", 
+    def calculateCoefficients(self, fileName:str = "Mothership.vsp3", 
                               alpha_start: float=0, alpha_end: float=1, alpha_step:float=0.5, 
-                              CD_fuse: np.ndarray=np.zeros(2),
-
+                              CD_fuse: np.ndarray=np.zeros(4),
                               AOA_stall:float=10, 
                               AOA_takeoff_max:float=10,
                               AOA_climb_max:float=10,
                               AOA_turn_max:float=20,
-
-                              CL_max: float=0.94,
-
-                              CL_flap_max:float=1.1,
-                              CL_flap_zero:float=0.04,
-                              CD_flap_max:float=0.20,
-                              CD_flap_zero:float=0.10,
-
                               Re:float=38000, Mach:float=0, 
                               boom_density_2018:float = 0.098, 
                               boom_density_1614:float = 0.087,
@@ -68,25 +59,90 @@ class VSPAnalyzer:
                               boom_density_big:float=0.098,
                               clearModel:bool=True):
 
-        # Set the Number of points for alpha
+            # Calculate coefficients with flaps at zero
+        results_no_flap = self._calculate_coeffs_helper(fileName, alpha_start, alpha_end, alpha_step,
+                                                   CD_fuse, Re, Mach, boom_density_2018, boom_density_1614,
+                                                   boom_density_86, boom_density_big, clearModel, 0.0)
+        
+        # Find index closest to AOA_stall and zero
+        alpha_list = results_no_flap['alpha_list']
+        stall_idx = np.abs(alpha_list - AOA_stall).argmin()
+        zero_idx = np.abs(alpha_list - 0).argmin()
+
+        # Calculate coefficients with flaps at max angle
+        results_flap_max = self._calculate_coeffs_helper(fileName, AOA_stall, AOA_stall+1, 1,
+                                                  np.array([CD_fuse[stall_idx]]), 
+                                                         Re, Mach, boom_density_2018, boom_density_1614,
+                                                  boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0])
+    
+        results_flap_zero = self._calculate_coeffs_helper(fileName, 0, 1, 1,
+                                                  np.array([CD_fuse[zero_idx]]), Re, Mach, boom_density_2018, boom_density_1614,
+                                                  boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0])
+   
+
+        # Get CL_max from the zero flaps data
+        CL_max = results_no_flap['CL'][stall_idx]
+
+        # Get corresponding CL/CD values
+        CL_flap_max = results_flap_max['CL'][0]
+        CD_flap_max = results_flap_max['CD'][0]
+        CL_flap_zero = results_flap_zero['CL'][0]
+        CD_flap_zero = results_flap_zero['CD'][0]
+    
+        return AircraftAnalysisResults(
+                aircraft=self.aircraft,
+                alpha_list=results_no_flap['alpha_list'],
+                m_fuel=results_no_flap['m_fuel'],
+                m_boom=results_no_flap['m_boom'],
+                m_wing=results_no_flap['m_wing'],
+                span=results_no_flap['span'],
+                AR=results_no_flap['AR'], 
+                taper=results_no_flap['taper'],
+                twist=results_no_flap['twist'],
+                Sref=results_no_flap['Sref'],
+                Lw=results_no_flap['Lw'],
+                Lh=results_no_flap['Lh'],
+                CL=results_no_flap['CL'],
+                CL_max=CL_max,
+                CD_wing=results_no_flap['CD'],
+                CD_fuse=CD_fuse,
+                CD_total=results_no_flap['CD'] + CD_fuse,
+                AOA_stall=AOA_stall,
+                AOA_takeoff_max=AOA_takeoff_max, 
+                AOA_climb_max=AOA_climb_max,
+                AOA_turn_max=AOA_turn_max,
+                CL_flap_max=CL_flap_max,
+                CL_flap_zero=CL_flap_zero,
+                CD_flap_max=CD_flap_max,
+                CD_flap_zero=CD_flap_zero
+        )
+
+    def _calculate_coeffs_helper(self, fileName, alpha_start, alpha_end, alpha_step,
+                           CD_fuse, Re, Mach, boom_density_2018, boom_density_1614,
+                           boom_density_86, boom_density_big, clearModel, flap_angle, do_mass_analysis=True):
+        """Helper method to calculate coefficients for a given flap angle"""
+        
         point_number = round(int((alpha_end-alpha_start)/alpha_step))
-       
-        # Input sanitation
+        
         if(CD_fuse.size != point_number): 
             raise ValueError(f"CD_fuse size({CD_fuse.size}) doesn't match point_number({point_number})")
 
         if(clearModel):
             vsp.ClearVSPModel()
-
         vsp.VSPRenew()
         
         if(clearModel):
             if not os.path.exists(os.path.join(self.outputPath,fileName)):
                 raise FileNotFoundError(f"Model file {fileName} not found.")
-
+                
         vsp.ReadVSPFile(os.path.join(self.outputPath,fileName))
         
+        # Set flap angle
+        for i, flap_id in enumerate(self.flap_id):
+            vsp.SetParmVal(flap_id[0], flap_angle)
+            vsp.SetParmVal(flap_id[1], -flap_angle)
         # Geometric analysis
+
         print("Starting Geometric Analysis")
         geom_analysis = "VSPAEROComputeGeometry"
         vsp.SetAnalysisInputDefaults(geom_analysis)
@@ -103,36 +159,41 @@ class VSPAnalyzer:
         wing_c_root = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Root_Chord","XSec_1"))
         tail_c_root = vsp.GetParmVal(vsp.GetParm(self.horizontal_tail_id,"Root_Chord","XSec_1"))
         print("Finished Geometric Analysis")
-
-        # Mass Analysis
-        print("Starting Mass Analysis")
-        vsp.ComputeMassProps(0, 100, 0)
-        mass_results_id = vsp.FindLatestResultsID("Mass_Properties")
-        mass_data = vsp.GetDoubleResults(mass_results_id, "Total_Mass")
-
-        span_Projected = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalProjectedSpan","WingGeom"))
-        chord_Mean = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalChord","WingGeom"))
-        area_Projected = span_Projected * chord_Mean
-        horizontal_distance = self.aircraft.horizontal_volume_ratio * chord_Mean / self.aircraft.horizontal_area_ratio
-
-        m_wing = mass_data[0] \
-                + 2 * (span - 50.0) * (boom_density_1614 + boom_density_2018 + boom_density_86)
         
-        m_boom = horizontal_distance * boom_density_big
-        
-        ## TODO if m_fuel < 0 exit early
+        if do_mass_analysis:
+            # Mass Analysis
+            print("Starting Mass Analysis")
+            vsp.ComputeMassProps(0, 100, 0)
+            mass_results_id = vsp.FindLatestResultsID("Mass_Properties")
+            mass_data = vsp.GetDoubleResults(mass_results_id, "Total_Mass")
 
-        m_fuel = self.aircraft.m_total - m_wing - m_boom - self.aircraft.m_fuselage - self.presets.m_x1
-        
-        mass_center_x = 120 # Calculated by CG Calculater, static margin 10%
+            span_Projected = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalProjectedSpan","WingGeom"))
+            chord_Mean = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalChord","WingGeom"))
+            area_Projected = span_Projected * chord_Mean
+            horizontal_distance = self.aircraft.horizontal_volume_ratio * chord_Mean / self.aircraft.horizontal_area_ratio
 
-        # Aerodynamic Center
-        w_ac = 0.25 * 2/3 * wing_c_root * (1 + taper + taper ** 2) / (1 + taper)
-        h_ac = horizontal_distance + 0.25 * tail_c_root
-        lw = w_ac - mass_center_x
-        lh = h_ac - mass_center_x
+            m_wing = mass_data[0] \
+                    + 2 * (span - 50.0) * (boom_density_1614 + boom_density_2018 + boom_density_86)
+            
+            m_boom = horizontal_distance * boom_density_big
+            
+            ## TODO if m_fuel < 0 exit early
 
-        print("Finished Mass Analysis")
+            m_fuel = self.aircraft.m_total - m_wing - m_boom - self.aircraft.m_fuselage - self.presets.m_x1
+            
+            mass_center_x = 120 # Calculated by CG Calculater, static margin 10%
+
+            # Aerodynamic Center
+            w_ac = 0.25 * 2/3 * wing_c_root * (1 + taper + taper ** 2) / (1 + taper)
+            h_ac = horizontal_distance + 0.25 * tail_c_root
+            lw = w_ac - mass_center_x
+            lh = h_ac - mass_center_x
+
+            print("Finished Mass Analysis")
+        else:
+            print("Skipping Mass Analysis")
+            m_fuel, m_boom, m_wing = 0, 0, 0
+            lw, lh = 0, 0
 
         # Configure sweep analysis for coefficient
         print("Starting Sweep Analysis")
@@ -176,46 +237,24 @@ class VSPAnalyzer:
             CDwing_list[i] = vsp.GetDoubleResults(sweepResults[i], "CDtot")[-1]
 
         aircraft=self.aircraft
-
         
 
-        return AircraftAnalysisResults(
-                aircraft=aircraft,  
-                alpha_list=alpha_list,
-                m_fuel=m_fuel,
-                m_boom=m_boom,
-                m_wing=m_wing,
-        # Geo Mass_Properties
-                span = span,
-                AR = AR,
-                taper = taper,
-                twist = twist,
-                Sref=Sref,
-
-                Lw=lw,Lh=lh,
-                CL=CL_list,
-
-                CL_max = CL_max,
-
-                CD_wing=CDwing_list,
-                CD_fuse=CD_fuse,
-                CD_total=CDwing_list+ CD_fuse,
-
-        # TODO Calculate AOA
-                AOA_stall=AOA_stall, 
-                AOA_takeoff_max=AOA_takeoff_max,
-                AOA_climb_max=AOA_climb_max, 
-                AOA_turn_max=AOA_turn_max,
-
-        # TODO Calculate flap coefficients
-                CL_flap_max=CL_flap_max,
-                CL_flap_zero=CL_flap_zero,
-                CD_flap_max=CD_flap_max,
-                CD_flap_zero=CD_flap_zero
-                )
-
-
-
+        
+        return {
+            'alpha_list': alpha_list,
+            'm_fuel': m_fuel,
+            'm_boom': m_boom,
+            'm_wing': m_wing,
+            'span': span,
+            'AR': AR,
+            'taper': taper,
+            'twist': twist,
+            'Sref': Sref,
+            'Lw': lw,
+            'Lh': lh,
+            'CL': CL_list,
+            'CD': CDwing_list
+        }
 
 
     def createMainWing(self, aircraft: Aircraft) -> str:
@@ -307,7 +346,7 @@ class VSPAnalyzer:
             vsp.SetParmVal(flap_group_id_r, -flap_angle)
             vsp.Update()
 
-            flap_id_list.append([flap_group_id_l,flap_group_r])
+            flap_id_list.append([flap_group_id_l,flap_group_id_r])
 
         return flap_id_list
 
@@ -491,3 +530,29 @@ def loadAnalysisResults(hashValue:int, csvPath:str = "data/test.csv")-> Aircraft
 
     analysisResult=df.to_dict(orient='records')[0]
     return AircraftAnalysisResults.fromDict(analysisResult)
+
+def visualize_results(results: AircraftAnalysisResults):
+    """Visualize CL and CD data with flap points"""
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    
+    # Plot CL
+    ax1.plot(results.alpha_list, results.CL, 'b-', label='No Flaps')
+    ax1.scatter([0, results.AOA_stall], [results.CL_flap_zero, results.CL_flap_max], 
+                c='r', marker='o', label='With Flaps')
+    ax1.set_xlabel('Angle of Attack (degrees)')
+    ax1.set_ylabel('Lift Coefficient (CL)')
+    ax1.grid(True)
+    ax1.legend()
+    
+    # Plot CD
+    ax2.plot(results.alpha_list, results.CD_total, 'b-', label='No Flaps')
+    ax2.scatter([0, results.AOA_stall], [results.CD_flap_zero, results.CD_flap_max],
+                c='r', marker='o', label='With Flaps')
+    ax2.set_xlabel('Angle of Attack (degrees)')
+    ax2.set_ylabel('Drag Coefficient (CD)')
+    ax2.grid(True)
+    ax2.legend()
+    
+    plt.tight_layout()
+    plt.show()

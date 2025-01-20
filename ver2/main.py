@@ -1,6 +1,6 @@
 ## Does all the main work
 
-from vsp_analysis import VSPAnalyzer, writeAnalysisResults, loadAnalysisResults
+from vsp_analysis import VSPAnalyzer, writeAnalysisResults, loadAnalysisResults, visualize_results
 from mission_analysis import MissionAnalyzer
 from models import *
 
@@ -12,20 +12,20 @@ def main():
           score_weight_ratio=1
           )
 
-    missionParam = MissionParameters(max_battery_capacity=2250,
-                                     throttle_takeoff=0.9, throttle_climb=0.9,
-                                     throttle_level=0.6, throttle_turn=0.55,
-                                     max_climb_angle=40, max_speed=40, max_load_factor=4.0,
-                                     h_flap_transition=5)
+    # missionParam = MissionParameters(max_battery_capacity=2250,
+    #                                  throttle_takeoff=0.9, throttle_climb=0.9,
+    #                                  throttle_level=0.6, throttle_turn=0.55,
+    #                                  max_climb_angle=40, max_speed=40, max_load_factor=4.0,
+    #                                  h_flap_transition=5)
 
-    a=loadAnalysisResults(6010330674452735345)
-    
-    missionAnalyzer = MissionAnalyzer(a,missionParam,presetValues)
-    
-    print(missionAnalyzer.run_mission2())
-    print(missionAnalyzer.stateLog.head())
-    
-    return
+    # a=loadAnalysisResults(6010330674452735345)
+    # 
+    # missionAnalyzer = MissionAnalyzer(a,missionParam,presetValues)
+    # 
+    # print(missionAnalyzer.run_mission2())
+    # print(missionAnalyzer.stateLog.head())
+    # 
+    # return
    
     aircraft = Aircraft(
             m_total=50,m_fuselage=10,
@@ -59,23 +59,17 @@ def main():
     vspAnalyzer = VSPAnalyzer(presetValues)
     vspAnalyzer.setup_vsp_model(aircraft)
     analResults = vspAnalyzer.calculateCoefficients(
-            alpha_start=13,alpha_end=15,alpha_step=0.5,
-            CD_fuse=np.zeros(4),
+            alpha_start=5,alpha_end=10,alpha_step=1,
+            CD_fuse=np.zeros(5),
 
             AOA_stall=10, 
             AOA_takeoff_max=10,
             AOA_climb_max=10,
             AOA_turn_max=20,
-                              
-            CL_max=0.94,
-
-            CL_flap_max=1.1,
-            CL_flap_zero=0.04,
-            CD_flap_max=0.20,
-            CD_flap_zero=0.10,
 
             clearModel=False)
-    writeAnalysisResults(analResults)
+    visualize_results(analResults)
+    #writeAnalysisResults(analResults)
 
 if __name__== "__main__":
     main()
