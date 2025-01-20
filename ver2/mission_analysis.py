@@ -114,9 +114,9 @@ class MissionAnalyzer():
             CD_flap_zero=results.CD_flap_zero
         )
 
-    def run_mission(self, missionPlan: List[MissionConfig]) -> None:
+    def run_mission(self, missionPlan: List[MissionConfig],clearState = True) -> int:
 
-        self.clearState()
+        if(clearState): self.clearState()
 
         for phase in missionPlan:
             match phase.phaseType:
@@ -132,6 +132,14 @@ class MissionAnalyzer():
                     raise ValueError("Didn't provide a correct PhaseType!")
             self.state.phase += 1
             #print("Changed Phase")
+
+    ## TODO Maybe implement this?
+    def _mission_viable(self):
+        if (self.state.battery_voltage < self.presetValues.min_battery_voltage):
+            return False
+
+        return True
+
 
     def run_mission2(self) -> float:
 
@@ -162,6 +170,57 @@ class MissionAnalyzer():
         self.run_mission(mission2)        
         
         return self.analResult.m_fuel / self.state.time
+
+    def run_mission3(self) -> float:
+        mission3 = [
+                MissionConfig(PhaseType.TAKEOFF, []),
+                MissionConfig(PhaseType.CLIMB, [60,-140], "left"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [-152], "left"),
+                MissionConfig(PhaseType.TURN, [180], "CW"),
+                MissionConfig(PhaseType.CLIMB, [60,-10], "right"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
+                MissionConfig(PhaseType.TURN, [360], "CCW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [152], "right"),
+                MissionConfig(PhaseType.TURN, [180], "CW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "left"),
+                ]
+
+        # Run initial mission sequence
+        self.run_mission(mission3)
+        # Store starting index for each lap to handle truncation if needed
+        N_laps = 1
+        time_limit = 300 - self.presetValues.x1_flight_time  # 270 seconds
+
+        # Define lap2 phases
+        lap2 = [
+            MissionConfig(PhaseType.LEVEL_FLIGHT, [-152], "left"),
+            MissionConfig(PhaseType.TURN, [180], "CW"),
+            MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
+            MissionConfig(PhaseType.TURN, [360], "CCW"),
+            MissionConfig(PhaseType.LEVEL_FLIGHT, [152], "right"),
+            MissionConfig(PhaseType.TURN, [180], "CW"),
+            MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "left"),
+        ]
+
+        while True:
+            lap_start_index = len(self.stateLog)
+            N_laps += 1
+
+            self.run_mission(lap2,clearState=False)
+
+            # Check if we've exceeded time limit or voltage limit
+            if (self.state.time > time_limit or 
+                self.state.battery_voltage < self.presetValues.min_battery_voltage):
+                #print("Time ran out")
+                # Truncate the results and finish
+                self.stateLog = self.stateLog[:lap_start_index]
+                N_laps -= 1
+                break
+
+        # Calculate objective score
+        obj3 = N_laps + 2.5 / self.presetValues.m_x1
+        
+        return obj3
         
     def clearState(self):
         self.state = PlaneState()

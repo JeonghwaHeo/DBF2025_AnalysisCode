@@ -14,7 +14,7 @@ def main():
         x1_flight_time = 30,              # sec
         max_battery_capacity = 2250,      # mAh (per one battery)
         Thrust_max = 6.6,                 # kg (two motors)
-        min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
+        min_battery_voltage = 25,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
         propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
         score_weight_ratio = 1            # mission2/3 score weight ratio
         )
@@ -35,14 +35,13 @@ def main():
     b=loadAnalysisResults(1676891088784291821)
     c=loadAnalysisResults(1268481079834018136)
     d=loadAnalysisResults(1446022752061654911)
-    compare_aerodynamics([a,b,c,d])
-    return
+    #compare_aerodynamics([a,b,c,d])
     missionAnalyzer = MissionAnalyzer(a, missionParam, presetValues)
-
+    
     profiler = cProfile.Profile()
     profiler.enable()
 
-    missionAnalyzer.run_mission2()
+    missionAnalyzer.run_mission3()
 
     profiler.disable()
 

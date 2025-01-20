@@ -7,8 +7,14 @@ from mission_analysis import MissionAnalyzer, visualize_mission
 from models import *
 
 
-def runMission2GridSearch(analysisResults: AircraftAnalysisResults, missionParamConstraints:MissionParamConstraints, presetValues:PresetValues) -> tuple[float, MissionParameters]:
+def runMissionGridSearch(hashVal:int, 
+                          missionParamConstraints:MissionParamConstraints, 
+                          presetValues:PresetValues,
+                          csvPath:str = "data/test.csv"
+                          ) :
 
+
+    analysisResults = loadAnalysisResults(hashVal, csvPath)
     ## Variable lists using for optimization
     
     throttle_climb_list = np.arange(missionParamConstraints.throttle_climb_min, missionParamConstraints.throttle_climb_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
@@ -20,9 +26,12 @@ def runMission2GridSearch(analysisResults: AircraftAnalysisResults, missionParam
     print(f"throttle level list: {throttle_level_list}\n")
 
 
-    best_score = float('-inf')
-    best_params = None
+    best_score_2 = float('-inf')
+    best_params_2 = None
     
+    best_score_3 = float('-inf')
+    best_params_3 = None
+
     # Create iterator for all combinations
     throttle_combinations = product(throttle_climb_list, throttle_turn_list, throttle_level_list)
 
@@ -49,23 +58,40 @@ def runMission2GridSearch(analysisResults: AircraftAnalysisResults, missionParam
         try:
             # Create mission analyzer and run mission 2
             missionAnalyzer = MissionAnalyzer(analysisResults, missionParams, presetValues)
-            score = missionAnalyzer.run_mission2()
+            score_2 = missionAnalyzer.run_mission2()
+            score_3 = missionAnalyzer.run_mission3()
 
             # Update best score if current score is better
-            if score > best_score:
-                best_score = score
-                best_params = missionParams
+            if score_2 > best_score_2:
+                best_score_2 = score_2
+                best_params_2 = missionParams
                 
-                print(f"\nNew best score: {best_score}")
-                print(f"Throttle settings - Climb: {throttle_climb:.2f}, "
+                print(f"\nNew best score for Mission 2: {best_score_2}")
+                print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
+                      f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
+            # Update best score if current score is better
+            if score_3 > best_score_3:
+                best_score_3 = score_3
+                best_params_3 = missionParams
+                
+                print(f"\nNew best score for Mission 3: {best_score_3}")
+                print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
                       f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
         
         except Exception as e:
             print(f"Failed with throttles {throttle_climb:.2f}/{throttle_turn:.2f}/"
                   f"{throttle_level:.2f}: {str(e)}")
             continue
+   
+    print("\nDone!")
+    print(f"\nBest score for Mission 2: {best_score_2}")
+    print(f"> Throttle settings - Climb: {best_params_2.throttle_climb:.2f}, "
+          f"Turn: {best_params_2.throttle_turn:.2f}, Level: {best_params_2.throttle_level:.2f}")
 
-    return best_score, best_params
+    print(f"\nBest score for Mission 3: {best_score_3}")
+    print(f"> Throttle settings - Climb: {best_params_3.throttle_climb:.2f}, "
+          f"Turn: {best_params_3.throttle_turn:.2f}, Level: {best_params_3.throttle_level:.2f}")
+    return [best_score_2, best_score_3], [best_params_2, best_params_3]
 
 if __name__=="__main__":
     presetValues = PresetValues(
@@ -78,7 +104,7 @@ if __name__=="__main__":
             score_weight_ratio = 1            # mission2/3 score weight ratio
             )
     a=loadAnalysisResults(687192594661440415)
-    score, param = runMission2GridSearch(a,
+    score, param = runMissionGridSearch(687192594661440415,
                           MissionParamConstraints (
                               #Constraints for calculating missions
                               throttle_climb_min = 1.0,
@@ -91,6 +117,10 @@ if __name__=="__main__":
                               ),
                           presetValues
                           )
-    missionAnalyzer = MissionAnalyzer(a,param,presetValues) 
+
+    missionAnalyzer = MissionAnalyzer(a,param[0],presetValues) 
     missionAnalyzer.run_mission2()
+    visualize_mission(missionAnalyzer.stateLog)
+    missionAnalyzer = MissionAnalyzer(a,param[1],presetValues) 
+    missionAnalyzer.run_mission3()
     visualize_mission(missionAnalyzer.stateLog)
