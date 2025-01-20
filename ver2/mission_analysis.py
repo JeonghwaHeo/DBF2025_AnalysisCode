@@ -337,11 +337,10 @@ class MissionAnalyzer():
             direction (string): The direction of movement. Must be either 'left' or 'right'.
         """
         if self.state.position[2] > h_target: return
-
+        self.dt = 0.01
         n_steps = int(60 / self.dt)  # Max 60 seconds simulation
         break_flag = False
         alpha_w_deg = 0 
-
         for step in range(n_steps):
 
             self.state.time += self.dt
@@ -452,11 +451,10 @@ class MissionAnalyzer():
     # dt = 0.1!
     def level_flight_simulation(self, x_final, direction):
         print("\nRunning Level Flight Simulation...")
-        
         max_steps = int(180/self.dt) # max 3 minuites
         # print(max_steps)
         step = 0
-        
+        self.dt = 0.1
         # Initialize vectors
         self.state.velocity[2] = 0  # Zero vertical velocity
         speed = np.linalg.norm(self.state.velocity)
@@ -550,7 +548,7 @@ class MissionAnalyzer():
             target_angle_degree (float): Required angle of coordinate level turn (degree)
             direction (string): The direction of movement. Must be either 'CW' or 'CCW'.
         """     
-        
+        self.dt = 0.01
         speed = np.linalg.norm(self.state.velocity) 
 
         # Initialize turn tracking
