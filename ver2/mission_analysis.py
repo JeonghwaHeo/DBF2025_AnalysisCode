@@ -114,7 +114,6 @@ class MissionAnalyzer():
             CD_flap_zero=results.CD_flap_zero
         )
 
-
     def run_mission(self, missionPlan: List[MissionConfig]) -> None:
 
         self.clearState()
@@ -134,16 +133,12 @@ class MissionAnalyzer():
             self.state.phase += 1
             print("Changed Phase")
 
-            
-
-
-
     def run_mission2(self) -> float:
 
         mission2 = [
                 MissionConfig(PhaseType.TAKEOFF, []),
                 MissionConfig(PhaseType.CLIMB, [25,-140], "left"),
-                MissionConfig(PhaseType.LEVEL_FLIGHT, [-200], "left"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [-152], "left"),
                 MissionConfig(PhaseType.TURN, [180], "CW"),
                 MissionConfig(PhaseType.CLIMB, [25,-10], "right"),
                 MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
@@ -154,21 +149,19 @@ class MissionAnalyzer():
                 MissionConfig(PhaseType.TURN, [180], "CW"),
                 MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
                 MissionConfig(PhaseType.TURN, [360], "CCW"),
-                #MissionConfig(PhaseType.LEVEL_FLIGHT, [152], "right"),
-                #MissionConfig(PhaseType.TURN, [180], "CW"),
-                #MissionConfig(PhaseType.LEVEL_FLIGHT, [-152], "left"),
-                #MissionConfig(PhaseType.TURN, [180], "CW"),
-                #MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
-                #MissionConfig(PhaseType.TURN, [360], "CW"),
-                #MissionConfig(PhaseType.LEVEL_FLIGHT, [152], "right"),
-                #MissionConfig(PhaseType.TURN, [180], "CW"),
-                #MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "left"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [152], "right"),
+                MissionConfig(PhaseType.TURN, [180], "CW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [-152], "left"),
+                MissionConfig(PhaseType.TURN, [180], "CW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
+                MissionConfig(PhaseType.TURN, [360], "CCW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [152], "right"),
+                MissionConfig(PhaseType.TURN, [180], "CW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "left"),
                 ]
         self.run_mission(mission2)        
         
-    
         return self.analResult.m_fuel / self.state.time
-    
         
     def clearState(self):
         self.state = PlaneState()
@@ -176,13 +169,13 @@ class MissionAnalyzer():
 
     # update the current state of the simulation
     def logState(self) -> None:
-        print(self.state)
+        # print(self.state)
         self.stateLog = pd.concat([self.stateLog, pd.DataFrame([asdict(self.state)])])
 
     def setAuxVals(self) -> None:
         self.weight = self.aircraft.m_total * g
 
-        self.v_stall = math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_max))
+        # self.v_stall = math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_max))
         self.v_takeoff = (math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_flap_max)))
 
         # Convert kgf to N
@@ -199,8 +192,7 @@ class MissionAnalyzer():
         # multiply (lh-lw) / lh at CL to consider the effect from horizontal tail wing
         # interpolate CD using quadratic function 
         # alpha_func : function to calculate AOA from given CL value
-        self.CL_func = interp1d(self.analResult.alpha_list, 
-
+        self.CL_func = interp1d(self.analResult.alpha_list,
                                 float((self.analResult.Lh-self.analResult.Lw) / self.analResult.Lh) * np.array(self.analResult.CL), 
                                 kind = 'linear', 
                                 bounds_error = False, fill_value = "extrapolate")
@@ -219,9 +211,9 @@ class MissionAnalyzer():
         return
 
     ## Previously battery
-    def updateBatteryState(self,T) -> None :
+    def updateBatteryState(self, T) -> None :
         """
-        T:                두 모터의 총 추력(N), 배터리 하나의 전기용량으로 계산하기 때문에 power 계산식에서 /2
+        T: 두 모터의 총 추력(N), 배터리 하나의 전기용량으로 계산하기 때문에 power 계산식에서 /2
     
         SoC vs Voltage 정보는 노션 Sizing/추친 참고
         """
@@ -245,9 +237,7 @@ class MissionAnalyzer():
 
         return
 
-
-
-    def calculate_level_alpha(self,T,v):
+    def calculate_level_alpha(self, T, v):
         #  Function that calculates the AOA required for level flight using the velocity vector and thrust
         speed = np.linalg.norm(v)
         def equation(alpha:float):
@@ -296,7 +286,7 @@ class MissionAnalyzer():
             
             self.state.loadfactor = loadfactor
 
-            self.throttle = self.missionParam.throttle_takeoff
+            self.state.throttle = self.missionParam.throttle_takeoff
             
             self.state.AOA = 0
             self.state.climb_pitch_angle =np.nan
@@ -328,7 +318,7 @@ class MissionAnalyzer():
             L, loadfactor = self.calculateLift(self.analResult.CL_flap_max)
             self.state.loadfactor = loadfactor
 
-            self.throttle = self.missionParam.throttle_takeoff
+            self.state.throttle = self.missionParam.throttle_takeoff
             
             self.state.AOA=0
             self.state.climb_pitch_angle=np.nan
@@ -339,26 +329,25 @@ class MissionAnalyzer():
             self.logState()
 
     # dt 0.01
-    def climb_simulation(self,h_target, x_max_distance, direction):
+    def climb_simulation(self, h_target, x_max_distance, direction):
         """
         Args:
             h_target (float): Desired altitude to climb at the maximum climb AOA (m)
             x_max_distance (float): Restricted x-coordinate for climb (m)
             direction (string): The direction of movement. Must be either 'left' or 'right'.
-        """    
+        """
+        if self.state.position[2] > h_target: return
+
         n_steps = int(60 / self.dt)  # Max 60 seconds simulation
         break_flag = False
+        alpha_w_deg = 0 
 
         for step in range(n_steps):
 
-
             self.state.time += self.dt
-
-
 
             # Calculate climb angle
             gamma_rad = math.atan2(self.state.velocity[2], abs(self.state.velocity[0]))
-            alpha_w_deg = 0 
 
             if direction == 'right':
                 # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
@@ -422,7 +411,7 @@ class MissionAnalyzer():
             else:
                 CL = float(self.CL_func(alpha_w_deg))
 
-            print(f"Gamma: f{gamma_rad}") 
+            # print(f"Gamma: f{gamma_rad}") 
             self.state.acceleration = RK4_step(self.state.velocity,self.dt,
                          lambda v: calculate_acceleration_climb(v, self.aircraft.m_total,self.weight,
                                                                 self.analResult.Sref,
@@ -441,7 +430,7 @@ class MissionAnalyzer():
             self.state.position[0] += self.state.velocity[0]* self.dt
             self.state.position[2] += self.state.velocity[2]* self.dt
 
-            L, loadfactor = self.calculateLift(self.analResult.CL_flap_zero)
+            L, loadfactor = self.calculateLift(CL)
             
             self.state.loadfactor = loadfactor
 
@@ -456,17 +445,16 @@ class MissionAnalyzer():
             self.logState()
 
             # break when climb angle goes to zero
-            if break_flag == 1 and gamma_rad < 50:
+            if break_flag == 1 and gamma_rad < 0:
                 # print(f"cruise altitude is {z_pos:.2f} m.")
                 break
 
-
     # dt = 0.1!
-    def level_flight_simulation(self,x_final, direction):
+    def level_flight_simulation(self, x_final, direction):
         print("\nRunning Level Flight Simulation...")
         
         max_steps = int(180/self.dt) # max 3 minuites
-        print(max_steps)
+        # print(max_steps)
         step = 0
         
         # Initialize vectors
@@ -477,7 +465,8 @@ class MissionAnalyzer():
             self.state.velocity = np.array([speed, 0, 0])  # Align with x-axis
         elif direction=='left':
             self.state.velocity = np.array([-speed, 0, 0])
-            
+        
+        cruise_flag = 0
         
         while step < max_steps:
             step += 1
@@ -492,6 +481,9 @@ class MissionAnalyzer():
             # Speed limiting while maintaining direction
 
             if speed > self.missionParam.max_speed:  # Original speed limit
+                cruise_flag = 1
+
+            if cruise_flag == 1:
                 self.state.velocity = self.state.velocity * (self.missionParam.max_speed / speed)
                 T_cruise = 0.5 * rho * self.missionParam.max_speed**2 \
                                 * self.analResult.Sref * float(self.CD_func(alpha_w_deg))
@@ -521,7 +513,6 @@ class MissionAnalyzer():
             # Update Acc, Vel, position
             if direction == 'right': 
                 self.state.velocity += self.state.acceleration * self.dt
-                print(self.state.velocity)
             elif direction == 'left': 
                 self.state.velocity -= self.state.acceleration * self.dt
             
@@ -681,8 +672,7 @@ class MissionAnalyzer():
 
         return
     
-
-def RK4_step(v,dt,func):
+def RK4_step(v, dt, func):
     """ Given v and a = f(v), solve for (v(t+dt)-v(dt))/dt or approximately a(t+dt/2)"""
     a1 = func(v)
     v1 = v + a1 * dt/2
@@ -695,9 +685,7 @@ def RK4_step(v,dt,func):
 
     return (a1 + 2*a2 + 2*a3 + a4)/6
 
-
-
-def calculate_acceleration_groundroll(v,m_total,Weight,
+def calculate_acceleration_groundroll(v, m_total, Weight,
                                       Sref,
                                       CD_zero_flap,CL_zero_flap,
                                       T_takeoff)->np.ndarray:
@@ -708,7 +696,7 @@ def calculate_acceleration_groundroll(v,m_total,Weight,
     a_x = (T_takeoff - D - 0.03*(Weight-L)) / m_total              # calculate x direction acceleration 
     return np.array([a_x, 0, 0])
 
-def calculate_acceleration_groundrotation(v,m_total,Weight,
+def calculate_acceleration_groundrotation(v, m_total, Weight,
                                           Sref,
                                           CD_max_flap,CL_max_flap,
                                           T_takeoff)->np.ndarray:
@@ -719,17 +707,13 @@ def calculate_acceleration_groundrotation(v,m_total,Weight,
     a_x = (T_takeoff - D - 0.03*(Weight-L)) / m_total            # calculate x direction acceleration 
     return np.array([a_x, 0, 0])
 
-def calculate_acceleration_level(v,m_total, 
-                                 Sref, 
-                                 CD_func, alpha_deg, 
-                                 T):
+def calculate_acceleration_level(v, m_total, Sref, CD_func, alpha_deg, T):
     # Function that calculates the acceleration during level flight
     speed = np.linalg.norm(v)
     CD = float(CD_func(alpha_deg))
     D = 0.5 * rho * speed**2 * Sref * CD
     a_x = (T * math.cos(math.radians(alpha_deg)) - D) / m_total
     return np.array([a_x, 0, 0])
-
 
 def calculate_acceleration_climb(v, m_total, Weight, 
                                  Sref, 
@@ -762,7 +746,6 @@ def calculate_acceleration_climb(v, m_total, Weight,
 
     return np.array([a_x, 0, a_z])
 
-
 def visualize_mission(stateLog: pd.DataFrame):
     """Generate all visualization plots for the mission in a single window"""
     fig = plt.figure(figsize=(20, 15))
@@ -770,7 +753,7 @@ def visualize_mission(stateLog: pd.DataFrame):
     
     # Get phases and colors
     phases = stateLog['phase'].unique()
-    colors = plt.cm.rainbow(np.linspace(0, 1, len(phases)))
+    colors = plt.cm.rainbow(np.random.rand(len(phases)))
     
     # 3D trajectory colored by phase
     ax_3d = fig.add_subplot(gs[0:2, 0], projection='3d')
@@ -784,7 +767,7 @@ def visualize_mission(stateLog: pd.DataFrame):
     ax_3d.set_ylabel('Y Position (m)')
     ax_3d.set_zlabel('Altitude (m)')
     ax_3d.set_title('3D Trajectory')
-    ax_3d.legend()
+    # ax_3d.legend()
     
     # Set equal scale for 3D plot
     x_lims = ax_3d.get_xlim3d()
@@ -810,7 +793,7 @@ def visualize_mission(stateLog: pd.DataFrame):
     ax_top.set_title('Top-Down View')
     ax_top.grid(True)
     ax_top.set_aspect('equal')
-    ax_top.legend()
+    # ax_top.legend()
 
     # Speed
     ax_speed = fig.add_subplot(gs[0, 1])
@@ -823,7 +806,7 @@ def visualize_mission(stateLog: pd.DataFrame):
     ax_speed.set_ylabel('Speed (m/s)')
     ax_speed.set_title('Speed by Phase')
     ax_speed.grid(True)
-    ax_speed.legend()
+    # ax_speed.legend()
 
     # Load factor
     ax_load = fig.add_subplot(gs[0, 2])
@@ -836,7 +819,7 @@ def visualize_mission(stateLog: pd.DataFrame):
     ax_load.set_ylabel('Load Factor')
     ax_load.set_title('Load Factor by Phase')
     ax_load.grid(True)
-    ax_load.legend()
+    # ax_load.legend()
 
     # Angles
     ax_angles = fig.add_subplot(gs[1, 1])
@@ -879,7 +862,7 @@ def visualize_mission(stateLog: pd.DataFrame):
     ax_side.set_title('Side View')
     ax_side.grid(True)
     ax_side.set_aspect('equal')
-    ax_side.legend()
+    # ax_side.legend()
 
     plt.tight_layout()
     plt.show()

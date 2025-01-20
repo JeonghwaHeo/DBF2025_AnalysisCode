@@ -19,7 +19,8 @@ class PresetValues:
 
     Thrust_max: float
     propulsion_efficiency: float
-    score_weight_ratio: float=1 # What is this?
+    score_weight_ratio: float=1 # What is this? 
+    # 경락: 이거 mission2/3 점수의 비율을 정해서 특정 형상이 mission2/3 에서 얼마나 좋은지 보는 거라는데 일단 무시 ㅋㅋ
 
 
 @dataclass

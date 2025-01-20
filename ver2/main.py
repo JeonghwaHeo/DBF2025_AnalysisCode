@@ -6,21 +6,30 @@ from models import *
 
 def main():
     presetValues = PresetValues(
-            m_x1=0.2,x1_flight_time=3,
-            max_battery_capacity=2250,Thrust_max=6.6,
-            min_battery_voltage=18, propulsion_efficiency=0.8,
-          score_weight_ratio=1
-          )
+        m_x1 = 0.2,                       # kg
+        x1_flight_time = 30,              # sec
+        max_battery_capacity = 2250,      # mAh (per one battery)
+        Thrust_max = 6.6,                 # kg (two motors)
+        min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
+        propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
+        score_weight_ratio = 1            # mission2/3 score weight ratio
+        )
 
-    missionParam = MissionParameters(max_battery_capacity=2250,
-                                     throttle_takeoff=0.9, throttle_climb=0.9,
-                                     throttle_level=0.9, throttle_turn=0.55,
-                                     max_climb_angle=40, max_speed=40, max_load_factor=4.0,
-                                     h_flap_transition=5)
+    missionParam = MissionParameters(
+        max_battery_capacity = 2250,      # mAh (per one battery)
+        throttle_takeoff = 0.9,           # %
+        throttle_climb = 0.9,             # %
+        throttle_level = 0.6,             # %
+        throttle_turn = 0.55,             # %
+        max_climb_angle = 40,             # degree
+        max_speed = 40,                   # m/s
+        max_load_factor = 4.0,
+        h_flap_transition = 5             # m
+        )
 
-    a=loadAnalysisResults(1694631385136050562)
+    a=loadAnalysisResults(7227620209081741491)
     
-    missionAnalyzer = MissionAnalyzer(a,missionParam,presetValues)
+    missionAnalyzer = MissionAnalyzer(a, missionParam, presetValues)
     missionAnalyzer.run_mission2()
     
     visualize_mission(missionAnalyzer.stateLog) 

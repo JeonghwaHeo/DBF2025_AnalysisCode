@@ -70,13 +70,13 @@ class VSPAnalyzer:
         zero_idx = np.abs(alpha_list - 0).argmin()
 
         # Calculate coefficients with flaps at max angle
-        results_flap_max = self._calculate_coeffs_helper(fileName, AOA_stall, AOA_stall+1, 1,
+        results_flap_max = self._calculate_coeffs_helper(fileName, AOA_stall, AOA_stall, 1,
                                                   np.array([CD_fuse[stall_idx]]), 
                                                          Re, Mach, boom_density_2018, boom_density_1614,
                                                   boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
                                                          do_mass_analysis=False)
     
-        results_flap_zero = self._calculate_coeffs_helper(fileName, 0, 1, 1,
+        results_flap_zero = self._calculate_coeffs_helper(fileName, 0, 0, 1,
                                                   np.array([CD_fuse[zero_idx]]), Re, Mach, boom_density_2018, boom_density_1614,
                                                   boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
                                                           do_mass_analysis=False)
@@ -124,9 +124,9 @@ class VSPAnalyzer:
                            boom_density_86, boom_density_big, clearModel, flap_angle, do_mass_analysis=True):
         """Helper method to calculate coefficients for a given flap angle"""
         
-        point_number = round(int((alpha_end-alpha_start)/alpha_step))
+        point_number = round(int((alpha_end - alpha_start) / alpha_step) + 1)
         
-        if(CD_fuse.size != point_number): 
+        if(CD_fuse.size != point_number):
             raise ValueError(f"CD_fuse size({CD_fuse.size}) doesn't match point_number({point_number})")
 
         if(clearModel):
@@ -537,6 +537,9 @@ def loadAnalysisResults(hashValue:int, csvPath:str = "data/test.csv")-> Aircraft
                                np.array(ast.literal_eval(x),float) if isinstance(x, str) and x.startswith('[')
                                else x)
     df.pop('hash')
+    
+    if df.empty:
+        raise ValueError(f"No data found for hash value: {hashValue}")
 
     analysisResult=df.to_dict(orient='records')[0]
     return AircraftAnalysisResults.fromDict(analysisResult)
