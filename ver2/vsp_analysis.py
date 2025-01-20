@@ -1,4 +1,5 @@
 import openvsp as vsp
+import contextlib
 import csv
 import numpy as np
 import numpy.strings
@@ -16,7 +17,6 @@ from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 import configparser
 import pandas as pd
-import contextlib
 import io
 
 from models import Aircraft, AircraftAnalysisResults
@@ -30,7 +30,14 @@ class VSPAnalyzer:
         self.presets = presets
         self.dataPath = dataPath
         self.outputPath = outputPath
+
+        self.logfile = os.path.join(self.outputPath, "vspaero.log")
+
         vsp.VSPCheckSetup()
+
+    def clean(self) -> None:
+        vsp.ClearVSPModel()
+        vsp.VSPRenew()
           
         
     def setup_vsp_model(self, aircraft: Aircraft,fileName:str = "Mothership.vsp3") -> None:
@@ -58,7 +65,7 @@ class VSPAnalyzer:
                               boom_density_86:float = 0.036,
                               boom_density_big:float=0.098,
                               clearModel:bool=True):
-
+        print("Starting Analysis")
             # Calculate coefficients with flaps at zero
         results_no_flap = self._calculate_coeffs_helper(fileName, alpha_start, alpha_end, alpha_step,
                                                    CD_fuse, Re, Mach, boom_density_2018, boom_density_1614,
@@ -91,6 +98,7 @@ class VSPAnalyzer:
         CL_flap_zero = results_flap_zero['CL'][0]
         CD_flap_zero = results_flap_zero['CD'][0]
     
+        print("Finished Analysis")
         return AircraftAnalysisResults(
                 aircraft=self.aircraft,
                 alpha_list=results_no_flap['alpha_list'],
@@ -121,7 +129,8 @@ class VSPAnalyzer:
 
     def _calculate_coeffs_helper(self, fileName, alpha_start, alpha_end, alpha_step,
                            CD_fuse, Re, Mach, boom_density_2018, boom_density_1614,
-                           boom_density_86, boom_density_big, clearModel, flap_angle, do_mass_analysis=True):
+                           boom_density_86, boom_density_big, clearModel, flap_angle, 
+                                 do_mass_analysis=True, do_geom_analysis=True):
         """Helper method to calculate coefficients for a given flap angle"""
         
         point_number = round(int((alpha_end - alpha_start) / alpha_step) + 1)
@@ -144,27 +153,37 @@ class VSPAnalyzer:
             vsp.SetParmVal(flap_id[0], flap_angle)
             vsp.SetParmVal(flap_id[1], -flap_angle)
         # Geometric analysis
+        
+        if do_geom_analysis:
+            print("> Starting Geometric Analysis")
+            geom_analysis = "VSPAEROComputeGeometry"
+            vsp.SetAnalysisInputDefaults(geom_analysis)
+            vsp.ExecAnalysis(geom_analysis)
 
-        print("Starting Geometric Analysis")
-        geom_analysis = "VSPAEROComputeGeometry"
-        vsp.SetAnalysisInputDefaults(geom_analysis)
-        vsp.ExecAnalysis(geom_analysis)
+            # Configure VSPAERO
+            vsp.SetVSPAERORefWingID(self.wing_id) ##### wing_id 확인할것
 
-        # Configure VSPAERO
-        vsp.SetVSPAERORefWingID(self.wing_id) ##### wing_id 확인할것
-
-        span = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalSpan","WingGeom"))
-        AR = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalAR","WingGeom"))
-        taper = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Taper","XSec_1"))
-        twist = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Twist","XSec_1"))
-        Sref = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalArea","WingGeom"))
-        wing_c_root = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Root_Chord","XSec_1"))
-        tail_c_root = vsp.GetParmVal(vsp.GetParm(self.horizontal_tail_id,"Root_Chord","XSec_1"))
-        print("Finished Geometric Analysis")
+            span = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalSpan","WingGeom"))
+            AR = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalAR","WingGeom"))
+            taper = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Taper","XSec_1"))
+            twist = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Twist","XSec_1"))
+            Sref = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalArea","WingGeom"))
+            wing_c_root = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Root_Chord","XSec_1"))
+            tail_c_root = vsp.GetParmVal(vsp.GetParm(self.horizontal_tail_id,"Root_Chord","XSec_1"))
+            print("> Finished Geometric Analysis")
+        else:
+            print("> Skipping Geometric Analysis")
+            span = 0
+            AR = 0
+            taper = 0
+            twist = 0
+            Sref = 0
+            wing_c_root = 0
+            tail_c_root = 0
         
         if do_mass_analysis:
             # Mass Analysis
-            print("Starting Mass Analysis")
+            print("> Starting Mass Analysis")
             vsp.ComputeMassProps(0, 100, 0)
             mass_results_id = vsp.FindLatestResultsID("Mass_Properties")
             mass_data = vsp.GetDoubleResults(mass_results_id, "Total_Mass")
@@ -191,38 +210,42 @@ class VSPAnalyzer:
             Lw = w_ac - mass_center_x
             Lh = h_ac - mass_center_x
 
-            print("Finished Mass Analysis")
+            print("> Finished Mass Analysis")
         else:
-            print("Skipping Mass Analysis")
+            print("> Skipping Mass Analysis")
             m_fuel, m_boom, m_wing = 0, 0, 0
             Lw, Lh = 0, 0
 
         # Configure sweep analysis for coefficient
-        print("Starting Sweep Analysis")
+        print("> Starting Sweep Analysis")
+        
         sweep_analysis = "VSPAEROSweep"
         vsp.SetAnalysisInputDefaults(sweep_analysis)
         vsp.SetIntAnalysisInput(sweep_analysis, "AnalysisMethod", [vsp.VORTEX_LATTICE])
         vsp.SetIntAnalysisInput(sweep_analysis, "GeomSet", [vsp.SET_ALL])
-
+        
         # **Set the reference geometry set**
         vsp.SetDoubleAnalysisInput(sweep_analysis, "MachStart", [Mach])
         vsp.SetDoubleAnalysisInput(sweep_analysis, "ReCref", [Re])
         vsp.SetDoubleAnalysisInput(sweep_analysis, "AlphaStart", [alpha_start])
         vsp.SetDoubleAnalysisInput(sweep_analysis, "AlphaEnd", [alpha_end])
         vsp.SetIntAnalysisInput(sweep_analysis, "AlphaNpts", [point_number])
-
+        
         # Number of CPUs
         vsp.SetIntAnalysisInput(sweep_analysis, "NCPU", [6])
+
+        # Redirect log to null
+        vsp.SetStringAnalysisInput( "VSPAEROSweep", "RedirectFile", "" )
 
         # Disable CpSlice
         aero_id = vsp.FindContainer("VSPAEROSettings",0);
         vsp.SetParmVal(aero_id,"CpSliceFlag","VSPAERO",0);
         vsp.Update()
-
+        
         # Execute sweep analysis
         sweep_results_id = vsp.ExecAnalysis(sweep_analysis)
-
-        print("Finished Sweep Analysis")
+        
+        print("> Finished Sweep Analysis")
 
         # Extract coefficient data
         sweepResults = vsp.GetStringResults(sweep_results_id, "ResultsVec")
