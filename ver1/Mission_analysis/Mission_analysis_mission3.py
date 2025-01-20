@@ -385,18 +385,24 @@ def level_flight_simulation(x_final, direction):
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
     battery_capacity = battery_capacity_list[-1]
+    cruise_flag = 0
     
     while step < max_steps:
         step += 1
         t += dt
         time_list.append(t)
         
+        
         # Calculate alpha_w first
         alpha_w_deg = calculate_level_alpha(v, T_level)
             
         # Speed limiting while maintaining direction
         speed = magnitude(v)
-        if speed > max_speed:  # Original speed limit
+        if speed > max_speed:
+            cruise_flag = 1
+
+        
+        if cruise_flag == 1:  # Original speed limit
             v = v * (max_speed / speed)
             T_cruise = 0.5 * rho * max_speed**2 * S * float(CD_func(alpha_w_deg))
             alpha_w_deg = calculate_level_alpha(v, T_cruise)
