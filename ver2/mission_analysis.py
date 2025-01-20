@@ -146,14 +146,14 @@ class MissionAnalyzer():
                 MissionConfig(PhaseType.LEVEL_FLIGHT, [-200], "left"),
                 MissionConfig(PhaseType.TURN, [180], "CW"),
                 MissionConfig(PhaseType.CLIMB, [25,-10], "right"),
-                #MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
-                #MissionConfig(PhaseType.TURN, [360], "CCW"),
-                #MissionConfig(PhaseType.LEVEL_FLIGHT, [152], "right"),
-                #MissionConfig(PhaseType.TURN, [180], "CW"),
-                #MissionConfig(PhaseType.LEVEL_FLIGHT, [-152], "left"),
-                #MissionConfig(PhaseType.TURN, [180], "CW"),
-                #MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
-                #MissionConfig(PhaseType.TURN, [360], "CCW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
+                MissionConfig(PhaseType.TURN, [360], "CCW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [152], "right"),
+                MissionConfig(PhaseType.TURN, [180], "CW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [-152], "left"),
+                MissionConfig(PhaseType.TURN, [180], "CW"),
+                MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "right"),
+                MissionConfig(PhaseType.TURN, [360], "CCW"),
                 #MissionConfig(PhaseType.LEVEL_FLIGHT, [152], "right"),
                 #MissionConfig(PhaseType.TURN, [180], "CW"),
                 #MissionConfig(PhaseType.LEVEL_FLIGHT, [-152], "left"),
@@ -348,7 +348,7 @@ class MissionAnalyzer():
         """    
         n_steps = int(60 / self.dt)  # Max 60 seconds simulation
         break_flag = False
-        
+
         for step in range(n_steps):
 
 
@@ -361,54 +361,60 @@ class MissionAnalyzer():
             alpha_w_deg = 0 
 
             if direction == 'right':
-
-                if(self.state.position[0] < x_max_distance):
                 # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
-                    if(self.isBelowFlapTransition()):
-                        alpha_w_deg = self.analResult.AOA_takeoff_max
-                    else:
-                        if self.calculateLift(float(self.CL_func(self.analResult.AOA_climb_max)))[1] < self.missionParam.max_load_factor:
-                            if gamma_rad < math.radians(self.missionParam.max_climb_angle):
-                                alpha_w_deg = self.analResult.AOA_climb_max
-                            else:
-                                float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/(rho * np.linalg.norm(self.state.velocity)**2 * self.analResult.Sref)))
-
-                        else:
-                            alpha_w_deg -= 1
-                            alpha_w_deg = max(alpha_w_deg, -5) 
-                else:
-                    break_flag = True 
-                    if gamma_rad > math.radians(self.missionParam.max_climb_angle):
-                        alpha_w_deg -= 1
-                        alpha_w_deg = max(alpha_w_deg, -5)
-                    else:
-                        alpha_w_deg -= 0.1
-                        alpha_w_deg = max(alpha_w_deg , -5)         
-
-            elif direction == 'left':
-                if(self.state.position[0] > x_max_distance):
-                # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
-                    if(self.isBelowFlapTransition()):
-                        alpha_w_deg = self.analResult.AOA_takeoff_max
-                    else:
-                        if self.calculateLift(float(self.CL_func(self.analResult.AOA_climb_max)))[1] < self.missionParam.max_load_factor:
-                            if gamma_rad < math.radians(self.missionParam.max_climb_angle):
-                                alpha_w_deg = self.analResult.AOA_climb_max
-                            else:
-                                float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/(rho * np.linalg.norm(self.state.velocity)**2 * self.analResult.Sref)))
-
-                        else:
-                            alpha_w_deg -= 1
-                            alpha_w_deg = max(alpha_w_deg, -5) 
-                else:
-                    break_flag = True 
-                    if gamma_rad > math.radians(self.missionParam.max_climb_angle):
-                        alpha_w_deg -= 1
-                        alpha_w_deg = max(alpha_w_deg, -5)
-                    else:
-                        alpha_w_deg -= 0.1
-                        alpha_w_deg = max(alpha_w_deg , -5)         
+                if(self.state.position[2] < self.missionParam.h_flap_transition and 
+                   self.state.position[0] < x_max_distance):
+                    alpha_w_deg = self.analResult.AOA_takeoff_max
+                elif(self.missionParam.h_flap_transition <= self.state.position[2] < h_target and 
+                     self.state.position[0] < x_max_distance):
+                    load_factor = self.calculateLift(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
             
+                    if (load_factor < self.missionParam.max_load_factor and 
+                        gamma_rad < math.radians(self.missionParam.max_climb_angle)):
+                        alpha_w_deg = self.analResult.AOA_climb_max
+                    elif (load_factor >= self.missionParam.max_load_factor and 
+                          gamma_rad < math.radians(self.missionParam.max_climb_angle)):
+                        alpha_w_deg = float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/
+                                                          (rho * np.linalg.norm(self.state.velocity)**2 * self.analResult.Sref)))
+                    else:
+                        alpha_w_deg -= 1
+                        alpha_w_deg = max(alpha_w_deg, -5)
+                else:
+                    break_flag = True
+                    if gamma_rad > math.radians(self.missionParam.max_climb_angle):
+                        alpha_w_deg -= 1
+                        alpha_w_deg = max(alpha_w_deg, -5)
+                    else:
+                        alpha_w_deg -= 0.1
+                        alpha_w_deg = max(alpha_w_deg, -5)
+            
+            elif direction == 'left':
+                # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
+                if(self.state.position[2] < self.missionParam.h_flap_transition and 
+                   self.state.position[0] > x_max_distance):
+                    alpha_w_deg = self.analResult.AOA_takeoff_max
+                elif(self.missionParam.h_flap_transition <= self.state.position[2] < h_target and 
+                     self.state.position[0] > x_max_distance):
+                    load_factor = self.calculateLift(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
+            
+                    if (load_factor < self.missionParam.max_load_factor and 
+                        gamma_rad < math.radians(self.missionParam.max_climb_angle)):
+                        alpha_w_deg = self.analResult.AOA_climb_max
+                    elif (load_factor >= self.missionParam.max_load_factor and 
+                          gamma_rad < math.radians(self.missionParam.max_climb_angle)):
+                        alpha_w_deg = float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/
+                                                          (rho * np.linalg.norm(self.state.velocity)**2 * self.analResult.Sref)))
+                    else:
+                        alpha_w_deg -= 1
+                        alpha_w_deg = max(alpha_w_deg, -5)
+                else:
+                    break_flag = True
+                    if gamma_rad > math.radians(self.missionParam.max_climb_angle):
+                        alpha_w_deg -= 1
+                        alpha_w_deg = max(alpha_w_deg, -5)
+                    else:
+                        alpha_w_deg -= 0.1
+                        alpha_w_deg = max(alpha_w_deg, -5)            
                     
             # Calculate load factor
             if (self.isBelowFlapTransition()):
@@ -476,6 +482,7 @@ class MissionAnalyzer():
         while step < max_steps:
             step += 1
             self.state.time += self.dt
+            speed = np.linalg.norm(self.state.velocity)
             
             # Calculate alpha_w first
             alpha_w_deg=self.calculate_level_alpha(self.T_level,self.state.velocity)
@@ -500,7 +507,6 @@ class MissionAnalyzer():
                                                                     self.CD_func, alpha_w_deg,
                                                                     T_cruise))
             else:
-
                 self.state.throttle= self.missionParam.throttle_level
 
                 self.updateBatteryState(self.T_level)
@@ -513,8 +519,11 @@ class MissionAnalyzer():
 
                 
             # Update Acc, Vel, position
-            if direction == 'right': self.state.velocity += self.state.acceleration * self.dt
-            elif direction == 'left': self.state.velocity += self.state.acceleration * self.dt
+            if direction == 'right': 
+                self.state.velocity += self.state.acceleration * self.dt
+                print(self.state.velocity)
+            elif direction == 'left': 
+                self.state.velocity -= self.state.acceleration * self.dt
             
             self.state.position[0] += self.state.velocity[0] * self.dt
             self.state.position[1] += self.state.velocity[1] * self.dt
@@ -753,38 +762,59 @@ def calculate_acceleration_climb(v, m_total, Weight,
 
     return np.array([a_x, 0, a_z])
 
+
 def visualize_mission(stateLog: pd.DataFrame):
     """Generate all visualization plots for the mission in a single window"""
-    # Create figure with grid spec
     fig = plt.figure(figsize=(20, 15))
     gs = fig.add_gridspec(3, 3)
     
-    # 3D trajectory (larger plot on the left)
+    # Get phases and colors
+    phases = stateLog['phase'].unique()
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(phases)))
+    
+    # 3D trajectory colored by phase
     ax_3d = fig.add_subplot(gs[0:2, 0], projection='3d')
-    ax_3d.plot(stateLog['position'].apply(lambda x: x[0]), 
-               stateLog['position'].apply(lambda x: x[1]), 
-               stateLog['position'].apply(lambda x: x[2]))
+    for phase, color in zip(phases, colors):
+        mask = stateLog['phase'] == phase
+        ax_3d.plot(stateLog[mask]['position'].apply(lambda x: x[0]), 
+                  stateLog[mask]['position'].apply(lambda x: x[1]), 
+                  stateLog[mask]['position'].apply(lambda x: x[2]),
+                  color=color, label=f'Phase {phase}')
     ax_3d.set_xlabel('X Position (m)')
     ax_3d.set_ylabel('Y Position (m)')
     ax_3d.set_zlabel('Altitude (m)')
     ax_3d.set_title('3D Trajectory')
+    ax_3d.legend()
+    
+    # Set equal scale for 3D plot
+    x_lims = ax_3d.get_xlim3d()
+    y_lims = ax_3d.get_ylim3d()
+    z_lims = ax_3d.get_zlim3d()
+    max_range = max(x_lims[1] - x_lims[0], y_lims[1] - y_lims[0], z_lims[1] - z_lims[0])
+    x_center = (x_lims[1] + x_lims[0]) / 2
+    y_center = (y_lims[1] + y_lims[0]) / 2
+    z_center = (z_lims[1] + z_lims[0]) / 2
+    ax_3d.set_xlim3d([x_center - max_range/2, x_center + max_range/2])
+    ax_3d.set_ylim3d([y_center - max_range/2, y_center + max_range/2])
+    ax_3d.set_zlim3d([z_center - max_range/2, z_center + max_range/2])
 
-    # Top-down view
+    # Top-down view colored by phase
     ax_top = fig.add_subplot(gs[2, 0])
-    ax_top.plot(stateLog['position'].apply(lambda x: x[0]), 
-                stateLog['position'].apply(lambda x: x[1]))
+    for phase, color in zip(phases, colors):
+        mask = stateLog['phase'] == phase
+        ax_top.plot(stateLog[mask]['position'].apply(lambda x: x[0]), 
+                   stateLog[mask]['position'].apply(lambda x: x[1]),
+                   color=color, label=f'Phase {phase}')
     ax_top.set_xlabel('X Position (m)')
     ax_top.set_ylabel('Y Position (m)')
     ax_top.set_title('Top-Down View')
     ax_top.grid(True)
-    ax_top.axis('equal')
+    ax_top.set_aspect('equal')
+    ax_top.legend()
 
-    # Speed and altitude
+    # Speed
     ax_speed = fig.add_subplot(gs[0, 1])
     speeds = np.sqrt(stateLog['velocity'].apply(lambda x: x[0]**2 + x[1]**2 + x[2]**2))
-    phases = stateLog['phase'].unique()
-    colors = plt.cm.rainbow(np.linspace(0, 1, len(phases)))
-    
     for phase, color in zip(phases, colors):
         mask = stateLog['phase'] == phase
         ax_speed.plot(stateLog[mask]['time'], speeds[mask], 
@@ -827,26 +857,29 @@ def visualize_mission(stateLog: pd.DataFrame):
     ax_battery.set_title('Battery Capacity')
     ax_battery.grid(True)
 
-    # Add throttle on same plot with different y-axis
     ax_throttle = ax_battery.twinx()
     ax_throttle.plot(stateLog['time'], stateLog['throttle'], 
                     'r-', label='Throttle')
     ax_throttle.set_ylabel('Throttle', color='r')
     ax_throttle.tick_params(axis='y', labelcolor='r')
 
-    # Combine legends
     lines1, labels1 = ax_battery.get_legend_handles_labels()
     lines2, labels2 = ax_throttle.get_legend_handles_labels()
     ax_battery.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
 
-    # Position vs Altitude (side view)
+    # Side view colored by phase
     ax_side = fig.add_subplot(gs[2, 1:])
-    ax_side.plot(stateLog['position'].apply(lambda x: x[0]), 
-                stateLog['position'].apply(lambda x: x[2]))
+    for phase, color in zip(phases, colors):
+        mask = stateLog['phase'] == phase
+        ax_side.plot(stateLog[mask]['position'].apply(lambda x: x[0]), 
+                    stateLog[mask]['position'].apply(lambda x: x[2]),
+                    color=color, label=f'Phase {phase}')
     ax_side.set_xlabel('X Position (m)')
     ax_side.set_ylabel('Altitude (m)')
     ax_side.set_title('Side View')
     ax_side.grid(True)
+    ax_side.set_aspect('equal')
+    ax_side.legend()
 
     plt.tight_layout()
     plt.show()

@@ -14,7 +14,7 @@ def main():
 
     missionParam = MissionParameters(max_battery_capacity=2250,
                                      throttle_takeoff=0.9, throttle_climb=0.9,
-                                     throttle_level=0.6, throttle_turn=0.55,
+                                     throttle_level=0.9, throttle_turn=0.55,
                                      max_climb_angle=40, max_speed=40, max_load_factor=4.0,
                                      h_flap_transition=5)
 
