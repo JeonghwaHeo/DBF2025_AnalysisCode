@@ -20,9 +20,9 @@ m_x1 = 0.2          # X-1 test vehicle weight(kg)
 # Values from aerodynamic analysis block
 alpha_result = [-3.5, -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
 
-CL_result  = [-0.26, -0.22, -0.18, -0.14, -0.10, -0.06, -0.02, 0.02, 0.04, 0.06, 0.1, 0.14, 0.18, 0.22, 0.26, 0.3, 0.34, 0.38, 0.42, 0.46, 0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.9, 0.94, 0.98, 1.02]
+CL_result  = [-0.222436413643, -0.180875576755, -0.139353137812, -0.096288694512, -0.052894264361, -0.010754747321, 0.03419869168, 0.078854413452, 0.12106696648, 0.161467678137, 0.201566908973, 0.241976026112, 0.283543470056, 0.325138093932, 0.366766152143, 0.408601633264, 0.450967415346, 0.492989122636, 0.53524722748, 0.577778950465, 0.620252144137, 0.66246540482, 0.704655611664, 0.746793179114, 0.789031485863, 0.831251673013, 0.873484864926, 0.915483050867, 0.957648958944, 0.999516432639, 1.041274666905, 1.083247121776, 1.125457607853, 1.167900194023]
 
-CD_result = [0.071, 0.069, 0.068, 0.067, 0.066, 0.065, 0.065, 0.065, 0.065, 0.066, 0.066, 0.067, 0.068, 0.068, 0.069, 0.070, 0.071, 0.072, 0.074, 0.075, 0.076, 0.078, 0.079, 0.081, 0.082, 0.084, 0.086, 0.088, 0.090, 0.092, 0.094, 0.13, 0.136, 0.141]
+CD_result = [0.061772973184999996, 0.060765457993, 0.059979766333, 0.059394043367, 0.059040664995, 0.058869576359, 0.058963513243, 0.059280045015, 0.059776186698, 0.060453351271999994, 0.061323192485999996, 0.062396026167, 0.063704602328, 0.06522873753899999, 0.066964071138, 0.068919968281, 0.071116570998, 0.07350985547899999, 0.07612991908899999, 0.078985169342, 0.082052402645, 0.085314783391, 0.088788471021, 0.09247106842200001, 0.096374377045, 0.100489297343, 0.104817307711, 0.109328470074, 0.114072939519, 0.11898399017, 0.124117963712, 0.129468159746, 0.13505869094099998, 0.14089597807600002]
 
 CL_max = 0.94           # maximum lift coefficient
 CL_max_flap = 1.1       # maximum lift coefficient with flap deploy
@@ -41,8 +41,8 @@ CD_zero_flap = 0.10    # 0 AOA drag coefficient with flap deploy
 m_empty = 5.0       # empty weight(kg) 
 S = 0.6             # wing area(m^2)
 AR = 5.4            # wing aspect ratio    
-lw = 0.08           # Distance from the aircraft's CG to the main wing AC (m)
-lh = 0.93           # Distance from the aircraft's CG to the Horizontal Tail AC (m)
+lw = -36.192786918391576          # Distance from the aircraft's CG to the main wing AC (m)
+lh = 852.8685720200021           # Distance from the aircraft's CG to the Horizontal Tail AC (m)
 
 
 # Values from propulsion block
@@ -257,6 +257,8 @@ def climb_simulation(h_target, x_max_distance, direction):
         direction (string): The direction of movement. Must be either 'left' or 'right'.
     """    
     print("\nRunning Climb Simulation...")
+
+    if position_list[-1][2] > h_target: return
     
     dt = 0.01
     n_steps = int(60 / dt)  # Max 60 seconds simulation
@@ -300,6 +302,7 @@ def climb_simulation(h_target, x_max_distance, direction):
             if(z_pos < h_flap_transition and x_pos > x_max_distance):
                 alpha_w_deg = AOA_takeoff_max
             elif(h_flap_transition <= z_pos < h_target and x_pos > x_max_distance):
+
                 if 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb_max)) < W * max_load_factor and gamma_rad < math.radians(max_climb_angle):
                     alpha_w_deg = AOA_climb_max
                 elif 0.5 * rho * magnitude(v)**2 * S * float(CL_func(AOA_climb_max)) >= W * max_load_factor and gamma_rad < math.radians(max_climb_angle):
@@ -309,6 +312,7 @@ def climb_simulation(h_target, x_max_distance, direction):
                     alpha_w_deg = max(alpha_w_deg, -5) 
             else:
                 break_flag = 1
+                print(gamma_rad)
                 if gamma_rad > math.radians(max_climb_angle):
                     alpha_w_deg -= 1
                     alpha_w_deg = max(alpha_w_deg, -5)
@@ -391,6 +395,7 @@ def level_flight_simulation(x_final, direction):
     t = time_list[-1]
     x_pos, y_pos, z_pos = position_list[-1]
     battery_capacity = battery_capacity_list[-1]
+    cruise_flag = 0
     
     while step < max_steps:
         step += 1
@@ -403,6 +408,9 @@ def level_flight_simulation(x_final, direction):
         # Speed limiting while maintaining direction
         speed = magnitude(v)
         if speed > max_speed:  # Original speed limit
+            cruise_flag = 1
+
+        if cruise_flag == 1:
             v = v * (max_speed / speed)
             T_cruise = 0.5 * rho * max_speed**2 * S * float(CD_func(alpha_w_deg))
             alpha_w_deg = calculate_level_alpha(v, T_cruise)
