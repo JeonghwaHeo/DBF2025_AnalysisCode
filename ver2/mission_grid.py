@@ -1,0 +1,96 @@
+import numpy as np
+from itertools import product
+import time
+from config import *
+from vsp_analysis import  loadAnalysisResults
+from mission_analysis import MissionAnalyzer, visualize_mission
+from models import *
+
+
+def runMission2GridSearch(analysisResults: AircraftAnalysisResults, missionParamConstraints:MissionParamConstraints, presetValues:PresetValues) -> tuple[float, MissionParameters]:
+
+    ## Variable lists using for optimization
+    
+    throttle_climb_list = np.arange(missionParamConstraints.throttle_climb_min, missionParamConstraints.throttle_climb_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
+    throttle_turn_list = np.arange(missionParamConstraints.throttle_turn_min, missionParamConstraints.throttle_turn_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
+    throttle_level_list = np.arange(missionParamConstraints.throttle_level_min, missionParamConstraints.throttle_level_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
+    
+    print(f"\nthrottle climb list: {throttle_climb_list}")
+    print(f"throttle turn list: {throttle_turn_list}")
+    print(f"throttle level list: {throttle_level_list}\n")
+
+
+    best_score = float('-inf')
+    best_params = None
+    
+    # Create iterator for all combinations
+    throttle_combinations = product(throttle_climb_list, throttle_turn_list, throttle_level_list)
+
+    # Print total combinations
+    total = len(throttle_climb_list) * len(throttle_turn_list) * len(throttle_level_list)
+    print(f"Testing {total} throttle combinations...")
+
+    # Test each combination
+    for i, (throttle_climb, throttle_turn, throttle_level) in enumerate(throttle_combinations):
+        if(i%10 == 0): print(f"[{time.strftime("%Y-%m-%d %X")}] Progress: {i}/{total} configurations")
+        # Create mission parameters for this combination
+        missionParams = MissionParameters(
+            max_battery_capacity=presetValues.max_battery_capacity,
+            throttle_takeoff=0.9,  # Fixed
+            throttle_climb=throttle_climb,
+            throttle_level=throttle_level,
+            throttle_turn=throttle_turn,
+            max_climb_angle=40,  # Fixed
+            max_speed=40,  # Fixed
+            max_load_factor=4.0,  # Fixed
+            h_flap_transition=5  # Fixed
+        )
+
+        try:
+            # Create mission analyzer and run mission 2
+            missionAnalyzer = MissionAnalyzer(analysisResults, missionParams, presetValues)
+            score = missionAnalyzer.run_mission2()
+
+            # Update best score if current score is better
+            if score > best_score:
+                best_score = score
+                best_params = missionParams
+                
+                print(f"\nNew best score: {best_score}")
+                print(f"Throttle settings - Climb: {throttle_climb:.2f}, "
+                      f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
+        
+        except Exception as e:
+            print(f"Failed with throttles {throttle_climb:.2f}/{throttle_turn:.2f}/"
+                  f"{throttle_level:.2f}: {str(e)}")
+            continue
+
+    return best_score, best_params
+
+if __name__=="__main__":
+    presetValues = PresetValues(
+            m_x1 = 0.2,                       # kg
+            x1_flight_time = 30,              # sec
+            max_battery_capacity = 2250,      # mAh (per one battery)
+            Thrust_max = 6.6,                 # kg (two motors)
+            min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
+            propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
+            score_weight_ratio = 1            # mission2/3 score weight ratio
+            )
+    a=loadAnalysisResults(687192594661440415)
+    score, param = runMission2GridSearch(a,
+                          MissionParamConstraints (
+                              #Constraints for calculating missions
+                              throttle_climb_min = 1.0,
+                              throttle_climb_max = 1.0,
+                              throttle_turn_min = 0.7,
+                              throttle_turn_max = 0.7,
+                              throttle_level_min = 1.0,
+                              throttle_level_max = 1.0,
+                              throttle_analysis_interval = 0.05,
+                              ),
+                          presetValues
+                          )
+    missionAnalyzer = MissionAnalyzer(a,param,presetValues) 
+    missionAnalyzer.run_mission2()
+    visualize_mission(missionAnalyzer.stateLog)

@@ -4,7 +4,7 @@ import cProfile
 import pstats
 from pstats import SortKey
 
-from vsp_analysis import VSPAnalyzer, writeAnalysisResults, loadAnalysisResults, visualize_results
+from vsp_analysis import VSPAnalyzer, writeAnalysisResults, loadAnalysisResults, visualize_results, compare_aerodynamics
 from mission_analysis import MissionAnalyzer, visualize_mission
 from models import *
 
@@ -31,8 +31,12 @@ def main():
         h_flap_transition = 5             # m
         )
 
-    a=loadAnalysisResults(7227620209081741491)
-    
+    a=loadAnalysisResults(687192594661440415)
+    b=loadAnalysisResults(1676891088784291821)
+    c=loadAnalysisResults(1268481079834018136)
+    d=loadAnalysisResults(1446022752061654911)
+    compare_aerodynamics([a,b,c,d])
+    return
     missionAnalyzer = MissionAnalyzer(a, missionParam, presetValues)
 
     profiler = cProfile.Profile()

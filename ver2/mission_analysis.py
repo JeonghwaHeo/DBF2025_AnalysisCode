@@ -131,7 +131,7 @@ class MissionAnalyzer():
                 case _: 
                     raise ValueError("Didn't provide a correct PhaseType!")
             self.state.phase += 1
-            print("Changed Phase")
+            #print("Changed Phase")
 
     def run_mission2(self) -> float:
 
@@ -180,10 +180,10 @@ class MissionAnalyzer():
             AOA=self.state.AOA,
             climb_pitch_angle=self.state.climb_pitch_angle,
             bank_angle=self.state.bank_angle,
-            phase=self.state.phase,
             battery_capacity=self.state.battery_capacity,
             battery_voltage=self.state.battery_voltage,
-            current_draw=self.state.current_draw
+            current_draw=self.state.current_draw,
+            phase=self.state.phase
         ))
 
 
