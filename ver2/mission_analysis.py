@@ -697,135 +697,6 @@ class MissionAnalyzer():
           self.logState() 
 
 
-    # dt = 0.01
-    #def turn_simulation(self, target_angle_deg, direction):
-    #    """
-    #    Args:
-    #        target_angle_degree (float): Required angle of coordinate level turn (degree)
-    #        direction (string): The direction of movement. Must be either 'CW' or 'CCW'.
-    #    """     
-    #    self.dt = 0.01
-    #    speed = fast_norm(self.state.velocity) 
-
-    #    # Initialize turn tracking
-    #    target_angle_rad = math.radians(target_angle_deg)
-    #    turned_angle_rad = 0
-    #
-    #    # Get initial heading and setup turn center
-    #    initial_angle_rad = math.atan2(self.state.velocity[1], self.state.velocity[0])
-    #    current_angle_rad = initial_angle_rad
-    #
-    #    # Turn
-    #    while abs(turned_angle_rad) < abs(target_angle_rad):
-    #        self.state.time += self.dt
-    #        R,omega =0,0
-    #        a_tangential,a_centripetal = 0, 0
-    #        phi_rad,alpha_turn = 0, 0
-    #        if speed < self.missionParam.max_speed:
-
-    #            CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
-    #                    float((2*self.missionParam.max_load_factor*self.weight)/(rho * speed**2 * self.analResult.Sref)))
-
-
-    #            alpha_turn = float(self.alpha_func(CL)) 
-
-    #            L, load_factor = self.calculateLift(CL)
-
-    #            phi_rad = math.acos(self.weight/L)
-    #            a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
-
-    #            R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
-
-    #            omega = speed / R
-
-    #            self.state.loadfactor = 1 / math.cos(phi_rad)
-    #
-    #            CD = float(self.CD_func(alpha_turn))
-    #            D = CD * (0.5 * rho * speed**2) * self.analResult.Sref
-
-    #            a_tangential = (self.T_turn - D) / self.aircraft.m_total
-    #            self.state.throttle = self.missionParam.throttle_turn
-
-    #            speed += a_tangential * self.dt
-    #            
-    #            self.updateBatteryState(self.T_turn)
-    #        
-    #        elif speed >= self.missionParam.max_speed : 
-    #            speed = self.missionParam.max_speed
-    #            CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
-    #                     float((2*self.missionParam.max_load_factor*self.weight)/(rho * speed**2 * self.analResult.Sref)))
-    #            alpha_turn = float(self.alpha_func(CL)) 
-
-    #            L, load_factor = self.calculateLift(CL)
-
-    #            phi_rad = math.acos(self.weight/L)
-
-    #            a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
-    #            R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
-    #            omega = speed / R
-
-    #            self.state.loadfactor = 1 / math.cos(phi_rad)
-    #
-    #            CD = float(self.CD_func(alpha_turn))
-    #            D = CD * (0.5 * rho * speed**2) * self.analResult.Sref
-    #            T = min(D, self.T_turn)
-    #            self.throttle = T/self.T_max
-    #            a_tangential = (T - D) / self.aircraft.m_total
-    #            speed += a_tangential * self.dt
-
-    #            self.updateBatteryState(T)
-
-    #        center_x,center_y = 0,0 
-    #        
-    #        # Calculate turn center
-    #        if direction == "CCW":
-    #            center_x = self.state.position[0]- R * math.sin(current_angle_rad)
-    #            center_y = self.state.position[1]+ R * math.cos(current_angle_rad)
-    #        elif direction == "CW":
-    #            center_x = self.state.position[0] + R * math.sin(current_angle_rad)
-    #            center_y = self.state.position[1] - R * math.cos(current_angle_rad)
-    #
-    #        # Update heading based on angular velocity
-    #        if direction == "CCW":
-    #            current_angle_rad += omega * self.dt
-    #            turned_angle_rad += omega * self.dt
-    #        elif direction == "CW":
-    #            current_angle_rad -= omega * self.dt
-    #            turned_angle_rad -= omega * self.dt
-    #        
-    #        # Calculate new position relative to turn center
-    #        if direction == "CCW":
-    #            self.state.position[0] = center_x + R * math.sin(current_angle_rad)
-    #            self.state.position[1] = center_y - R * math.cos(current_angle_rad)
-    #        elif direction == "CW":
-    #            self.state.position[0] = center_x - R * math.sin(current_angle_rad)
-    #            self.state.position[1] = center_y + R * math.cos(current_angle_rad)
-    #
-    #        # Update velocity direction (tangent to the circular path)
-    #        self.state.velocity = np.array([
-    #            speed * math.cos(current_angle_rad),
-    #            speed * math.sin(current_angle_rad),
-    #            0
-    #        ])
-    #
-    #        self.state.acceleration = np.array([a_tangential * math.cos(current_angle_rad) \
-    #                                            - a_centripetal * math.sin(current_angle_rad),
-    #                                            a_tangential * math.sin(current_angle_rad) \
-    #                                             + a_centripetal * math.cos(current_angle_rad),
-    #                                            0])
-    #            
-
-    #         
-    #        self.state.AOA = alpha_turn
-    #        self.state.bank_angle = math.degrees(phi_rad)
-    #        self.state.climb_pitch_angle = np.nan
-
-    #        self.phase = 3
-
-    #        self.logState()
-
-    #    return
-    
 def RK4_step(v, dt, func):
     """ Given v and a = f(v), solve for (v(t+dt)-v(dt))/dt or approximately a(t+dt/2)"""
 
@@ -953,13 +824,13 @@ def visualize_mission(stateLog):
     x_lims = ax_3d.get_xlim3d()
     y_lims = ax_3d.get_ylim3d()
     z_lims = ax_3d.get_zlim3d()
-    max_range = max(x_lims[1] - x_lims[0], y_lims[1] - y_lims[0], z_lims[1] - z_lims[0])
+    max_range = max(x_lims[1] - x_lims[0], y_lims[1] - y_lims[0])
     x_center = (x_lims[1] + x_lims[0]) / 2
     y_center = (y_lims[1] + y_lims[0]) / 2
     z_center = (z_lims[1] + z_lims[0]) / 2
     ax_3d.set_xlim3d([x_center - max_range/2, x_center + max_range/2])
     ax_3d.set_ylim3d([y_center - max_range/2, y_center + max_range/2])
-    ax_3d.set_zlim3d([z_center - max_range/2, z_center + max_range/2])
+    ax_3d.set_zlim3d([0, z_lims[1]*1.5])
 
     # Top-down view colored by phase
     ax_top = fig.add_subplot(gs[2, 0])
