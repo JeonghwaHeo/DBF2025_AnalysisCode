@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass
+from dataclasses import replace, dataclass
 from typing import List
 import numpy as np
 import pandas as pd
@@ -165,12 +165,27 @@ class MissionAnalyzer():
         
     def clearState(self):
         self.state = PlaneState()
-        self.stateLog = pd.DataFrame(columns = list(asdict(self.state).keys()))
+        self.stateLog = []
 
     # update the current state of the simulation
     def logState(self) -> None:
-        # print(self.state)
-        self.stateLog = pd.concat([self.stateLog, pd.DataFrame([asdict(self.state)])])
+        # Append current state as a copy
+        self.stateLog.append(PlaneState(
+            position=self.state.position.copy(),
+            velocity=self.state.velocity.copy(), 
+            acceleration=self.state.acceleration.copy(),
+            time=self.state.time,
+            throttle=self.state.throttle,
+            loadfactor=self.state.loadfactor,
+            AOA=self.state.AOA,
+            climb_pitch_angle=self.state.climb_pitch_angle,
+            bank_angle=self.state.bank_angle,
+            phase=self.state.phase,
+            battery_capacity=self.state.battery_capacity,
+            battery_voltage=self.state.battery_voltage,
+            current_draw=self.state.current_draw
+        ))
+
 
     def setAuxVals(self) -> None:
         self.weight = self.aircraft.m_total * g
@@ -192,22 +207,41 @@ class MissionAnalyzer():
         # multiply (lh-lw) / lh at CL to consider the effect from horizontal tail wing
         # interpolate CD using quadratic function 
         # alpha_func : function to calculate AOA from given CL value
-        self.CL_func = interp1d(self.analResult.alpha_list,
-                                float((self.analResult.Lh-self.analResult.Lw) / self.analResult.Lh) * np.array(self.analResult.CL), 
-                                kind = 'linear', 
-                                bounds_error = False, fill_value = "extrapolate")
 
-        self.CD_func = interp1d(self.analResult.alpha_list, 
-                                self.analResult.CD_total, 
-                                kind = 'quadratic',
-                                bounds_error = False, fill_value = 'extrapolate')
+        tail_effect = float((self.analResult.Lh-self.analResult.Lw) / self.analResult.Lh)
 
-        self.alpha_func = interp1d(
-                                (self.analResult.Lh-self.analResult.Lw) 
-                                / self.analResult.Lh * np.array(self.analResult.CL), 
-                                   self.analResult.alpha_list, 
-                                   kind='linear',
-                                   bounds_error=False, fill_value='extrapolate') 
+         # Create focused alpha range from -10 to 10 degrees
+        alpha_extended = np.linspace(-10, 10, 2000)  # 0.01 degree resolution
+    
+        # Create lookup tables
+        CL_table = np.interp(alpha_extended, 
+                            self.analResult.alpha_list,
+                            tail_effect * np.array(self.analResult.CL))
+        CD_table = np.interp(alpha_extended, 
+                            self.analResult.alpha_list,
+                            self.analResult.CD_total)
+        
+        # Create lambda functions for faster lookup
+        self.CL_func = lambda alpha: np.interp(alpha, alpha_extended, CL_table)
+        self.CD_func = lambda alpha: np.interp(alpha, alpha_extended, CD_table)
+        self.alpha_func = lambda CL: np.interp(CL, CL_table, alpha_extended)
+
+       # self.CL_func = interp1d(self.analResult.alpha_list,
+       #                         float((self.analResult.Lh-self.analResult.Lw) / self.analResult.Lh) * np.array(self.analResult.CL), 
+       #                         kind = 'linear', 
+       #                         bounds_error = False, fill_value = "extrapolate")
+
+       # self.CD_func = interp1d(self.analResult.alpha_list, 
+       #                         self.analResult.CD_total, 
+       #                         kind = 'quadratic',
+       #                         bounds_error = False, fill_value = 'extrapolate')
+
+       # self.alpha_func = interp1d(
+       #                         (self.analResult.Lh-self.analResult.Lw) 
+       #                         / self.analResult.Lh * np.array(self.analResult.CL), 
+       #                            self.analResult.alpha_list, 
+       #                            kind='linear',
+       #                            bounds_error=False, fill_value='extrapolate') 
         return
 
     ## Previously battery
@@ -239,7 +273,7 @@ class MissionAnalyzer():
 
     def calculate_level_alpha(self, T, v):
         #  Function that calculates the AOA required for level flight using the velocity vector and thrust
-        speed = np.linalg.norm(v)
+        speed = fast_norm(v)
         def equation(alpha:float):
             CL = float(self.CL_func(alpha))
             L,_ = self.calculateLift(CL,float(speed))
@@ -249,8 +283,8 @@ class MissionAnalyzer():
         return alpha_solution[0]
     
     def calculateLift(self, CL, speed:float=-1):
-        if(speed == -1): speed = np.linalg.norm(self.state.velocity)
-        L = 0.5 * rho * np.linalg.norm(self.state.velocity)**2 * self.analResult.Sref * CL
+        if(speed == -1): speed = fast_norm(self.state.velocity)
+        L = 0.5 * rho * fast_norm(self.state.velocity)**2 * self.analResult.Sref * CL
         return L, L/self.weight 
 
     def isBelowFlapTransition(self):
@@ -266,7 +300,7 @@ class MissionAnalyzer():
         self.state.battery_capacity = self.presetValues.max_battery_capacity
         
         # Ground roll until 0.9 times takeoff speed
-        while np.linalg.norm(self.state.velocity) < 0.9 * self.v_takeoff:
+        while fast_norm(self.state.velocity) < 0.9 * self.v_takeoff:
             
             self.state.time += self.dt
 
@@ -300,7 +334,7 @@ class MissionAnalyzer():
 
             
         # Ground rotation until takeoff speed    
-        while 0.9 * self.v_takeoff <= np.linalg.norm(self.state.velocity) <= self.v_takeoff:
+        while 0.9 * self.v_takeoff <= fast_norm(self.state.velocity) <= self.v_takeoff:
 
             self.state.time += self.dt
 
@@ -337,11 +371,10 @@ class MissionAnalyzer():
             direction (string): The direction of movement. Must be either 'left' or 'right'.
         """
         if self.state.position[2] > h_target: return
-
+        self.dt = 0.01
         n_steps = int(60 / self.dt)  # Max 60 seconds simulation
         break_flag = False
         alpha_w_deg = 0 
-
         for step in range(n_steps):
 
             self.state.time += self.dt
@@ -364,7 +397,7 @@ class MissionAnalyzer():
                     elif (load_factor >= self.missionParam.max_load_factor and 
                           gamma_rad < math.radians(self.missionParam.max_climb_angle)):
                         alpha_w_deg = float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/
-                                                          (rho * np.linalg.norm(self.state.velocity)**2 * self.analResult.Sref)))
+                                                          (rho * fast_norm(self.state.velocity)**2 * self.analResult.Sref)))
                     else:
                         alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)
@@ -392,7 +425,7 @@ class MissionAnalyzer():
                     elif (load_factor >= self.missionParam.max_load_factor and 
                           gamma_rad < math.radians(self.missionParam.max_climb_angle)):
                         alpha_w_deg = float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/
-                                                          (rho * np.linalg.norm(self.state.velocity)**2 * self.analResult.Sref)))
+                                                          (rho * fast_norm(self.state.velocity)**2 * self.analResult.Sref)))
                     else:
                         alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)
@@ -451,15 +484,14 @@ class MissionAnalyzer():
 
     # dt = 0.1!
     def level_flight_simulation(self, x_final, direction):
-        print("\nRunning Level Flight Simulation...")
-        
+        #print("\nRunning Level Flight Simulation...")
         max_steps = int(180/self.dt) # max 3 minuites
         # print(max_steps)
         step = 0
-        
+        self.dt = 0.1
         # Initialize vectors
         self.state.velocity[2] = 0  # Zero vertical velocity
-        speed = np.linalg.norm(self.state.velocity)
+        speed = fast_norm(self.state.velocity)
 
         if direction == 'right':
             self.state.velocity = np.array([speed, 0, 0])  # Align with x-axis
@@ -471,7 +503,7 @@ class MissionAnalyzer():
         while step < max_steps:
             step += 1
             self.state.time += self.dt
-            speed = np.linalg.norm(self.state.velocity)
+            speed = fast_norm(self.state.velocity)
             
             # Calculate alpha_w first
             alpha_w_deg=self.calculate_level_alpha(self.T_level,self.state.velocity)
@@ -542,155 +574,279 @@ class MissionAnalyzer():
 
 
         return
+    def turn_simulation(self, target_angle_deg, direction):
+      """
+      Args:
+          target_angle_degree (float): Required angle of coordinate level turn (degree)
+          direction (string): The direction of movement. Must be either 'CW' or 'CCW'.
+      """     
+      speed = fast_norm(self.state.velocity) 
+
+      # Initialize turn tracking
+      target_angle_rad = math.radians(target_angle_deg)
+      turned_angle_rad = 0
+
+      # Get initial heading and setup turn center
+      initial_angle_rad = math.atan2(self.state.velocity[1], self.state.velocity[0])
+      current_angle_rad = initial_angle_rad
+
+      # Pre-calculate constants
+      dynamic_pressure_base = 0.5 * rho * self.analResult.Sref
+      max_speed = self.missionParam.max_speed
+      max_load = self.missionParam.max_load_factor
+      weight = self.weight
+
+      while abs(turned_angle_rad) < abs(target_angle_rad):
+          self.state.time += self.dt
+
+          if speed < max_speed:
+              # Pre-calculate shared terms
+              dynamic_pressure = dynamic_pressure_base * speed * speed
+              
+              CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
+                      float((2 * max_load * weight)/(dynamic_pressure)))
+
+              alpha_turn = float(self.alpha_func(CL))
+              L = dynamic_pressure * CL
+              phi_rad = math.acos(weight/L)
+              
+              a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
+              R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
+              omega = speed / R
+
+              self.state.loadfactor = 1 / math.cos(phi_rad)
+
+              CD = float(self.CD_func(alpha_turn))
+              D = CD * dynamic_pressure
+
+              a_tangential = (self.T_turn - D) / self.aircraft.m_total
+              self.state.throttle = self.missionParam.throttle_turn
+
+              speed += a_tangential * self.dt
+              self.updateBatteryState(self.T_turn)
+
+          else:
+              speed = max_speed
+              dynamic_pressure = dynamic_pressure_base * speed * speed
+              
+              CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
+                      float((2 * max_load * weight)/(dynamic_pressure)))
+                      
+              alpha_turn = float(self.alpha_func(CL))
+              L = dynamic_pressure * CL
+              phi_rad = math.acos(weight/L)
+
+              a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
+              R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
+              omega = speed / R
+
+              self.state.loadfactor = 1 / math.cos(phi_rad)
+
+              CD = float(self.CD_func(alpha_turn))
+              D = CD * dynamic_pressure
+              T = min(D, self.T_turn)
+              self.state.throttle = T/self.T_max
+              a_tangential = (T - D) / self.aircraft.m_total
+              speed += a_tangential * self.dt
+
+              self.updateBatteryState(T)
+
+          # Calculate turn center
+          sin_current = math.sin(current_angle_rad)
+          cos_current = math.cos(current_angle_rad)
+          
+          if direction == "CCW":
+              center_x = self.state.position[0] - R * sin_current
+              center_y = self.state.position[1] + R * cos_current
+              current_angle_rad += omega * self.dt
+              turned_angle_rad += omega * self.dt
+          else:  # CW
+              center_x = self.state.position[0] + R * sin_current
+              center_y = self.state.position[1] - R * cos_current
+              current_angle_rad -= omega * self.dt
+              turned_angle_rad -= omega * self.dt
+
+          # Update position
+          sin_new = math.sin(current_angle_rad)
+          cos_new = math.cos(current_angle_rad)
+          
+          if direction == "CCW":
+              self.state.position[0] = center_x + R * sin_new
+              self.state.position[1] = center_y - R * cos_new
+          else:  # CW
+              self.state.position[0] = center_x - R * sin_new
+              self.state.position[1] = center_y + R * cos_new
+
+          # Update velocity direction
+          self.state.velocity = np.array([
+              speed * cos_new,
+              speed * sin_new,
+              0
+          ])
+
+          self.state.acceleration = np.array([
+              a_tangential * cos_new - a_centripetal * sin_new,
+              a_tangential * sin_new + a_centripetal * cos_new,
+              0
+          ])
+
+          self.state.AOA = alpha_turn
+          self.state.bank_angle = math.degrees(phi_rad)
+          self.state.climb_pitch_angle = np.nan
+
+          self.logState() 
+
 
     # dt = 0.01
-    def turn_simulation(self, target_angle_deg, direction):
-        """
-        Args:
-            target_angle_degree (float): Required angle of coordinate level turn (degree)
-            direction (string): The direction of movement. Must be either 'CW' or 'CCW'.
-        """     
-        
-        speed = np.linalg.norm(self.state.velocity) 
+    #def turn_simulation(self, target_angle_deg, direction):
+    #    """
+    #    Args:
+    #        target_angle_degree (float): Required angle of coordinate level turn (degree)
+    #        direction (string): The direction of movement. Must be either 'CW' or 'CCW'.
+    #    """     
+    #    self.dt = 0.01
+    #    speed = fast_norm(self.state.velocity) 
 
-        # Initialize turn tracking
-        target_angle_rad = math.radians(target_angle_deg)
-        turned_angle_rad = 0
-    
-        # Get initial heading and setup turn center
-        initial_angle_rad = math.atan2(self.state.velocity[1], self.state.velocity[0])
-        current_angle_rad = initial_angle_rad
-    
-        # Turn
-        while abs(turned_angle_rad) < abs(target_angle_rad):
-            self.state.time += self.dt
-            R,omega =0,0
-            a_tangential,a_centripetal = 0, 0
-            phi_rad,alpha_turn = 0, 0
-            if speed < self.missionParam.max_speed:
+    #    # Initialize turn tracking
+    #    target_angle_rad = math.radians(target_angle_deg)
+    #    turned_angle_rad = 0
+    #
+    #    # Get initial heading and setup turn center
+    #    initial_angle_rad = math.atan2(self.state.velocity[1], self.state.velocity[0])
+    #    current_angle_rad = initial_angle_rad
+    #
+    #    # Turn
+    #    while abs(turned_angle_rad) < abs(target_angle_rad):
+    #        self.state.time += self.dt
+    #        R,omega =0,0
+    #        a_tangential,a_centripetal = 0, 0
+    #        phi_rad,alpha_turn = 0, 0
+    #        if speed < self.missionParam.max_speed:
 
-                CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
-                        float((2*self.missionParam.max_load_factor*self.weight)/(rho * speed**2 * self.analResult.Sref)))
+    #            CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
+    #                    float((2*self.missionParam.max_load_factor*self.weight)/(rho * speed**2 * self.analResult.Sref)))
 
 
-                alpha_turn = float(self.alpha_func(CL)) 
+    #            alpha_turn = float(self.alpha_func(CL)) 
 
-                L, load_factor = self.calculateLift(CL)
+    #            L, load_factor = self.calculateLift(CL)
 
-                phi_rad = math.acos(self.weight/L)
-                a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
+    #            phi_rad = math.acos(self.weight/L)
+    #            a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
 
-                R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
+    #            R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
 
-                omega = speed / R
+    #            omega = speed / R
 
-                self.state.loadfactor = 1 / math.cos(phi_rad)
-    
-                CD = float(self.CD_func(alpha_turn))
-                D = CD * (0.5 * rho * speed**2) * self.analResult.Sref
+    #            self.state.loadfactor = 1 / math.cos(phi_rad)
+    #
+    #            CD = float(self.CD_func(alpha_turn))
+    #            D = CD * (0.5 * rho * speed**2) * self.analResult.Sref
 
-                a_tangential = (self.T_turn - D) / self.aircraft.m_total
-                self.state.throttle = self.missionParam.throttle_turn
+    #            a_tangential = (self.T_turn - D) / self.aircraft.m_total
+    #            self.state.throttle = self.missionParam.throttle_turn
 
-                speed += a_tangential * self.dt
-                
-                self.updateBatteryState(self.T_turn)
-            
-            elif speed >= self.missionParam.max_speed : 
-                speed = self.missionParam.max_speed
-                CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
-                         float((2*self.missionParam.max_load_factor*self.weight)/(rho * speed**2 * self.analResult.Sref)))
-                alpha_turn = float(self.alpha_func(CL)) 
+    #            speed += a_tangential * self.dt
+    #            
+    #            self.updateBatteryState(self.T_turn)
+    #        
+    #        elif speed >= self.missionParam.max_speed : 
+    #            speed = self.missionParam.max_speed
+    #            CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
+    #                     float((2*self.missionParam.max_load_factor*self.weight)/(rho * speed**2 * self.analResult.Sref)))
+    #            alpha_turn = float(self.alpha_func(CL)) 
 
-                L, load_factor = self.calculateLift(CL)
+    #            L, load_factor = self.calculateLift(CL)
 
-                phi_rad = math.acos(self.weight/L)
+    #            phi_rad = math.acos(self.weight/L)
 
-                a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
-                R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
-                omega = speed / R
+    #            a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
+    #            R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
+    #            omega = speed / R
 
-                self.state.loadfactor = 1 / math.cos(phi_rad)
-    
-                CD = float(self.CD_func(alpha_turn))
-                D = CD * (0.5 * rho * speed**2) * self.analResult.Sref
-                T = min(D, self.T_turn)
-                self.throttle = T/self.T_max
-                a_tangential = (T - D) / self.aircraft.m_total
-                speed += a_tangential * self.dt
+    #            self.state.loadfactor = 1 / math.cos(phi_rad)
+    #
+    #            CD = float(self.CD_func(alpha_turn))
+    #            D = CD * (0.5 * rho * speed**2) * self.analResult.Sref
+    #            T = min(D, self.T_turn)
+    #            self.throttle = T/self.T_max
+    #            a_tangential = (T - D) / self.aircraft.m_total
+    #            speed += a_tangential * self.dt
 
-                self.updateBatteryState(T)
+    #            self.updateBatteryState(T)
 
-            center_x,center_y = 0,0 
-            
-            # Calculate turn center
-            if direction == "CCW":
-                center_x = self.state.position[0]- R * math.sin(current_angle_rad)
-                center_y = self.state.position[1]+ R * math.cos(current_angle_rad)
-            elif direction == "CW":
-                center_x = self.state.position[0] + R * math.sin(current_angle_rad)
-                center_y = self.state.position[1] - R * math.cos(current_angle_rad)
-    
-            # Update heading based on angular velocity
-            if direction == "CCW":
-                current_angle_rad += omega * self.dt
-                turned_angle_rad += omega * self.dt
-            elif direction == "CW":
-                current_angle_rad -= omega * self.dt
-                turned_angle_rad -= omega * self.dt
-            
-            # Calculate new position relative to turn center
-            if direction == "CCW":
-                self.state.position[0] = center_x + R * math.sin(current_angle_rad)
-                self.state.position[1] = center_y - R * math.cos(current_angle_rad)
-            elif direction == "CW":
-                self.state.position[0] = center_x - R * math.sin(current_angle_rad)
-                self.state.position[1] = center_y + R * math.cos(current_angle_rad)
-    
-            # Update velocity direction (tangent to the circular path)
-            self.state.velocity = np.array([
-                speed * math.cos(current_angle_rad),
-                speed * math.sin(current_angle_rad),
-                0
-            ])
-    
-            self.state.acceleration = np.array([a_tangential * math.cos(current_angle_rad) \
-                                                - a_centripetal * math.sin(current_angle_rad),
-                                                a_tangential * math.sin(current_angle_rad) \
-                                                 + a_centripetal * math.cos(current_angle_rad),
-                                                0])
-                
+    #        center_x,center_y = 0,0 
+    #        
+    #        # Calculate turn center
+    #        if direction == "CCW":
+    #            center_x = self.state.position[0]- R * math.sin(current_angle_rad)
+    #            center_y = self.state.position[1]+ R * math.cos(current_angle_rad)
+    #        elif direction == "CW":
+    #            center_x = self.state.position[0] + R * math.sin(current_angle_rad)
+    #            center_y = self.state.position[1] - R * math.cos(current_angle_rad)
+    #
+    #        # Update heading based on angular velocity
+    #        if direction == "CCW":
+    #            current_angle_rad += omega * self.dt
+    #            turned_angle_rad += omega * self.dt
+    #        elif direction == "CW":
+    #            current_angle_rad -= omega * self.dt
+    #            turned_angle_rad -= omega * self.dt
+    #        
+    #        # Calculate new position relative to turn center
+    #        if direction == "CCW":
+    #            self.state.position[0] = center_x + R * math.sin(current_angle_rad)
+    #            self.state.position[1] = center_y - R * math.cos(current_angle_rad)
+    #        elif direction == "CW":
+    #            self.state.position[0] = center_x - R * math.sin(current_angle_rad)
+    #            self.state.position[1] = center_y + R * math.cos(current_angle_rad)
+    #
+    #        # Update velocity direction (tangent to the circular path)
+    #        self.state.velocity = np.array([
+    #            speed * math.cos(current_angle_rad),
+    #            speed * math.sin(current_angle_rad),
+    #            0
+    #        ])
+    #
+    #        self.state.acceleration = np.array([a_tangential * math.cos(current_angle_rad) \
+    #                                            - a_centripetal * math.sin(current_angle_rad),
+    #                                            a_tangential * math.sin(current_angle_rad) \
+    #                                             + a_centripetal * math.cos(current_angle_rad),
+    #                                            0])
+    #            
 
-             
-            self.state.AOA = alpha_turn
-            self.state.bank_angle = math.degrees(phi_rad)
-            self.state.climb_pitch_angle = np.nan
+    #         
+    #        self.state.AOA = alpha_turn
+    #        self.state.bank_angle = math.degrees(phi_rad)
+    #        self.state.climb_pitch_angle = np.nan
 
-            self.phase = 3
+    #        self.phase = 3
 
-            self.logState()
+    #        self.logState()
 
-        return
+    #    return
     
 def RK4_step(v, dt, func):
     """ Given v and a = f(v), solve for (v(t+dt)-v(dt))/dt or approximately a(t+dt/2)"""
+
+    dt2 = dt/2
     a1 = func(v)
-    v1 = v + a1 * dt/2
-    a2 = func(v1)
-    v2 = v + a2 * dt / 2 
-    a3 = func(v2)
-    v3 = v + a3 * dt
-    a4 = func(v3)
+    a2 = func(v + a1 * dt2)
+    a3 = func(v + a2 * dt2)
+    a4 = func(v + a3 * dt)
+    return (a1 + 2*(a2 + a3) + a4) * (1/6)
 
+def fast_norm(v):
+    """Faster alternative to np.linalg.norm for 3D vectors"""
+    return math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
 
-    return (a1 + 2*a2 + 2*a3 + a4)/6
 
 def calculate_acceleration_groundroll(v, m_total, Weight,
                                       Sref,
                                       CD_zero_flap,CL_zero_flap,
                                       T_takeoff)->np.ndarray:
     # Function that calculates the acceleration of an aircraft during ground roll
-    speed = np.linalg.norm(v)
+    speed = fast_norm(v)
     D = 0.5 * rho * speed**2 * Sref * CD_zero_flap
     L = 0.5 * rho * speed**2 * Sref * CL_zero_flap
     a_x = (T_takeoff - D - 0.03*(Weight-L)) / m_total              # calculate x direction acceleration 
@@ -701,7 +857,7 @@ def calculate_acceleration_groundrotation(v, m_total, Weight,
                                           CD_max_flap,CL_max_flap,
                                           T_takeoff)->np.ndarray:
     # Function that calculate the acceleration of the aircraft during rotation for takeoff
-    speed = np.linalg.norm(v)
+    speed = fast_norm(v)
     D = 0.5 * rho * speed**2 * Sref * CD_max_flap
     L = 0.5 * rho * speed**2 * Sref * CL_max_flap
     a_x = (T_takeoff - D - 0.03*(Weight-L)) / m_total            # calculate x direction acceleration 
@@ -709,7 +865,7 @@ def calculate_acceleration_groundrotation(v, m_total, Weight,
 
 def calculate_acceleration_level(v, m_total, Sref, CD_func, alpha_deg, T):
     # Function that calculates the acceleration during level flight
-    speed = np.linalg.norm(v)
+    speed = fast_norm(v)
     CD = float(CD_func(alpha_deg))
     D = 0.5 * rho * speed**2 * Sref * CD
     a_x = (T * math.cos(math.radians(alpha_deg)) - D) / m_total
@@ -727,7 +883,7 @@ def calculate_acceleration_climb(v, m_total, Weight,
     # Function that calculates the acceleration during climb
     CL=0
     CD=0
-    speed = np.linalg.norm(v)
+    speed = fast_norm(v)
     if (over_flap_transition):
         CL = float(CL_func(alpha_deg))
         CD = float(CD_func(alpha_deg))
@@ -746,8 +902,32 @@ def calculate_acceleration_climb(v, m_total, Weight,
 
     return np.array([a_x, 0, a_z])
 
-def visualize_mission(stateLog: pd.DataFrame):
+def get_state_df(stateLog):
+    # Convert numpy arrays to lists for proper DataFrame conversion
+    states_dict = []
+    for state in stateLog:
+        state_dict = {
+            'position': np.array([state.position[0],state.position[1],state.position[2]]),
+            'velocity': np.array([state.velocity[0],state.velocity[1],state.velocity[2]]),
+            'acceleration': np.array([state.acceleration[0],state.acceleration[1],state.acceleration[2]]),
+            'time': state.time,
+            'throttle': state.throttle,
+            'loadfactor': state.loadfactor,
+            'AOA': state.AOA,
+            'climb_pitch_angle': state.climb_pitch_angle,
+            'bank_angle': state.bank_angle,
+            'phase': state.phase,
+            'battery_capacity': state.battery_capacity,
+            'battery_voltage': state.battery_voltage,
+            'current_draw': state.current_draw
+        }
+        states_dict.append(state_dict)
+    return pd.DataFrame(states_dict)
+
+def visualize_mission(stateLog):
     """Generate all visualization plots for the mission in a single window"""
+    stateLog = get_state_df(stateLog)
+
     fig = plt.figure(figsize=(20, 15))
     gs = fig.add_gridspec(3, 3)
     

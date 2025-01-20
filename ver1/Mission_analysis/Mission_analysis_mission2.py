@@ -312,7 +312,6 @@ def climb_simulation(h_target, x_max_distance, direction):
                     alpha_w_deg = max(alpha_w_deg, -5) 
             else:
                 break_flag = 1
-                print(gamma_rad)
                 if gamma_rad > math.radians(max_climb_angle):
                     alpha_w_deg -= 1
                     alpha_w_deg = max(alpha_w_deg, -5)
