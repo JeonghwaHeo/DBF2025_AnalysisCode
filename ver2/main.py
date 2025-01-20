@@ -1,37 +1,37 @@
 ## Does all the main work
 
 from vsp_analysis import VSPAnalyzer, writeAnalysisResults, loadAnalysisResults, visualize_results
-from mission_analysis import MissionAnalyzer
+from mission_analysis import MissionAnalyzer, visualize_mission
 from models import *
 
 def main():
     presetValues = PresetValues(
-            m_x1=1,x1_flight_time=2,
-            max_battery_capacity=3,Thrust_max=4,
-            min_battery_voltage=3, propulsion_efficiency=0.5,
+            m_x1=0.2,x1_flight_time=3,
+            max_battery_capacity=2250,Thrust_max=6.6,
+            min_battery_voltage=18, propulsion_efficiency=0.8,
           score_weight_ratio=1
           )
 
-    # missionParam = MissionParameters(max_battery_capacity=2250,
-    #                                  throttle_takeoff=0.9, throttle_climb=0.9,
-    #                                  throttle_level=0.6, throttle_turn=0.55,
-    #                                  max_climb_angle=40, max_speed=40, max_load_factor=4.0,
-    #                                  h_flap_transition=5)
+    missionParam = MissionParameters(max_battery_capacity=2250,
+                                     throttle_takeoff=0.9, throttle_climb=0.9,
+                                     throttle_level=0.6, throttle_turn=0.55,
+                                     max_climb_angle=40, max_speed=40, max_load_factor=4.0,
+                                     h_flap_transition=5)
 
-    # a=loadAnalysisResults(6010330674452735345)
-    # 
-    # missionAnalyzer = MissionAnalyzer(a,missionParam,presetValues)
-    # 
-    # print(missionAnalyzer.run_mission2())
-    # print(missionAnalyzer.stateLog.head())
-    # 
-    # return
+    a=loadAnalysisResults(1694631385136050562)
+    
+    missionAnalyzer = MissionAnalyzer(a,missionParam,presetValues)
+    missionAnalyzer.run_mission2()
+    
+    visualize_mission(missionAnalyzer.stateLog) 
+    
+    return
    
     aircraft = Aircraft(
-            m_total=50,m_fuselage=10,
-
+            m_total=6000,m_fuselage=3000,
+ 
             wing_density=0.0000852, spar_density=1.0,
-
+ 
             mainwing_span=1800.0,        
             mainwing_AR=5.45,           
             mainwing_taper=0.65,        
@@ -39,37 +39,37 @@ def main():
             mainwing_sweepback=0,   
             mainwing_dihedral=5.0,     
             mainwing_incidence=2.0,    
-
+ 
             flap_start=[0.05,0.4],            
             flap_end=[0.25,0.6],              
             flap_angle=[20.0,15.0],           
             flap_c_ratio=[0.35,0.35],         
-
+ 
             horizontal_volume_ratio=0.7,
             horizontal_area_ratio=0.25, 
             horizontal_AR=4.0,         
             horizontal_taper=1,      
             horizontal_ThickChord=1,
-
+ 
             vertical_volume_ratio=0.05,
             vertical_taper=0.7,        
             vertical_ThickChord=0.08   
             )
-
+ 
     vspAnalyzer = VSPAnalyzer(presetValues)
     vspAnalyzer.setup_vsp_model(aircraft)
     analResults = vspAnalyzer.calculateCoefficients(
-            alpha_start=5,alpha_end=10,alpha_step=1,
-            CD_fuse=np.zeros(5),
-
+            alpha_start=-5,alpha_end=10,alpha_step=1,
+            CD_fuse=np.zeros(15),
+ 
             AOA_stall=10, 
             AOA_takeoff_max=10,
             AOA_climb_max=10,
             AOA_turn_max=20,
-
+ 
             clearModel=False)
     visualize_results(analResults)
-    #writeAnalysisResults(analResults)
+    writeAnalysisResults(analResults)
 
 if __name__== "__main__":
     main()

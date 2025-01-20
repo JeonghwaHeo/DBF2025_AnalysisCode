@@ -73,11 +73,13 @@ class VSPAnalyzer:
         results_flap_max = self._calculate_coeffs_helper(fileName, AOA_stall, AOA_stall+1, 1,
                                                   np.array([CD_fuse[stall_idx]]), 
                                                          Re, Mach, boom_density_2018, boom_density_1614,
-                                                  boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0])
+                                                  boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
+                                                         do_mass_analysis=False)
     
         results_flap_zero = self._calculate_coeffs_helper(fileName, 0, 1, 1,
                                                   np.array([CD_fuse[zero_idx]]), Re, Mach, boom_density_2018, boom_density_1614,
-                                                  boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0])
+                                                  boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
+                                                          do_mass_analysis=False)
    
 
         # Get CL_max from the zero flaps data
