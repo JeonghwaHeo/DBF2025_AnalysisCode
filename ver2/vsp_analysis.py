@@ -592,3 +592,101 @@ def visualize_results(results: AircraftAnalysisResults):
     
     plt.tight_layout()
     plt.show()
+
+import matplotlib.pyplot as plt
+import numpy as np
+from typing import List, Optional, Dict
+from models import AircraftAnalysisResults
+
+def compare_aerodynamics(results_list: List[AircraftAnalysisResults],
+                        labels: Optional[List[str]] = None,
+                        plot_flaps: bool = True,
+                        figsize: tuple = (15, 10),
+                        style: str = 'default',
+                        save_path: Optional[str] = None) -> None:
+    """
+    Compare lift and drag coefficients of multiple aircraft configurations.
+    
+    Args:
+        results_list: List of AircraftAnalysisResults objects to compare
+        labels: Optional list of labels for each configuration
+        plot_flaps: Whether to plot flap configurations
+        figsize: Size of the figure (width, height)
+        style: Matplotlib style to use
+        save_path: Optional path to save the figure
+    """
+    plt.style.use(style)
+    
+    # Create figure with subplots
+    fig = plt.figure(figsize=figsize)
+    gs = plt.GridSpec(2, 2, figure=fig)
+    ax_cl = fig.add_subplot(gs[0, 0])  # CL vs Alpha
+    ax_cd = fig.add_subplot(gs[0, 1])  # CD vs Alpha
+    ax_polar = fig.add_subplot(gs[1, :])  # Drag polar
+    
+    # Generate default labels if none provided
+    if labels is None:
+        labels = [f"Configuration {i+1}" for i in range(len(results_list))]
+    
+    # Color map for different configurations
+    colors = plt.cm.viridis(np.linspace(0, 1, len(results_list)))
+    
+    # Plot each configuration
+    for i, (results, label, color) in enumerate(zip(results_list, labels, colors)):
+        # Basic lift curve
+        ax_cl.plot(results.alpha_list, results.CL, 
+                  color=color, label=label, linewidth=2)
+        
+        # Basic drag curve
+        ax_cd.plot(results.alpha_list, results.CD_total, 
+                  color=color, label=label, linewidth=2)
+        
+        # Drag polar
+        ax_polar.plot(results.CD_total, results.CL, 
+                     color=color, label=label, linewidth=2)
+        
+        # Add flap configurations if requested
+        if plot_flaps:
+            flap_alphas = [0, results.AOA_stall]
+            flap_cls = [results.CL_flap_zero, results.CL_flap_max]
+            flap_cds = [results.CD_flap_zero, results.CD_flap_max]
+            
+            # Plot flap points
+            ax_cl.scatter(flap_alphas, flap_cls, color=color, marker='o', s=100)
+            ax_cd.scatter(flap_alphas, flap_cds, color=color, marker='o', s=100)
+            ax_polar.scatter(flap_cds, flap_cls, color=color, marker='o', s=100)
+    
+    # Configure CL vs Alpha plot
+    ax_cl.set_xlabel('Angle of Attack (degrees)')
+    ax_cl.set_ylabel('Lift Coefficient (CL)')
+    ax_cl.set_title('Lift Curve')
+    ax_cl.grid(True, alpha=0.3)
+    ax_cl.legend()
+    
+    # Configure CD vs Alpha plot
+    ax_cd.set_xlabel('Angle of Attack (degrees)')
+    ax_cd.set_ylabel('Drag Coefficient (CD)')
+    ax_cd.set_title('Drag Curve')
+    ax_cd.grid(True, alpha=0.3)
+    ax_cd.legend()
+    
+    # Configure drag polar plot
+    ax_polar.set_xlabel('Drag Coefficient (CD)')
+    ax_polar.set_ylabel('Lift Coefficient (CL)')
+    ax_polar.set_title('Drag Polar')
+    ax_polar.grid(True, alpha=0.3)
+    ax_polar.legend()
+    
+    # Add annotation for flap points if plotted
+    if plot_flaps:
+        text = "○ Flap Configuration Points"
+        fig.text(0.02, 0.02, text, fontsize=10)
+    
+    # Adjust layout
+    plt.tight_layout()
+    
+    # Save if path provided
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
+    plt.show()
