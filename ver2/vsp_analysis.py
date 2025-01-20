@@ -30,9 +30,6 @@ class VSPAnalyzer:
         self.presets = presets
         self.dataPath = dataPath
         self.outputPath = outputPath
-
-        self.logfile = os.path.join(self.outputPath, "vspaero.log")
-
         vsp.VSPCheckSetup()
 
     def clean(self) -> None:
