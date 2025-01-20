@@ -1,5 +1,9 @@
 ## Does all the main work
 
+import cProfile
+import pstats
+from pstats import SortKey
+
 from vsp_analysis import VSPAnalyzer, writeAnalysisResults, loadAnalysisResults, visualize_results
 from mission_analysis import MissionAnalyzer, visualize_mission
 from models import *
@@ -30,7 +34,21 @@ def main():
     a=loadAnalysisResults(7227620209081741491)
     
     missionAnalyzer = MissionAnalyzer(a, missionParam, presetValues)
+
+    profiler = cProfile.Profile()
+    profiler.enable()
+
     missionAnalyzer.run_mission2()
+
+    profiler.disable()
+
+    stats = pstats.Stats(profiler).sort_stats(SortKey.CUMULATIVE)
+    stats.print_stats(30)  # Print top 30 functions
+    
+    # Print stats sorted by total time
+    print("\nStats sorted by total time:")
+    stats.sort_stats(SortKey.TIME).print_stats(30)
+
     
     visualize_mission(missionAnalyzer.stateLog) 
     
