@@ -337,7 +337,7 @@ def calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, flap_ang
     
     # Aerodynamic Center
     w_ac = 0.25 * 2/3 * wing_c_root * (1 + taper + taper ** 2) / (1 + taper)
-    h_ac = w_ac + 0.25 * horizontal_root
+    h_ac = w_ac + lh 
     Lw = w_ac - mass_center_x
     Lh = h_ac - mass_center_x
 
