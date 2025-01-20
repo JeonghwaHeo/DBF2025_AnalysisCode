@@ -14,12 +14,12 @@ import io
 vsp.VSPCheckSetup()
 
 # airfoil data path
-s9027_path = r"/workspaces/DBF2025_SizingCode-main/VSP_analysis/s9027.dat"
-naca0008_path = r"/workspaces/DBF2025_SizingCode-main/VSP_analysis/naca0008.dat"
-naca0009_path = r"/workspaces/DBF2025_SizingCode-main/VSP_analysis/naca0009.dat"
+s9027_path = r"./ver1/VSP_analysis/s9027.dat"
+naca0008_path = r"./ver1/VSP_analysis/naca0008.dat"
+naca0009_path = r"./ver1/VSP_analysis/naca0009.dat"
 
 # Create necessary directories
-custom_dir = r"./custom_dir"
+custom_dir = r"./ver1/VSP_analysis/custom_dir"
 vsp3_dir = os.path.join(custom_dir, "vsp3")
 analysis_dir = os.path.join(custom_dir, "analysis_results")
 ect_dir = os.path.join(custom_dir, "ect")
@@ -153,13 +153,22 @@ span_Projected = vsp.GetParmVal(vsp.GetParm(wing_id,"TotalProjectedSpan","WingGe
 chord_Mean = vsp.GetParmVal(vsp.GetParm(wing_id,"TotalChord","WingGeom"))
 area_Projected = span_Projected * chord_Mean
 horizontal_area = horizontal_area_ratio * area_Projected
-horizontal_distance = horizontal_volume_ratio * chord_Mean / horizontal_area_ratio
+horizontal_span = math.sqrt(horizontal_area * horizontal_AR)
+horizontal_root = (2 * horizontal_area) / ((1 + horizontal_taper) * horizontal_span)
+horizontal_tip = horizontal_root * horizontal_taper
+lh = horizontal_volume_ratio * chord_Mean / horizontal_area_ratio
+horizontal_distance = chord_Mean/4 + lh - horizontal_root/4
+# horizontal_distance = horizontal_volume_ratio * chord_Mean / horizontal_area_ratio
 
 # Horizontal Tail settings
-vsp.SetDriverGroup(tailwing_id, 1, vsp.AR_WSECT_DRIVER, vsp.AREA_WSECT_DRIVER, vsp.TAPER_WSECT_DRIVER)
-vsp.SetParmVal(tailwing_id, "Area", "XSec_1", horizontal_area / 2)  # Span of the each wing (Half of span)
-vsp.SetParmVal(tailwing_id, "Aspect", "XSec_1", horizontal_AR / 2)  
-vsp.SetParmVal(tailwing_id, "Taper", "XSec_1", horizontal_taper) 
+# vsp.SetDriverGroup(tailwing_id, 1, vsp.AR_WSECT_DRIVER, vsp.AREA_WSECT_DRIVER, vsp.TAPER_WSECT_DRIVER)
+# vsp.SetParmVal(tailwing_id, "Area", "XSec_1", horizontal_area / 2)  # Span of the each wing (Half of span)
+# vsp.SetParmVal(tailwing_id, "Aspect", "XSec_1", horizontal_AR / 2)  
+# vsp.SetParmVal(tailwing_id, "Taper", "XSec_1", horizontal_taper) 
+
+vsp.SetParmVal(tailwing_id, "Span", "XSec_1", horizontal_span / 2)  # Span of the each wing (Half of span)
+vsp.SetParmVal(tailwing_id, "Root_Chord", "XSec_1", horizontal_root)  
+vsp.SetParmVal(tailwing_id, "Tip_Chord", "XSec_1", horizontal_tip) 
 vsp.SetParmVal(tailwing_id, "Sweep", "XSec_1", tailwing_sweep) #Sweep Angle
 vsp.SetParmVal(tailwing_id, "X_Rel_Location", "XForm", horizontal_distance)  # Position along X-axis
 vsp.SetParmVal(tailwing_id, "Y_Rel_Location", "XForm", tailwing_yoffset)  # Position along Y-axis
@@ -194,8 +203,8 @@ verwing_length_tip = 5
 verwing_offset_tip = 0
 
 # Parameters related with Main, Horizontal 
-chord_Mean_horizontal = vsp.GetParmVal(vsp.GetParm(tailwing_id,"TotalChord","WingGeom"))
-vertical_area = vertical_volume_ratio * span_Projected * area_Projected / horizontal_distance # vertical_distance = horizontal_distance
+chord_Mean_horizontal = (horizontal_root + horizontal_tip) / 2
+vertical_area = vertical_volume_ratio * span_Projected * area_Projected / lh # vertical_distance = horizontal_distance
 vertical_c_root = chord_Mean_horizontal
 
 # Vertical Tail settings
@@ -204,6 +213,7 @@ vsp.SetParmVal(verwing_right_id, "Area", "XSec_1", vertical_area / 2)  # Span of
 vsp.SetParmVal(verwing_right_id, "Taper", "XSec_1", vertical_taper)  
 vsp.SetParmVal(verwing_right_id, "Root_Chord", "XSec_1", vertical_c_root) 
 vsp.SetParmVal(verwing_right_id, "Sweep", "XSec_1", verwing_sweep) #Sweep Angle
+vsp.SetParmVal(verwing_right_id, "Sweep_Location", "XSec_1", 0.99)
 vsp.SetParmVal(verwing_right_id, "X_Rel_Location", "XForm", horizontal_distance)  # Position along X-axis
 vsp.SetParmVal(verwing_right_id, "Y_Rel_Location", "XForm", verwing_yoffset)  # Position along Y-axis
 vsp.SetParmVal(verwing_right_id, "Z_Rel_Location", "XForm", verwing_zoffset)  # Position vertically
@@ -235,6 +245,7 @@ vsp.SetParmVal(verwing_left_id, "Area", "XSec_1", vertical_area / 2)  # Span of 
 vsp.SetParmVal(verwing_left_id, "Taper", "XSec_1", vertical_taper)  
 vsp.SetParmVal(verwing_left_id, "Root_Chord", "XSec_1", vertical_c_root) 
 vsp.SetParmVal(verwing_left_id, "Sweep", "XSec_1", verwing_sweep) #Sweep Angle
+vsp.SetParmVal(verwing_left_id, "Sweep_Location", "XSec_1", 0.99)
 vsp.SetParmVal(verwing_left_id, "X_Rel_Location", "XForm", horizontal_distance)  # Position along X-axis
 vsp.SetParmVal(verwing_left_id, "Y_Rel_Location", "XForm", -1 * verwing_yoffset)  # Position along Y-axis
 vsp.SetParmVal(verwing_left_id, "Z_Rel_Location", "XForm", verwing_zoffset)  # Position vertically
@@ -326,9 +337,9 @@ def calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, flap_ang
     
     # Aerodynamic Center
     w_ac = 0.25 * 2/3 * wing_c_root * (1 + taper + taper ** 2) / (1 + taper)
-    h_ac = horizontal_distance + 0.25 * tail_c_root
-    lw = w_ac - mass_center_x
-    lh = h_ac - mass_center_x
+    h_ac = w_ac + lh 
+    Lw = w_ac - mass_center_x
+    Lh = h_ac - mass_center_x
 
     # Move all files except .vsp3 from "vsp3" folder to "ect" folder
     for file in os.listdir(vsp3_dir):
@@ -361,11 +372,11 @@ def calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, flap_ang
         cdwing_vec = vsp.GetDoubleResults(sweepResults[i], "CDtot")
         CDwing_list[i] = cdwing_vec[len(cdwing_vec) - 1]
 
-    return span, AR, taper, twist, Sref, alpha_list, CL_list, CDwing_list, m_wing, m_total, lw, lh
+    return span, AR, taper, twist, Sref, alpha_list, CL_list, CDwing_list, m_wing, m_total, Lw, Lh
 
 
 
-span, AR, taper, twist, Sref, alpha_list, CL_list, CDwing_list, m_wing, m_total, lw, lh = calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, flap_angle, Re, Mach)
+span, AR, taper, twist, Sref, alpha_list, CL_list, CDwing_list, m_wing, m_total, Lw, Lh = calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, flap_angle, Re, Mach)
 
 
 
