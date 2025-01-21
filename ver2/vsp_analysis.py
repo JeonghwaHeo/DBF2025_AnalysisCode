@@ -56,7 +56,7 @@ class VSPAnalyzer:
                               AOA_takeoff_max:float=10,
                               AOA_climb_max:float=10,
                               AOA_turn_max:float=20,
-                              Re:float=38000, Mach:float=0, 
+                              Re:float=850000, Mach:float=0, 
                               boom_density_2018:float = 0.098, 
                               boom_density_1614:float = 0.087,
                               boom_density_86:float = 0.036,
@@ -95,7 +95,7 @@ class VSPAnalyzer:
         CL_flap_zero = results_flap_zero['CL'][0]
         CD_flap_zero = results_flap_zero['CD'][0]
     
-        print("Finished Analysis")
+        print("Finished Analysis for this configuration.")
         return AircraftAnalysisResults(
                 aircraft=self.aircraft,
                 alpha_list=results_no_flap['alpha_list'],
@@ -110,7 +110,7 @@ class VSPAnalyzer:
                 Lw=results_no_flap['Lw'],
                 Lh=results_no_flap['Lh'],
                 CL=results_no_flap['CL'],
-                CL_max=CL_max,
+                # CL_max=CL_max,
                 CD_wing=results_no_flap['CD'],
                 CD_fuse=CD_fuse,
                 CD_total=results_no_flap['CD'] + CD_fuse,
@@ -163,7 +163,7 @@ class VSPAnalyzer:
             span = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalSpan","WingGeom"))
             AR = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalAR","WingGeom"))
             taper = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Taper","XSec_1"))
-            twist = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Twist","XSec_1"))
+            twist = self.aircraft.mainwing_incidence - vsp.GetParmVal(vsp.GetParm(self.wing_id,"Twist","XSec_1"))
             Sref = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalArea","WingGeom"))
             wing_c_root = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Root_Chord","XSec_1"))
             tail_c_root = vsp.GetParmVal(vsp.GetParm(self.horizontal_tail_id,"Root_Chord","XSec_1"))
@@ -190,10 +190,9 @@ class VSPAnalyzer:
             lh = self.aircraft.horizontal_volume_ratio * chord_Mean / self.aircraft.horizontal_area_ratio
             horizontal_distance = chord_Mean/4 + lh - tail_c_root/4
 
-            m_wing = mass_data[0] \
-                    + 2 * (span - 50.0) * (boom_density_1614 + boom_density_2018 + boom_density_86)
+            m_wing = mass_data[0] + (span - 50.0) * (boom_density_1614 + boom_density_2018 + boom_density_86)
             
-            m_boom = horizontal_distance * boom_density_big
+            m_boom = horizontal_distance * boom_density_big * 2
             
             ## TODO if m_fuel < 0 exit early
 
@@ -291,15 +290,13 @@ class VSPAnalyzer:
         
         # Main Wing Settings
         vsp.SetDriverGroup(wing_id, 1, vsp.AR_WSECT_DRIVER, vsp.SPAN_WSECT_DRIVER, vsp.TAPER_WSECT_DRIVER)
-        vsp.SetParmVal(wing_id, "Span", "XSec_1", aircraft.mainwing_span / 2)  # Span of the each wing (Half of span)
+        vsp.SetParmVal(wing_id, "Span", "XSec_1", aircraft.mainwing_span / 2)  # Half span of the each wing 
         vsp.SetParmVal(wing_id, "Aspect", "XSec_1", aircraft.mainwing_AR / 2)  
         vsp.SetParmVal(wing_id, "Taper", "XSec_1", aircraft.mainwing_taper) 
-        vsp.SetParmVal(wing_id, "Twist", "XSec_1", aircraft.mainwing_twist)
+        vsp.SetParmVal(wing_id, "Twist", "XSec_1", aircraft.mainwing_incidence - aircraft.mainwing_twist)
+        
         vsp.SetParmVal(wing_id, "Dihedral", "XSec_1", aircraft.mainwing_dihedral)
-
-        # TODO twist 설정 incidence로 할지 안할지
         vsp.SetParmVal(wing_id, "Twist", "XSec_0", aircraft.mainwing_incidence)
-
         vsp.SetParmVal(wing_id, "Sweep", "XSec_1", aircraft.mainwing_sweepback)
         vsp.SetParmVal(wing_id, "Sweep_Location", "XSec_1", 0)
 
@@ -522,6 +519,16 @@ class VSPAnalyzer:
 
         return [verwing_right_id,verwing_left_id]
 
+
+def resetAnalysisResults(csvPath:str = "data/test.csv"):
+    df = pd.read_csv(csvPath, sep='|', encoding='utf-8')
+    df_columns_only = pd.DataFrame(columns=df.columns)
+    df_columns_only.to_csv(csvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
+
+def removeAnalysisResults(csvPath:str = "data/test.csv"):
+    if os.path.exists(csvPath):
+        os.remove(csvPath)
+        print("test.csv file has been deleted.")
 
 def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "data/test.csv"):
 

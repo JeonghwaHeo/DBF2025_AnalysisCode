@@ -4,12 +4,15 @@ import pandas as pd
 from pstats import SortKey
 from vsp_grid import runVSPGridAnalysis
 from mission_grid import runMissionGridSearch, save_mission_results
-from vsp_analysis import  loadAnalysisResults, visualize_results
+from vsp_analysis import  loadAnalysisResults, visualize_results, resetAnalysisResults, removeAnalysisResults
 from mission_analysis import MissionAnalyzer, visualize_mission
 from models import *
 from config import *
 
 def main():
+
+    #resetAnalysisResults()
+    removeAnalysisResults()
 
     presetValues = PresetValues(
         m_x1 = 0.2,                       # kg
@@ -33,7 +36,7 @@ def main():
         AR_max = 5.45,
         AR_interval = 0.5,
         
-        taper_min = 0.25,
+        taper_min = 0.55,
         taper_max = 0.65,                      
         taper_interval = 0.1,
         
@@ -41,38 +44,40 @@ def main():
         twist_max = 0.0,                     
         twist_interval = 1.0,
         )
+    
+    baseAircraft = Aircraft(
+        m_total = 8500, m_fuselage = 3000,
+
+        wing_density = 0.0000852, spar_density = 1.0,
+
+        mainwing_span = 1800,        
+        mainwing_AR = 5.45,           
+        mainwing_taper = 0.65,        
+        mainwing_twist = 0.0,        
+        mainwing_sweepback = 0,   
+        mainwing_dihedral = 5.0,     
+        mainwing_incidence = 2.0,    
+
+        flap_start = [0.05, 0.4],            
+        flap_end = [0.25, 0.6],              
+        flap_angle = [20.0, 15.0],           
+        flap_c_ratio = [0.35, 0.35],         
+
+        horizontal_volume_ratio = 0.7,
+        horizontal_area_ratio = 0.25, 
+        horizontal_AR = 4.0,         
+        horizontal_taper = 1,      
+        horizontal_ThickChord = 8,
+
+        vertical_volume_ratio = 0.053,
+        vertical_taper = 0.6,        
+        vertical_ThickChord = 9  
+        )
 
     
-    #runVSPGridAnalysis(
-    #        aircraftParamConstraints, presetValues, 
-    #        Aircraft(
-    #           m_total = 8500, m_fuselage = 5000,
-
-    #           wing_density = 0.0000852, spar_density = 1.0,
-
-    #           mainwing_span = 1800,        
-    #           mainwing_AR = 5.45,           
-    #           mainwing_taper = 0.65,        
-    #           mainwing_twist = 0.0,        
-    #           mainwing_sweepback = 0,   
-    #           mainwing_dihedral = 5.0,     
-    #           mainwing_incidence = 2.0,    
-
-    #           flap_start = [0.05, 0.4],            
-    #           flap_end = [0.25, 0.6],              
-    #           flap_angle = [20.0, 15.0],           
-    #           flap_c_ratio = [0.35, 0.35],         
-
-    #           horizontal_volume_ratio = 0.7,
-    #           horizontal_area_ratio = 0.25, 
-    #           horizontal_AR = 4.0,         
-    #           horizontal_taper = 1,      
-    #           horizontal_ThickChord = 8,
-
-    #           vertical_volume_ratio = 0.053,
-    #           vertical_taper = 0.6,        
-    #           vertical_ThickChord = 9  
-    #           ))
+    runVSPGridAnalysis(aircraftParamConstraints, presetValues, baseAircraft)
+    
+    return
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
