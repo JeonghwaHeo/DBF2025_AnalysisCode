@@ -46,10 +46,6 @@ if __name__ == "__main__":
     runVSPGridAnalysis(
             AircraftParamConstraints (
                 #Constraints for constructing the aircraf
-                # total mass of the aircraft
-                m_total_max = 8000,
-                m_total_min = 6000,
-                m_total_interval = 5000,
 
                 # wing parameter ranges
                 span_max = 1800.0,                   # mm

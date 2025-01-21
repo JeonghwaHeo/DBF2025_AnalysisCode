@@ -14,12 +14,13 @@ def main():
         x1_flight_time = 30,              # sec
         max_battery_capacity = 2250,      # mAh (per one battery)
         Thrust_max = 6.6,                 # kg (two motors)
-        min_battery_voltage = 25,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
+        min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
         propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
         score_weight_ratio = 1            # mission2/3 score weight ratio
         )
 
     missionParam = MissionParameters(
+        m_total=8000,
         max_battery_capacity = 2250,      # mAh (per one battery)
         throttle_takeoff = 0.9,           # %
         throttle_climb = 0.9,             # %
@@ -38,19 +39,19 @@ def main():
     #compare_aerodynamics([a,b,c,d])
     missionAnalyzer = MissionAnalyzer(a, missionParam, presetValues)
     
-    profiler = cProfile.Profile()
-    profiler.enable()
+    #profiler = cProfile.Profile()
+    #profiler.enable()
 
     missionAnalyzer.run_mission3()
 
-    profiler.disable()
+    #profiler.disable()
 
-    stats = pstats.Stats(profiler).sort_stats(SortKey.CUMULATIVE)
-    stats.print_stats(30)  # Print top 30 functions
+    #stats = pstats.Stats(profiler).sort_stats(SortKey.CUMULATIVE)
+    #stats.print_stats(30)  # Print top 30 functions
     
     # Print stats sorted by total time
     print("\nStats sorted by total time:")
-    stats.sort_stats(SortKey.TIME).print_stats(30)
+    #stats.sort_stats(SortKey.TIME).print_stats(30)
 
     
     visualize_mission(missionAnalyzer.stateLog) 
@@ -58,7 +59,7 @@ def main():
     return
    
     aircraft = Aircraft(
-            m_total=6000,m_fuselage=3000,
+            m_fuselage=3000,
  
             wing_density=0.0000852, spar_density=1.0,
  

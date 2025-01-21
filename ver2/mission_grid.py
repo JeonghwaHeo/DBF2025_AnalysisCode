@@ -16,11 +16,13 @@ def runMissionGridSearch(hashVal:int,
 
     analysisResults = loadAnalysisResults(hashVal, csvPath)
     ## Variable lists using for optimization
-    
+   
+    total_mass_list = np.arange(missionParamConstraints.m_total_min, missionParamConstraints.m_total_max+missionParamConstraints.m_total_interval,missionParamConstraints.m_total_interval)
     throttle_climb_list = np.arange(missionParamConstraints.throttle_climb_min, missionParamConstraints.throttle_climb_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
     throttle_turn_list = np.arange(missionParamConstraints.throttle_turn_min, missionParamConstraints.throttle_turn_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
     throttle_level_list = np.arange(missionParamConstraints.throttle_level_min, missionParamConstraints.throttle_level_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
     
+    print(f"\ntotal mass list: {total_mass_list}")
     print(f"\nthrottle climb list: {throttle_climb_list}")
     print(f"throttle turn list: {throttle_turn_list}")
     print(f"throttle level list: {throttle_level_list}\n")
@@ -33,17 +35,18 @@ def runMissionGridSearch(hashVal:int,
     best_params_3 = None
 
     # Create iterator for all combinations
-    throttle_combinations = product(throttle_climb_list, throttle_turn_list, throttle_level_list)
+    throttle_combinations = product(total_mass_list, throttle_climb_list, throttle_turn_list, throttle_level_list)
 
     # Print total combinations
-    total = len(throttle_climb_list) * len(throttle_turn_list) * len(throttle_level_list)
-    print(f"Testing {total} throttle combinations...")
+    total = len(total_mass_list)*len(throttle_climb_list) * len(throttle_turn_list) * len(throttle_level_list)
+    print(f"Testing {total} combinations...")
 
     # Test each combination
-    for i, (throttle_climb, throttle_turn, throttle_level) in enumerate(throttle_combinations):
+    for i, (total_mass, throttle_climb, throttle_turn, throttle_level) in enumerate(throttle_combinations):
         if(i%10 == 0): print(f"[{time.strftime("%Y-%m-%d %X")}] Progress: {i}/{total} configurations")
         # Create mission parameters for this combination
         missionParams = MissionParameters(
+            m_total=total_mass,
             max_battery_capacity=presetValues.max_battery_capacity,
             throttle_takeoff=0.9,  # Fixed
             throttle_climb=throttle_climb,
@@ -58,6 +61,7 @@ def runMissionGridSearch(hashVal:int,
         try:
             # Create mission analyzer and run mission 2
             missionAnalyzer = MissionAnalyzer(analysisResults, missionParams, presetValues)
+
             score_2 = missionAnalyzer.run_mission2()
             score_3 = missionAnalyzer.run_mission3()
 
@@ -67,6 +71,7 @@ def runMissionGridSearch(hashVal:int,
                 best_params_2 = missionParams
                 
                 print(f"\nNew best score for Mission 2: {best_score_2}")
+                print(f"> Total Mass: {total_mass:.2f}")
                 print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
                       f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
             # Update best score if current score is better
@@ -75,6 +80,7 @@ def runMissionGridSearch(hashVal:int,
                 best_params_3 = missionParams
                 
                 print(f"\nNew best score for Mission 3: {best_score_3}")
+                print(f"> Total Mass: {total_mass:.2f}")
                 print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
                       f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
         
@@ -85,10 +91,12 @@ def runMissionGridSearch(hashVal:int,
    
     print("\nDone!")
     print(f"\nBest score for Mission 2: {best_score_2}")
+    print(f"> Total Mass: {best_params_2.m_total:.2f}")
     print(f"> Throttle settings - Climb: {best_params_2.throttle_climb:.2f}, "
           f"Turn: {best_params_2.throttle_turn:.2f}, Level: {best_params_2.throttle_level:.2f}")
 
     print(f"\nBest score for Mission 3: {best_score_3}")
+    print(f"> Total Mass: {best_params_3.m_total:.2f}")
     print(f"> Throttle settings - Climb: {best_params_3.throttle_climb:.2f}, "
           f"Turn: {best_params_3.throttle_turn:.2f}, Level: {best_params_3.throttle_level:.2f}")
     return [best_score_2, best_score_3], [best_params_2, best_params_3]
@@ -106,6 +114,10 @@ if __name__=="__main__":
     a=loadAnalysisResults(687192594661440415)
     score, param = runMissionGridSearch(687192594661440415,
                           MissionParamConstraints (
+                              # total mass of the aircraft
+                              m_total_max = 8000,
+                              m_total_min = 6000,
+                              m_total_interval = 5000,
                               #Constraints for calculating missions
                               throttle_climb_min = 1.0,
                               throttle_climb_max = 1.0,

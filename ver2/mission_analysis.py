@@ -26,6 +26,9 @@ class MissionAnalyzer():
         self.presetValues = presetValues
         self.dt = dt
 
+
+        self.analResult.m_fuel += missionParam.m_total - self.aircraft.m_total
+
         self.clearState()
 
         self.setAuxVals()
@@ -132,10 +135,13 @@ class MissionAnalyzer():
                     raise ValueError("Didn't provide a correct PhaseType!")
             self.state.phase += 1
             #print("Changed Phase")
+            if(not self._mission_viable()):
+                return -1
+        return 0
 
     ## TODO Maybe implement this?
     def _mission_viable(self):
-        if (self.state.battery_voltage < self.presetValues.min_battery_voltage):
+        if(self.aircraft.m_total < 0):
             return False
 
         return True
@@ -167,7 +173,9 @@ class MissionAnalyzer():
                 MissionConfig(PhaseType.TURN, [180], "CW"),
                 MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "left"),
                 ]
-        self.run_mission(mission2)        
+        result = self.run_mission(mission2)        
+
+        if(result == -1): return 0
         
         return self.analResult.m_fuel / self.state.time
 
@@ -186,7 +194,10 @@ class MissionAnalyzer():
                 ]
 
         # Run initial mission sequence
-        self.run_mission(mission3)
+        result = self.run_mission(mission3)
+
+        if(result == -1): return 0
+
         # Store starting index for each lap to handle truncation if needed
         N_laps = 1
         time_limit = 300 - self.presetValues.x1_flight_time  # 270 seconds
