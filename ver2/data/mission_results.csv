@@ -1,2 +1,32 @@
 timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
 2025-01-21 01:57:37,687192594661440415,135.1486128381036,22.5,11000,1.05,0.75,1.05,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 03:52:05,687192594661440415,135.1486128381036,22.5,11000,1.05,0.75,1.05,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 03:52:15,1676891088784291821,136.11967082243825,22.5,11000,1.05,0.75,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 03:52:25,1268481079834018136,136.22118562068442,22.5,11000,1.05,0.75,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 03:52:34,1446022752061654911,136.1370495470149,22.5,11000,1.05,0.75,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 03:52:44,7227620209081741491,135.98562614731912,22.5,11000,1.0,0.75,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:05:46,687192594661440415,135.1486128381036,22.5,11000,1.05,0.75,1.05,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:05:56,1676891088784291821,136.11967082243825,22.5,11000,1.05,0.75,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:06:05,1268481079834018136,136.22118562068442,22.5,11000,1.05,0.75,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:06:15,1446022752061654911,136.1370495470149,22.5,11000,1.05,0.75,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:06:24,7227620209081741491,135.98562614731912,22.5,11000,1.0,0.75,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:18:42,687192594661440415,121.6846155440713,21.5,11000,1.05,0.7,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:18:52,1676891088784291821,121.38940609121218,21.5,11000,1.05,0.7,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:19:01,1268481079834018136,121.60453185386388,21.5,11000,1.05,0.7,1.0,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:19:10,1446022752061654911,121.53749862820911,21.5,11000,1.05,0.7,1.05,6000,1.0,0.7,1.0
+timestamp,hash,mission2_score,mission3_score,mission2_total_mass,mission2_throttle_climb,mission2_throttle_turn,mission2_throttle_level,mission3_total_mass,mission3_throttle_climb,mission3_throttle_turn,mission3_throttle_level
+2025-01-21 04:19:19,7227620209081741491,121.49732557194231,21.5,11000,1.05,0.7,1.0,6000,1.0,0.7,1.0

@@ -110,6 +110,7 @@ def main():
         missionAnalyzer.run_mission3()
         #visualize_mission(missionAnalyzer.stateLog)
 
+    visualize_mission(missionAnalyzer.stateLog)
         
     return
 
