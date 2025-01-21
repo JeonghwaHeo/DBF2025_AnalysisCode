@@ -44,7 +44,6 @@ class Aircraft:
     vertical_taper: float
     vertical_ThickChord: float
 
-    ## TODO add hash
     def __hash__(self) -> int:
             # Convert all the numerical values to strings with fixed precision
             # to ensure consistent hashing across different instances
@@ -120,7 +119,7 @@ class AircraftAnalysisResults:
     AOA_turn_max: float # Must be set manually!
 
     CL: np.ndarray
-    CL_max: float
+    # CL_max: float
 
     CD_wing: List[float]
     CD_fuse: List[float]## (TODO: integrate CFD)

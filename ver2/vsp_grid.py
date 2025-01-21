@@ -10,23 +10,21 @@ from models import *
 def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetValues: PresetValues, baseAircraft: Aircraft):
 
     ## Variable lists using for optimization
-    span_list = np.arange(aircraftParamConstraint.span_min, aircraftParamConstraint.span_max + aircraftParamConstraint.span_interval, aircraftParamConstraint.span_interval) # (min, max + step_size, step_size)
+    span_list = np.arange(aircraftParamConstraint.span_min, aircraftParamConstraint.span_max + aircraftParamConstraint.span_interval, aircraftParamConstraint.span_interval)
+    
     AR_list = np.arange(aircraftParamConstraint.AR_min, aircraftParamConstraint.AR_max + aircraftParamConstraint.AR_interval, aircraftParamConstraint.AR_interval)
+    
     taper_list = np.arange(aircraftParamConstraint.taper_min, aircraftParamConstraint.taper_max + aircraftParamConstraint.taper_interval, aircraftParamConstraint.taper_interval)
+    
     twist_list = np.arange(aircraftParamConstraint.twist_min, aircraftParamConstraint.twist_max + aircraftParamConstraint.twist_interval, aircraftParamConstraint.twist_interval)
-    
-    print(f"\nSpan list: {span_list}")
-    print(f"AR list: {AR_list}")
-    print(f"Taper list: {taper_list}")
-    print(f"Twist list: {twist_list}")
-    
+        
     vspAnalyzer = VSPAnalyzer(presetValues)
     
     total_combinations = np.prod([len(arr) for arr in [span_list,AR_list,taper_list,twist_list]])
 
     for i, (span, AR, taper, twist) in enumerate(product(span_list,AR_list,taper_list,twist_list)):
         print(f"[{time.strftime("%Y-%m-%d %X")}] Progress: {i}/{total_combinations} configurations")
-        aircraft = replace(baseAircraft)    
+        aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist)    
 
         vspAnalyzer.setup_vsp_model(aircraft)
         analResults = vspAnalyzer.calculateCoefficients(
@@ -55,7 +53,7 @@ if __name__ == "__main__":
                 AR_min = 5.45,
                 AR_interval = 0.5,
                 taper_max = 0.65,                       # (root chord) / (tip chord)
-                taper_min = 0.25,
+                taper_min = 0.45,
                 taper_interval = 0.1,
                 twist_max = 0.0,                       # degree
                 twist_min = 0.0,
