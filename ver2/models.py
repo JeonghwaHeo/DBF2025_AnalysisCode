@@ -143,6 +143,8 @@ class AircraftAnalysisResults:
 class MissionParameters:
     """Additional Parameters for running the mission(s)"""
 
+    m_total: float
+
     max_climb_angle: float
     max_speed: float
     max_load_factor: float

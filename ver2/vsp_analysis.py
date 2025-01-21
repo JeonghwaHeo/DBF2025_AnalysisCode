@@ -1,4 +1,5 @@
 import openvsp as vsp
+import contextlib
 import csv
 import numpy as np
 import numpy.strings
@@ -16,7 +17,6 @@ from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 import configparser
 import pandas as pd
-import contextlib
 import io
 
 from models import Aircraft, AircraftAnalysisResults
@@ -31,6 +31,10 @@ class VSPAnalyzer:
         self.dataPath = dataPath
         self.outputPath = outputPath
         vsp.VSPCheckSetup()
+
+    def clean(self) -> None:
+        vsp.ClearVSPModel()
+        vsp.VSPRenew()
           
         
     def setup_vsp_model(self, aircraft: Aircraft,fileName:str = "Mothership.vsp3") -> None:
@@ -58,7 +62,7 @@ class VSPAnalyzer:
                               boom_density_86:float = 0.036,
                               boom_density_big:float=0.098,
                               clearModel:bool=True):
-
+        print("Starting Analysis")
             # Calculate coefficients with flaps at zero
         results_no_flap = self._calculate_coeffs_helper(fileName, alpha_start, alpha_end, alpha_step,
                                                    CD_fuse, Re, Mach, boom_density_2018, boom_density_1614,
@@ -91,6 +95,7 @@ class VSPAnalyzer:
         CL_flap_zero = results_flap_zero['CL'][0]
         CD_flap_zero = results_flap_zero['CD'][0]
     
+        print("Finished Analysis")
         return AircraftAnalysisResults(
                 aircraft=self.aircraft,
                 alpha_list=results_no_flap['alpha_list'],
@@ -121,7 +126,8 @@ class VSPAnalyzer:
 
     def _calculate_coeffs_helper(self, fileName, alpha_start, alpha_end, alpha_step,
                            CD_fuse, Re, Mach, boom_density_2018, boom_density_1614,
-                           boom_density_86, boom_density_big, clearModel, flap_angle, do_mass_analysis=True):
+                           boom_density_86, boom_density_big, clearModel, flap_angle, 
+                                 do_mass_analysis=True, do_geom_analysis=True):
         """Helper method to calculate coefficients for a given flap angle"""
         
         point_number = round(int((alpha_end - alpha_start) / alpha_step) + 1)
@@ -144,27 +150,37 @@ class VSPAnalyzer:
             vsp.SetParmVal(flap_id[0], flap_angle)
             vsp.SetParmVal(flap_id[1], -flap_angle)
         # Geometric analysis
+        
+        if do_geom_analysis:
+            print("> Starting Geometric Analysis")
+            geom_analysis = "VSPAEROComputeGeometry"
+            vsp.SetAnalysisInputDefaults(geom_analysis)
+            vsp.ExecAnalysis(geom_analysis)
 
-        print("Starting Geometric Analysis")
-        geom_analysis = "VSPAEROComputeGeometry"
-        vsp.SetAnalysisInputDefaults(geom_analysis)
-        vsp.ExecAnalysis(geom_analysis)
+            # Configure VSPAERO
+            vsp.SetVSPAERORefWingID(self.wing_id) ##### wing_id 확인할것
 
-        # Configure VSPAERO
-        vsp.SetVSPAERORefWingID(self.wing_id) ##### wing_id 확인할것
-
-        span = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalSpan","WingGeom"))
-        AR = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalAR","WingGeom"))
-        taper = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Taper","XSec_1"))
-        twist = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Twist","XSec_1"))
-        Sref = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalArea","WingGeom"))
-        wing_c_root = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Root_Chord","XSec_1"))
-        tail_c_root = vsp.GetParmVal(vsp.GetParm(self.horizontal_tail_id,"Root_Chord","XSec_1"))
-        print("Finished Geometric Analysis")
+            span = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalSpan","WingGeom"))
+            AR = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalAR","WingGeom"))
+            taper = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Taper","XSec_1"))
+            twist = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Twist","XSec_1"))
+            Sref = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalArea","WingGeom"))
+            wing_c_root = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Root_Chord","XSec_1"))
+            tail_c_root = vsp.GetParmVal(vsp.GetParm(self.horizontal_tail_id,"Root_Chord","XSec_1"))
+            print("> Finished Geometric Analysis")
+        else:
+            print("> Skipping Geometric Analysis")
+            span = 0
+            AR = 0
+            taper = 0
+            twist = 0
+            Sref = 0
+            wing_c_root = 0
+            tail_c_root = 0
         
         if do_mass_analysis:
             # Mass Analysis
-            print("Starting Mass Analysis")
+            print("> Starting Mass Analysis")
             vsp.ComputeMassProps(0, 100, 0)
             mass_results_id = vsp.FindLatestResultsID("Mass_Properties")
             mass_data = vsp.GetDoubleResults(mass_results_id, "Total_Mass")
@@ -191,38 +207,42 @@ class VSPAnalyzer:
             Lw = w_ac - mass_center_x
             Lh = h_ac - mass_center_x
 
-            print("Finished Mass Analysis")
+            print("> Finished Mass Analysis")
         else:
-            print("Skipping Mass Analysis")
+            print("> Skipping Mass Analysis")
             m_fuel, m_boom, m_wing = 0, 0, 0
             Lw, Lh = 0, 0
 
         # Configure sweep analysis for coefficient
-        print("Starting Sweep Analysis")
+        print("> Starting Sweep Analysis")
+        
         sweep_analysis = "VSPAEROSweep"
         vsp.SetAnalysisInputDefaults(sweep_analysis)
         vsp.SetIntAnalysisInput(sweep_analysis, "AnalysisMethod", [vsp.VORTEX_LATTICE])
         vsp.SetIntAnalysisInput(sweep_analysis, "GeomSet", [vsp.SET_ALL])
-
+        
         # **Set the reference geometry set**
         vsp.SetDoubleAnalysisInput(sweep_analysis, "MachStart", [Mach])
         vsp.SetDoubleAnalysisInput(sweep_analysis, "ReCref", [Re])
         vsp.SetDoubleAnalysisInput(sweep_analysis, "AlphaStart", [alpha_start])
         vsp.SetDoubleAnalysisInput(sweep_analysis, "AlphaEnd", [alpha_end])
         vsp.SetIntAnalysisInput(sweep_analysis, "AlphaNpts", [point_number])
-
+        
         # Number of CPUs
         vsp.SetIntAnalysisInput(sweep_analysis, "NCPU", [6])
+
+        # Redirect log to null
+        vsp.SetStringAnalysisInput( "VSPAEROSweep", "RedirectFile", "" )
 
         # Disable CpSlice
         aero_id = vsp.FindContainer("VSPAEROSettings",0);
         vsp.SetParmVal(aero_id,"CpSliceFlag","VSPAERO",0);
         vsp.Update()
-
+        
         # Execute sweep analysis
         sweep_results_id = vsp.ExecAnalysis(sweep_analysis)
-
-        print("Finished Sweep Analysis")
+        
+        print("> Finished Sweep Analysis")
 
         # Extract coefficient data
         sweepResults = vsp.GetStringResults(sweep_results_id, "ResultsVec")
@@ -568,4 +588,102 @@ def visualize_results(results: AircraftAnalysisResults):
     ax2.legend()
     
     plt.tight_layout()
+    plt.show()
+
+import matplotlib.pyplot as plt
+import numpy as np
+from typing import List, Optional, Dict
+from models import AircraftAnalysisResults
+
+def compare_aerodynamics(results_list: List[AircraftAnalysisResults],
+                        labels: Optional[List[str]] = None,
+                        plot_flaps: bool = True,
+                        figsize: tuple = (15, 10),
+                        style: str = 'default',
+                        save_path: Optional[str] = None) -> None:
+    """
+    Compare lift and drag coefficients of multiple aircraft configurations.
+    
+    Args:
+        results_list: List of AircraftAnalysisResults objects to compare
+        labels: Optional list of labels for each configuration
+        plot_flaps: Whether to plot flap configurations
+        figsize: Size of the figure (width, height)
+        style: Matplotlib style to use
+        save_path: Optional path to save the figure
+    """
+    plt.style.use(style)
+    
+    # Create figure with subplots
+    fig = plt.figure(figsize=figsize)
+    gs = plt.GridSpec(2, 2, figure=fig)
+    ax_cl = fig.add_subplot(gs[0, 0])  # CL vs Alpha
+    ax_cd = fig.add_subplot(gs[0, 1])  # CD vs Alpha
+    ax_polar = fig.add_subplot(gs[1, :])  # Drag polar
+    
+    # Generate default labels if none provided
+    if labels is None:
+        labels = [f"Configuration {i+1}" for i in range(len(results_list))]
+    
+    # Color map for different configurations
+    colors = plt.cm.viridis(np.linspace(0, 1, len(results_list)))
+    
+    # Plot each configuration
+    for i, (results, label, color) in enumerate(zip(results_list, labels, colors)):
+        # Basic lift curve
+        ax_cl.plot(results.alpha_list, results.CL, 
+                  color=color, label=label, linewidth=2)
+        
+        # Basic drag curve
+        ax_cd.plot(results.alpha_list, results.CD_total, 
+                  color=color, label=label, linewidth=2)
+        
+        # Drag polar
+        ax_polar.plot(results.CD_total, results.CL, 
+                     color=color, label=label, linewidth=2)
+        
+        # Add flap configurations if requested
+        if plot_flaps:
+            flap_alphas = [0, results.AOA_stall]
+            flap_cls = [results.CL_flap_zero, results.CL_flap_max]
+            flap_cds = [results.CD_flap_zero, results.CD_flap_max]
+            
+            # Plot flap points
+            ax_cl.scatter(flap_alphas, flap_cls, color=color, marker='o', s=100)
+            ax_cd.scatter(flap_alphas, flap_cds, color=color, marker='o', s=100)
+            ax_polar.scatter(flap_cds, flap_cls, color=color, marker='o', s=100)
+    
+    # Configure CL vs Alpha plot
+    ax_cl.set_xlabel('Angle of Attack (degrees)')
+    ax_cl.set_ylabel('Lift Coefficient (CL)')
+    ax_cl.set_title('Lift Curve')
+    ax_cl.grid(True, alpha=0.3)
+    ax_cl.legend()
+    
+    # Configure CD vs Alpha plot
+    ax_cd.set_xlabel('Angle of Attack (degrees)')
+    ax_cd.set_ylabel('Drag Coefficient (CD)')
+    ax_cd.set_title('Drag Curve')
+    ax_cd.grid(True, alpha=0.3)
+    ax_cd.legend()
+    
+    # Configure drag polar plot
+    ax_polar.set_xlabel('Drag Coefficient (CD)')
+    ax_polar.set_ylabel('Lift Coefficient (CL)')
+    ax_polar.set_title('Drag Polar')
+    ax_polar.grid(True, alpha=0.3)
+    ax_polar.legend()
+    
+    # Add annotation for flap points if plotted
+    if plot_flaps:
+        text = "○ Flap Configuration Points"
+        fig.text(0.02, 0.02, text, fontsize=10)
+    
+    # Adjust layout
+    plt.tight_layout()
+    
+    # Save if path provided
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    
     plt.show()
