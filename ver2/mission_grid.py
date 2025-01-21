@@ -6,6 +6,8 @@ from vsp_analysis import  loadAnalysisResults
 from mission_analysis import MissionAnalyzer, visualize_mission
 from models import *
 
+import pandas as pd
+import time
 
 def runMissionGridSearch(hashVal:int, 
                           missionParamConstraints:MissionParamConstraints, 
@@ -136,3 +138,31 @@ if __name__=="__main__":
     missionAnalyzer = MissionAnalyzer(a,param[1],presetValues) 
     missionAnalyzer.run_mission3()
     visualize_mission(missionAnalyzer.stateLog)
+
+def save_mission_results(hashVal, scores, params, csv_path="./data/mission_results.csv"):
+
+   # Create dictionary with results
+   results = {
+       'timestamp': time.strftime("%Y-%m-%d %X"),
+       'hash': hashVal,
+       'mission2_score': scores[0],
+       'mission3_score': scores[1],
+       'mission2_total_mass': params[0].m_total,
+       'mission2_throttle_climb': params[0].throttle_climb,
+       'mission2_throttle_turn': params[0].throttle_turn,
+       'mission2_throttle_level': params[0].throttle_level,
+       'mission3_total_mass': params[1].m_total,
+       'mission3_throttle_climb': params[1].throttle_climb,
+       'mission3_throttle_turn': params[1].throttle_turn, 
+       'mission3_throttle_level': params[1].throttle_level
+   }
+
+   # Convert to DataFrame
+   df = pd.DataFrame([results])
+
+   # Append to CSV or create new one
+   try:
+       df.to_csv(csv_path, mode='a',  index=False)
+   except Exception as e:
+       print(f"Failed to save results: {str(e)}")
+
