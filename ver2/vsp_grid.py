@@ -29,7 +29,7 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
 
     for i, (span, AR, taper, twist) in enumerate(product(span_list,AR_list,taper_list,twist_list)):
         print(f"[{time.strftime("%Y-%m-%d %X")}] Progress: {i}/{total_combinations} configurations")
-        aircraft = replace(baseAircraft)    
+        aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist)    
 
         vspAnalyzer.setup_vsp_model(aircraft)
         analResults = vspAnalyzer.calculateCoefficients(
@@ -58,7 +58,7 @@ if __name__ == "__main__":
                 AR_min = 5.45,
                 AR_interval = 0.5,
                 taper_max = 0.65,                       # (root chord) / (tip chord)
-                taper_min = 0.25,
+                taper_min = 0.45,
                 taper_interval = 0.1,
                 twist_max = 0.0,                       # degree
                 twist_min = 0.0,
