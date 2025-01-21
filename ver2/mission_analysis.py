@@ -674,7 +674,7 @@ class MissionAnalyzer():
               dynamic_pressure = dynamic_pressure_base * speed * speed
               
               CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
-                      float((2 * max_load * weight)/(dynamic_pressure)))
+                      float((max_load * weight)/(dynamic_pressure)))
 
               alpha_turn = float(self.alpha_func(CL))
               L = dynamic_pressure * CL
@@ -700,7 +700,7 @@ class MissionAnalyzer():
               dynamic_pressure = dynamic_pressure_base * speed * speed
               
               CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
-                      float((2 * max_load * weight)/(dynamic_pressure)))
+                      float((max_load * weight)/(dynamic_pressure)))
                       
               alpha_turn = float(self.alpha_func(CL))
               L = dynamic_pressure * CL
