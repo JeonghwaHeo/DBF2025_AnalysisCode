@@ -1,5 +1,3 @@
-## Does all the main work
-
 import cProfile
 import pstats
 import pandas as pd
@@ -18,27 +16,31 @@ def main():
         x1_flight_time = 30,              # sec
         max_battery_capacity = 2250,      # mAh (per one battery)
         Thrust_max = 6.6,                 # kg (two motors)
-        min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
+        min_battery_voltage = 21,         # V
         propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
         score_weight_ratio = 1            # mission2/3 score weight ratio
         )
-    aircraftParamConstraints=            AircraftParamConstraints (
-                #Constraints for constructing the aircraf
-
-                # wing parameter ranges
-                span_max = 1800.0,                   # mm
-                span_min = 1800.0,
-                span_interval = 100.0,
-                AR_max = 5.45,
-                AR_min = 5.45,
-                AR_interval = 0.5,
-                taper_max = 0.65,                       # (root chord) / (tip chord)
-                taper_min = 0.25,
-                taper_interval = 0.1,
-                twist_max = 0.0,                       # degree
-                twist_min = 0.0,
-                twist_interval = 1.0,
-                )
+    
+    aircraftParamConstraints = AircraftParamConstraints (
+        #Constraints for constructing the aircraft
+        # wing parameter ranges
+        
+        span_min = 1800.0,                   # mm
+        span_max = 1800.0,                   
+        span_interval = 100.0,
+    
+        AR_min = 5.45,                  
+        AR_max = 5.45,
+        AR_interval = 0.5,
+        
+        taper_min = 0.25,
+        taper_max = 0.65,                      
+        taper_interval = 0.1,
+        
+        twist_min = 0.0,                     # degree
+        twist_max = 0.0,                     
+        twist_interval = 1.0,
+        )
 
     
     #runVSPGridAnalysis(

@@ -11,14 +11,17 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
 
     ## Variable lists using for optimization
     span_list = np.arange(aircraftParamConstraint.span_min, aircraftParamConstraint.span_max + aircraftParamConstraint.span_interval, aircraftParamConstraint.span_interval) # (min, max + step_size, step_size)
+    
     AR_list = np.arange(aircraftParamConstraint.AR_min, aircraftParamConstraint.AR_max + aircraftParamConstraint.AR_interval, aircraftParamConstraint.AR_interval)
+    
     taper_list = np.arange(aircraftParamConstraint.taper_min, aircraftParamConstraint.taper_max + aircraftParamConstraint.taper_interval, aircraftParamConstraint.taper_interval)
+    
     twist_list = np.arange(aircraftParamConstraint.twist_min, aircraftParamConstraint.twist_max + aircraftParamConstraint.twist_interval, aircraftParamConstraint.twist_interval)
     
-    print(f"\nSpan list: {span_list}")
-    print(f"AR list: {AR_list}")
-    print(f"Taper list: {taper_list}")
-    print(f"Twist list: {twist_list}")
+    # print(f"\nSpan list: {span_list}")
+    # print(f"AR list: {AR_list}")
+    # print(f"Taper list: {taper_list}")
+    # print(f"Twist list: {twist_list}")
     
     vspAnalyzer = VSPAnalyzer(presetValues)
     
