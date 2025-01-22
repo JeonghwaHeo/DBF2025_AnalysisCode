@@ -529,7 +529,7 @@ def resetAnalysisResults(csvPath:str = "data/test.csv"):
 def removeAnalysisResults(csvPath:str = "data/test.csv"):
     if os.path.exists(csvPath):
         os.remove(csvPath)
-        print("test.csv file has been deleted.")
+        print(f"{csvPath} file has been deleted.")
 
 def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "data/test.csv"):
 

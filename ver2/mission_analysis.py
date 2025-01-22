@@ -177,7 +177,7 @@ class MissionAnalyzer():
 
         if(result == -1): return 0
         
-        return self.analResult.m_fuel / self.state.time
+        return self.analResult.m_fuel, self.state.time
 
     def run_mission3(self) -> float:
         mission3 = [
@@ -227,11 +227,8 @@ class MissionAnalyzer():
                 self.stateLog = self.stateLog[:lap_start_index]
                 N_laps -= 1
                 break
-
-        # Calculate objective score
-        obj3 = N_laps + 2.5 / self.presetValues.m_x1
         
-        return obj3
+        return N_laps
         
     def clearState(self):
         self.state = PlaneState()
@@ -986,3 +983,5 @@ def visualize_mission(stateLog):
 
     plt.tight_layout()
     plt.show()
+
+
