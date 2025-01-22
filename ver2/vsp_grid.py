@@ -47,7 +47,7 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
         total_combinations = np.prod([len(arr) for arr in [span_list,AR_list,taper_list,twist_list]])
 
         for i, (span, AR, taper, twist, m_total) in enumerate(product(span_list,AR_list,taper_list,twist_list,total_mass_list)):
-                print(f"[{time.strftime("%Y-%m-%d %X")}] Progress: {i}/{total_combinations} configurations")
+                print(f"[{time.strftime('%Y-%m-%d %X')}] Progress: {i}/{total_combinations} configurations")
                 aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist, m_total = m_total)   
 
         vspAnalyzer.setup_vsp_model(aircraft)
