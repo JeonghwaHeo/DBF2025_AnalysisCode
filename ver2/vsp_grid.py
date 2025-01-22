@@ -10,27 +10,27 @@ from models import *
 def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetValues: PresetValues, baseAircraft: Aircraft):
 
     ## Variable lists using for optimization
-    span_list = np.arange(
+        span_list = np.arange(
         aircraftParamConstraint.span_min, 
         np.around(aircraftParamConstraint.span_max + aircraftParamConstraint.span_interval, decimals=3), 
         aircraftParamConstraint.span_interval
         )
-    AR_list = np.arange(
+        AR_list = np.arange(
                 aircraftParamConstraint.AR_min, 
                 np.around(aircraftParamConstraint.AR_max + aircraftParamConstraint.AR_interval, decimals=3), 
                 aircraftParamConstraint.AR_interval
                 )
-    taper_list = np.arange(
+        taper_list = np.arange(
                 aircraftParamConstraint.taper_min, 
                 np.around(aircraftParamConstraint.taper_max + aircraftParamConstraint.taper_interval, decimals=3), 
                 aircraftParamConstraint.taper_interval
                 )
-    twist_list = np.arange(
+        twist_list = np.arange(
                 aircraftParamConstraint.twist_min, 
                 np.around(aircraftParamConstraint.twist_max + aircraftParamConstraint.twist_interval, decimals=3), 
                 aircraftParamConstraint.twist_interval
                 )
-    total_mass_list = np.arange(
+        total_mass_list = np.arange(
                 aircraftParamConstraint.m_total_min, 
                 np.around(aircraftParamConstraint.m_total_max + aircraftParamConstraint.m_total_interval, decimals=3), 
                 aircraftParamConstraint.m_total_interval
@@ -43,7 +43,7 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
         print(f"total mass list: {total_mass_list}\n")
 
         vspAnalyzer = VSPAnalyzer(presetValues)
-    
+
         total_combinations = np.prod([len(arr) for arr in [span_list,AR_list,taper_list,twist_list]])
 
         for i, (span, AR, taper, twist, m_total) in enumerate(product(span_list,AR_list,taper_list,twist_list,total_mass_list)):
@@ -54,14 +54,14 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
         analResults = vspAnalyzer.calculateCoefficients(
                 alpha_start = -3.5, alpha_end = 13, alpha_step = 0.5,
                 CD_fuse = np.full(int(round((13 - (-3.5)) / 0.5)) + 1, 0.03),
-    
+
                 AOA_stall = 13,
                 AOA_takeoff_max = 10,
                 AOA_climb_max = 8,
                 AOA_turn_max = 8,
-    
+
                 clearModel=False)
-        
+
         selected_outputs = ["hash", "span", "AR", "taper", "twist", "alpha_list", "CL", "CD_total"]
         writeAnalysisResults(analResults, selected_outputs = selected_outputs)
         vspAnalyzer.clean()
