@@ -74,26 +74,20 @@ class VSPAnalyzer:
         zero_idx = np.abs(alpha_list - 0).argmin()
 
         # Calculate coefficients with flaps at max angle
-        results_flap_max = self._calculate_coeffs_helper(fileName, AOA_stall, AOA_stall, 1,
-                                                  np.array([CD_fuse[stall_idx]]), 
+        results_flap_max = self._calculate_coeffs_helper(fileName, 0, AOA_stall, AOA_stall,
+                                                  np.full(2, CD_fuse[0]), 
                                                          Re, Mach, boom_density_2018, boom_density_1614,
                                                   boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
                                                          do_mass_analysis=False)
-    
-        results_flap_zero = self._calculate_coeffs_helper(fileName, 0, 0, 1,
-                                                  np.array([CD_fuse[zero_idx]]), Re, Mach, boom_density_2018, boom_density_1614,
-                                                  boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
-                                                          do_mass_analysis=False)
-   
 
         # Get CL_max from the zero flaps data
         CL_max = results_no_flap['CL'][stall_idx]
 
         # Get corresponding CL/CD values
-        CL_flap_max = results_flap_max['CL'][0]
-        CD_flap_max = results_flap_max['CD'][0]
-        CL_flap_zero = results_flap_zero['CL'][0]
-        CD_flap_zero = results_flap_zero['CD'][0]
+        CL_flap_max = results_flap_max['CL'][1]
+        CD_flap_max = results_flap_max['CD'][1]
+        CL_flap_zero = results_flap_max['CL'][0]
+        CD_flap_zero = results_flap_max['CD'][0]
     
         print("Finished Analysis for this configuration.")
         return AircraftAnalysisResults(
