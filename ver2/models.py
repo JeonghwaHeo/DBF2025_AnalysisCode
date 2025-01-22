@@ -94,6 +94,7 @@ class AircraftAnalysisResults:
     aircraft: Aircraft
 
     # Mass properties
+    m_total : float
     m_boom: float
     m_wing: float
     #m_empty: float
@@ -119,7 +120,6 @@ class AircraftAnalysisResults:
     AOA_turn_max: float # Must be set manually!
 
     CL: np.ndarray
-    # CL_max: float
 
     CD_wing: List[float]
     CD_fuse: List[float]## (TODO: integrate CFD)
@@ -142,7 +142,7 @@ class AircraftAnalysisResults:
 class MissionParameters:
     """Additional Parameters for running the mission(s)"""
 
-    m_total: float
+    # m_total: float
 
     max_climb_angle: float
     max_speed: float

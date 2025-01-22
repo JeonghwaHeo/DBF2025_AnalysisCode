@@ -26,8 +26,7 @@ class MissionAnalyzer():
         self.presetValues = presetValues
         self.dt = dt
 
-
-        self.analResult.m_fuel += missionParam.m_total - self.aircraft.m_total
+        # self.analResult.m_fuel += missionParam.m_total - self.aircraft.m_total
 
         self.clearState()
 
@@ -78,6 +77,7 @@ class MissionAnalyzer():
             alpha_list=results.alpha_list,
             
             # Mass conversions (g to kg)
+            m_total = results.m_total / 1000,
             m_fuel=results.m_fuel / 1000,
             m_boom=results.m_boom / 1000,
             m_wing=results.m_wing / 1000,
@@ -99,7 +99,7 @@ class MissionAnalyzer():
             
             # These are dimensionless coefficients, no conversion needed
             CL=results.CL,
-            CL_max=results.CL_max,
+            # CL_max=results.CL_max,
             CD_wing=results.CD_wing,
             CD_fuse=results.CD_fuse,
             CD_total=results.CD_total,
