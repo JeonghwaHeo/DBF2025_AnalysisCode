@@ -81,7 +81,7 @@ class VSPAnalyzer:
                                                          do_mass_analysis=False)
 
         # Get CL_max from the zero flaps data
-        CL_max = results_no_flap['CL'][stall_idx]
+        # CL_max = results_no_flap['CL'][stall_idx]
 
         # Get corresponding CL/CD values
         CL_flap_max = results_flap_max['CL'][1]
@@ -199,12 +199,14 @@ class VSPAnalyzer:
             h_ac = w_ac + lh
             Lw = w_ac - mass_center_x
             Lh = h_ac - mass_center_x
+            tail_effect = float((Lh-Lw)/Lh)
 
             print("> Finished Mass Analysis")
         else:
             print("> Skipping Mass Analysis")
             m_fuel, m_boom, m_wing = 0, 0, 0
             Lw, Lh = 0, 0
+            tail_effect = 1
 
         # Configure sweep analysis for coefficient
         print("> Starting Sweep Analysis")
@@ -250,6 +252,9 @@ class VSPAnalyzer:
             CL_list[i]= vsp.GetDoubleResults(sweepResults[i], "CL")[-1]
 
             CDwing_list[i] = vsp.GetDoubleResults(sweepResults[i], "CDtot")[-1]
+
+        CL_list = [cl * tail_effect for cl in CL_list]
+        CL_list = np.array(CL_list)
 
         aircraft=self.aircraft
         
