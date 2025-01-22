@@ -54,10 +54,8 @@ def runMissionGridSearch(hashVal:int,
 
     # Create iterator for all combinations
     throttle_combinations = product(throttle_climb_list, throttle_turn_list, throttle_level_list)
-    throttle_combinations = product(throttle_climb_list, throttle_turn_list, throttle_level_list)
 
     # Print total combinations
-    total = len(throttle_climb_list) * len(throttle_turn_list) * len(throttle_level_list)
     total = len(throttle_climb_list) * len(throttle_turn_list) * len(throttle_level_list)
     print(f"Testing {total} combinations...")
 

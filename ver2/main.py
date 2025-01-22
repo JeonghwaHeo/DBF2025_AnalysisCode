@@ -15,22 +15,22 @@ def main():
     removeAnalysisResults()
 
     presetValues = PresetValues(
-        m_x1 = 0.25,                       # kg
-        x1_flight_time = 30,              # sec
-        max_battery_capacity = 2250,      # mAh (per one battery)
-        Thrust_max = 6.6,                 # kg (two motors)
-        min_battery_voltage = 21,         # V
-        propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
+        m_x1 = 0.25,                        # kg
+        x1_flight_time = 30,                # sec
+        max_battery_capacity = 2250,        # mAh (per one battery)
+        Thrust_max = 6.6,                   # kg (two motors)
+        min_battery_voltage = 21,           # V
+        propulsion_efficiency = 0.8,        # Efficiency of the propulsion system
         score_weight_ratio = 0.3            # mission2/3 score weight ratio
         )
     
     aircraftParamConstraints = AircraftParamConstraints (
         #Constraints for constructing the aircraft
-        # wing parameter ranges
+
         m_total_min = 8500.0,                # g
         m_total_max = 8500.0,
         m_total_interval = 100.0,
-
+        # wing parameter ranges
         span_min = 1800.0,                   # mm
         span_max = 1800.0,                   
         span_interval = 100.0,
@@ -93,8 +93,6 @@ def main():
     
         score, param = runMissionGridSearch(hashVal,
                               MissionParamConstraints (
-                                  # total mass of the aircraft
-
                                   #Constraints for calculating missions
                                   throttle_climb_min = 1.0,
                                   throttle_climb_max = 1.0,

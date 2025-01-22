@@ -11,10 +11,10 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
 
     ## Variable lists using for optimization
         span_list = np.arange(
-        aircraftParamConstraint.span_min, 
-        np.around(aircraftParamConstraint.span_max + aircraftParamConstraint.span_interval, decimals=3), 
-        aircraftParamConstraint.span_interval
-        )
+                aircraftParamConstraint.span_min, 
+                np.around(aircraftParamConstraint.span_max + aircraftParamConstraint.span_interval, decimals=3), 
+                aircraftParamConstraint.span_interval
+                )
         AR_list = np.arange(
                 aircraftParamConstraint.AR_min, 
                 np.around(aircraftParamConstraint.AR_max + aircraftParamConstraint.AR_interval, decimals=3), 

@@ -49,10 +49,6 @@ class AircraftParamConstraints:
 @dataclass
 class MissionParamConstraints:
     """Constraints for calculating missions"""
-    # # total mass of the aircraft
-    # m_total_max: float
-    # m_total_min: float
-    # m_total_interval: float
 
     # Throttle
     throttle_climb_min: float
