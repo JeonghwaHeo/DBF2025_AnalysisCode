@@ -3,3 +3,4 @@ VSP_analysis/custom_dir/
 VSP_analysis/vsp_analysis test.py
 results/mission2.npz
 Mission_analysis/test_mission3.py
+__pycache__
