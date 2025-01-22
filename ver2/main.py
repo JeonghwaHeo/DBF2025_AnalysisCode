@@ -39,7 +39,7 @@ def main():
         AR_max = 5.45,
         AR_interval = 0.5,
         
-        taper_min = 0.65,
+        taper_min = 0.55,
         taper_max = 0.65,                      
         taper_interval = 0.1,
         
@@ -49,7 +49,8 @@ def main():
         )
     
     baseAircraft = Aircraft(
-        m_total = 8500, m_fuselage = 3000,
+        m_total = 8500, 
+        m_fuselage = 3000,
 
         wing_density = 0.0000852, spar_density = 1.0,
 
@@ -79,11 +80,10 @@ def main():
 
     
     runVSPGridAnalysis(aircraftParamConstraints, presetValues, baseAircraft)
-    
-    return
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
+    
     for hashVal in results["hash"]:
         print(f"Analyzing for hash{hashVal}")
         a=loadAnalysisResults(hashVal)
@@ -94,12 +94,12 @@ def main():
         score, param = runMissionGridSearch(hashVal,
                               MissionParamConstraints (
                                   #Constraints for calculating missions
-                                  throttle_climb_min = 1.0,
-                                  throttle_climb_max = 1.0,
+                                  throttle_climb_min = 0.9,
+                                  throttle_climb_max = 0.9,
                                   throttle_turn_min = 0.7,
                                   throttle_turn_max = 0.7,
-                                  throttle_level_min = 1.0,
-                                  throttle_level_max = 1.0,
+                                  throttle_level_min = 0.5,
+                                  throttle_level_max = 0.5,
                                   throttle_analysis_interval = 0.05,
                                   ),
                               presetValues

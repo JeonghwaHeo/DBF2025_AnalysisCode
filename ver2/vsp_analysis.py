@@ -56,7 +56,8 @@ class VSPAnalyzer:
                               AOA_takeoff_max:float=10,
                               AOA_climb_max:float=8,
                               AOA_turn_max:float=8,
-                              Re:float=850000, Mach:float=0, 
+                              Re:float=850000, Mach:float=0,
+                              m_total:float = 8500, 
                               boom_density_2018:float = 0.098, 
                               boom_density_1614:float = 0.087,
                               boom_density_86:float = 0.036,
@@ -93,6 +94,7 @@ class VSPAnalyzer:
         return AircraftAnalysisResults(
                 aircraft=self.aircraft,
                 alpha_list=results_no_flap['alpha_list'],
+                m_total=m_total,
                 m_fuel=results_no_flap['m_fuel'],
                 m_boom=results_no_flap['m_boom'],
                 m_wing=results_no_flap['m_wing'],
@@ -529,7 +531,7 @@ def removeAnalysisResults(csvPath:str = "data/test.csv"):
         os.remove(csvPath)
         print("test.csv file has been deleted.")
 
-def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "data/test.csv", selected_outputs:list = None):
+def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "data/test.csv"):
 
     if not os.path.isfile(csvPath):
         df = pd.json_normalize(asdict(anaResults))
@@ -540,8 +542,8 @@ def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "dat
         df = pd.read_csv(csvPath, sep='|', encoding='utf-8')
         df= pd.concat([df,new_df]).drop_duplicates(["hash"],keep='last')
 
-    if selected_outputs is not None:
-        df = df.loc[:, [col for col in selected_outputs if col in df.columns]]    
+    # if selected_outputs is not None:
+    #     df = df.loc[:, [col for col in selected_outputs if col in df.columns]]    
 
     def convert_cell(x):
         if isinstance(x, np.ndarray):

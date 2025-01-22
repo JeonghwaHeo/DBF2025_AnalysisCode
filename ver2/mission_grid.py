@@ -60,11 +60,11 @@ def runMissionGridSearch(hashVal:int,
     print(f"Testing {total} combinations...")
 
     # Test each combination
-    for i, (total_mass, throttle_climb, throttle_turn, throttle_level) in enumerate(throttle_combinations):
+    for i, (throttle_climb, throttle_turn, throttle_level) in enumerate(throttle_combinations):
         if(i%10 == 0): print(f"[{time.strftime("%Y-%m-%d %X")}] Progress: {i}/{total} configurations")
         # Create mission parameters for this combination
         missionParams = MissionParameters(
-            m_total=total_mass,
+            
             max_battery_capacity=presetValues.max_battery_capacity,
             throttle_takeoff=0.9,  # Fixed
             throttle_climb=throttle_climb,
@@ -89,7 +89,7 @@ def runMissionGridSearch(hashVal:int,
                 best_params_2 = missionParams
                 
                 print(f"\nNew best score for Mission 2: {best_score_2}")
-                print(f"> Total Mass: {total_mass:.2f}")
+                # print(f"> Total Mass: {total_mass:.2f}")
                 print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
                       f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
             # Update best score if current score is better
@@ -98,7 +98,7 @@ def runMissionGridSearch(hashVal:int,
                 best_params_3 = missionParams
                 
                 print(f"\nNew best score for Mission 3: {best_score_3}")
-                print(f"> Total Mass: {total_mass:.2f}")
+                # print(f"> Total Mass: {total_mass:.2f}")
                 print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
                       f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
         
@@ -109,12 +109,12 @@ def runMissionGridSearch(hashVal:int,
    
     print("\nDone!")
     print(f"\nBest score for Mission 2: {best_score_2}")
-    print(f"> Total Mass: {best_params_2.m_total:.2f}")
+    # print(f"> Total Mass: {best_params_2.m_total:.2f}")
     print(f"> Throttle settings - Climb: {best_params_2.throttle_climb:.2f}, "
           f"Turn: {best_params_2.throttle_turn:.2f}, Level: {best_params_2.throttle_level:.2f}")
 
     print(f"\nBest score for Mission 3: {best_score_3}")
-    print(f"> Total Mass: {best_params_3.m_total:.2f}")
+    # print(f"> Total Mass: {best_params_3.m_total:.2f}")
     print(f"> Throttle settings - Climb: {best_params_3.throttle_climb:.2f}, "
           f"Turn: {best_params_3.throttle_turn:.2f}, Level: {best_params_3.throttle_level:.2f}")
     return [best_score_2, best_score_3], [best_params_2, best_params_3]
@@ -163,11 +163,11 @@ def save_mission_results(hashVal, scores, params, csv_path="./data/mission_resul
        'hash': hashVal,
        'mission2_score': scores[0],
        'mission3_score': scores[1],
-       'mission2_total_mass': params[0].m_total,
+    #    'mission2_total_mass': params[0].m_total,
        'mission2_throttle_climb': params[0].throttle_climb,
        'mission2_throttle_turn': params[0].throttle_turn,
        'mission2_throttle_level': params[0].throttle_level,
-       'mission3_total_mass': params[1].m_total,
+    #    'mission3_total_mass': params[1].m_total,
        'mission3_throttle_climb': params[1].throttle_climb,
        'mission3_throttle_turn': params[1].throttle_turn, 
        'mission3_throttle_level': params[1].throttle_level
