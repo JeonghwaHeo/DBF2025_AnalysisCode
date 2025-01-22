@@ -19,12 +19,30 @@ def runMissionGridSearch(hashVal:int,
     analysisResults = loadAnalysisResults(hashVal, csvPath)
     ## Variable lists using for optimization
    
-    total_mass_list = np.arange(missionParamConstraints.m_total_min, missionParamConstraints.m_total_max+missionParamConstraints.m_total_interval,missionParamConstraints.m_total_interval)
-    throttle_climb_list = np.arange(missionParamConstraints.throttle_climb_min, missionParamConstraints.throttle_climb_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
-    throttle_turn_list = np.arange(missionParamConstraints.throttle_turn_min, missionParamConstraints.throttle_turn_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
-    throttle_level_list = np.arange(missionParamConstraints.throttle_level_min, missionParamConstraints.throttle_level_max + missionParamConstraints.throttle_analysis_interval, missionParamConstraints.throttle_analysis_interval)
+    throttle_climb_list = np.around(
+        np.arange(
+            missionParamConstraints.throttle_climb_min, 
+            missionParamConstraints.throttle_climb_max + missionParamConstraints.throttle_analysis_interval, 
+            missionParamConstraints.throttle_analysis_interval
+        ), decimals=3
+    )
+
+    throttle_turn_list = np.around(
+        np.arange(
+            missionParamConstraints.throttle_turn_min, 
+            missionParamConstraints.throttle_turn_max + missionParamConstraints.throttle_analysis_interval, 
+            missionParamConstraints.throttle_analysis_interval
+        ), decimals=3
+    )
+
+    throttle_level_list = np.around(
+        np.arange(
+            missionParamConstraints.throttle_level_min, 
+            missionParamConstraints.throttle_level_max + missionParamConstraints.throttle_analysis_interval, 
+            missionParamConstraints.throttle_analysis_interval
+        ), decimals=3
+    )
     
-    print(f"\ntotal mass list: {total_mass_list}")
     print(f"\nthrottle climb list: {throttle_climb_list}")
     print(f"throttle turn list: {throttle_turn_list}")
     print(f"throttle level list: {throttle_level_list}\n")
@@ -37,10 +55,10 @@ def runMissionGridSearch(hashVal:int,
     best_params_3 = None
 
     # Create iterator for all combinations
-    throttle_combinations = product(total_mass_list, throttle_climb_list, throttle_turn_list, throttle_level_list)
+    throttle_combinations = product(throttle_climb_list, throttle_turn_list, throttle_level_list)
 
     # Print total combinations
-    total = len(total_mass_list)*len(throttle_climb_list) * len(throttle_turn_list) * len(throttle_level_list)
+    total = len(throttle_climb_list) * len(throttle_turn_list) * len(throttle_level_list)
     print(f"Testing {total} combinations...")
 
     # Test each combination
