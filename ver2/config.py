@@ -26,11 +26,12 @@ class PresetValues:
 @dataclass
 class AircraftParamConstraints:
     """Constraints for constructing the aircraft"""
+
     # total mass of the aircraft
     m_total_max: float
     m_total_min: float
     m_total_interval: float
-
+    
     # wing parameter ranges
     span_max: float
     span_min: float
@@ -48,6 +49,11 @@ class AircraftParamConstraints:
 @dataclass
 class MissionParamConstraints:
     """Constraints for calculating missions"""
+    # # total mass of the aircraft
+    # m_total_max: float
+    # m_total_min: float
+    # m_total_interval: float
+
     # Throttle
     throttle_climb_min: float
     throttle_turn_min: float

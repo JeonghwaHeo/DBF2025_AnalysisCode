@@ -26,7 +26,6 @@ def runMissionGridSearch(hashVal:int,
             missionParamConstraints.throttle_analysis_interval
         ), decimals=3
     )
-
     throttle_turn_list = np.around(
         np.arange(
             missionParamConstraints.throttle_turn_min, 
@@ -34,7 +33,6 @@ def runMissionGridSearch(hashVal:int,
             missionParamConstraints.throttle_analysis_interval
         ), decimals=3
     )
-
     throttle_level_list = np.around(
         np.arange(
             missionParamConstraints.throttle_level_min, 
@@ -56,8 +54,10 @@ def runMissionGridSearch(hashVal:int,
 
     # Create iterator for all combinations
     throttle_combinations = product(throttle_climb_list, throttle_turn_list, throttle_level_list)
+    throttle_combinations = product(throttle_climb_list, throttle_turn_list, throttle_level_list)
 
     # Print total combinations
+    total = len(throttle_climb_list) * len(throttle_turn_list) * len(throttle_level_list)
     total = len(throttle_climb_list) * len(throttle_turn_list) * len(throttle_level_list)
     print(f"Testing {total} combinations...")
 

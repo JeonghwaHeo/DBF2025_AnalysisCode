@@ -52,10 +52,10 @@ class VSPAnalyzer:
     def calculateCoefficients(self, fileName:str = "Mothership.vsp3", 
                               alpha_start: float=0, alpha_end: float=1, alpha_step:float=0.5, 
                               CD_fuse: np.ndarray=np.zeros(4),
-                              AOA_stall:float=10, 
+                              AOA_stall:float=13, 
                               AOA_takeoff_max:float=10,
-                              AOA_climb_max:float=10,
-                              AOA_turn_max:float=20,
+                              AOA_climb_max:float=8,
+                              AOA_turn_max:float=8,
                               Re:float=850000, Mach:float=0, 
                               boom_density_2018:float = 0.098, 
                               boom_density_1614:float = 0.087,
@@ -524,18 +524,19 @@ def removeAnalysisResults(csvPath:str = "data/test.csv"):
         os.remove(csvPath)
         print("test.csv file has been deleted.")
 
-def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "data/test.csv"):
+def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "data/test.csv", selected_outputs:list = None):
 
     if not os.path.isfile(csvPath):
         df = pd.json_normalize(asdict(anaResults))
         df['hash'] = hash(anaResults.aircraft)
     else:
         new_df = pd.json_normalize(asdict(anaResults))
-
         new_df['hash'] = hash(anaResults.aircraft)
         df = pd.read_csv(csvPath, sep='|', encoding='utf-8')
         df= pd.concat([df,new_df]).drop_duplicates(["hash"],keep='last')
 
+    if selected_outputs is not None:
+        df = df.loc[:, [col for col in selected_outputs if col in df.columns]]    
 
     def convert_cell(x):
         if isinstance(x, np.ndarray):
