@@ -278,7 +278,6 @@ class MissionAnalyzer():
         # interpolate CD using quadratic function 
         # alpha_func : function to calculate AOA from given CL value
 
-        tail_effect = float((self.analResult.Lh-self.analResult.Lw) / self.analResult.Lh)
 
          # Create focused alpha range from -10 to 10 degrees
         alpha_extended = np.linspace(-10, 10, 2000)  # 0.01 degree resolution
@@ -286,7 +285,7 @@ class MissionAnalyzer():
         # Create lookup tables
         CL_table = np.interp(alpha_extended, 
                             self.analResult.alpha_list,
-                            tail_effect * np.array(self.analResult.CL))
+                            self.analResult.CL)
         CD_table = np.interp(alpha_extended, 
                             self.analResult.alpha_list,
                             self.analResult.CD_total)
