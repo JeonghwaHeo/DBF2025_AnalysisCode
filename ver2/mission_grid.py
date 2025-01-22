@@ -2,12 +2,16 @@ import numpy as np
 from itertools import product
 import time
 from config import *
+from dataclasses import replace
 from vsp_analysis import  loadAnalysisResults
 from mission_analysis import MissionAnalyzer, visualize_mission
 from models import *
-
+import os 
+import os.path
 import pandas as pd
 import time
+from dataclasses import asdict
+import csv
 
 def runMissionGridSearch(hashVal:int, 
                           missionParamConstraints:MissionParamConstraints, 
@@ -46,11 +50,11 @@ def runMissionGridSearch(hashVal:int,
     print(f"throttle level list: {throttle_level_list}\n")
 
 
-    best_score_2 = float('-inf')
-    best_params_2 = None
+    # best_score_2 = float('-inf')
+    # best_params_2 = None
     
-    best_score_3 = float('-inf')
-    best_params_3 = None
+    # best_score_3 = float('-inf')
+    # best_params_3 = None
 
     # Create iterator for all combinations
     throttle_combinations = product(throttle_climb_list, throttle_turn_list, throttle_level_list)
@@ -61,7 +65,7 @@ def runMissionGridSearch(hashVal:int,
 
     # Test each combination
     for i, (throttle_climb, throttle_turn, throttle_level) in enumerate(throttle_combinations):
-        if(i%10 == 0): print(f"[{time.strftime("%Y-%m-%d %X")}] Progress: {i}/{total} configurations")
+        # if(i%10 == 0): print(f"[{time.strftime("%Y-%m-%d %X")}] Progress: {i+1}/{total} configurations")
         # Create mission parameters for this combination
         missionParams = MissionParameters(
             
@@ -78,29 +82,57 @@ def runMissionGridSearch(hashVal:int,
 
         try:
             # Create mission analyzer and run mission 2
-            missionAnalyzer = MissionAnalyzer(analysisResults, missionParams, presetValues)
+            mission2Analyzer = MissionAnalyzer(analysisResults, missionParams, presetValues)
+            fuel_weight, flight_time = mission2Analyzer.run_mission2()
+            obj2 = fuel_weight * 2.204 / flight_time
+            
+            analysisResults_for_mission3 = replace(analysisResults,
+                                                   m_total=analysisResults.m_total - analysisResults.m_fuel,
+                                                   m_fuel=0.0)
+            mission3Analyzer = MissionAnalyzer(analysisResults_for_mission3, missionParams, presetValues)
+            N_laps = mission3Analyzer.run_mission3()
+            obj3 = N_laps + 2.5 / (presetValues.m_x1 * 2.204)
+            
+            results = {
+                'timestamp': time.strftime("%Y-%m-%d %X"),
+                'hash': hashVal,
+                'fuel_weight' : fuel_weight,
+                'flight_time' : flight_time,
+                'N_laps' : N_laps,
+                'objective_2': obj2,
+                'objective_3': obj3,
+                'mission2_throttle_climb': throttle_climb,
+                'mission2_throttle_turn': throttle_turn,
+                'mission2_throttle_level': throttle_level,
+                'mission3_throttle_climb': throttle_climb,
+                'mission3_throttle_turn': throttle_turn, 
+                'mission3_throttle_level': throttle_level
+            }
+    
+            results = pd.DataFrame([results])
+    
+            writeMissionAnalysisResults(hashVal, results)
 
-            score_2 = missionAnalyzer.run_mission2()
-            score_3 = missionAnalyzer.run_mission3()
 
-            # Update best score if current score is better
-            if score_2 > best_score_2:
-                best_score_2 = score_2
-                best_params_2 = missionParams
+
+            # # Update best score if current score is better
+            # if score_2 > best_score_2:
+            #     best_score_2 = score_2
+            #     best_params_2 = missionParams
                 
-                print(f"\nNew best score for Mission 2: {best_score_2}")
-                # print(f"> Total Mass: {total_mass:.2f}")
-                print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
-                      f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
-            # Update best score if current score is better
-            if score_3 > best_score_3:
-                best_score_3 = score_3
-                best_params_3 = missionParams
+            #     print(f"\nNew best score for Mission 2: {best_score_2}")
+            #     # print(f"> Total Mass: {total_mass:.2f}")
+            #     print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
+            #           f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
+            # # Update best score if current score is better
+            # if score_3 > best_score_3:
+            #     best_score_3 = score_3
+            #     best_params_3 = missionParams
                 
-                print(f"\nNew best score for Mission 3: {best_score_3}")
-                # print(f"> Total Mass: {total_mass:.2f}")
-                print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
-                      f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
+            #     print(f"\nNew best score for Mission 3: {best_score_3}")
+            #     # print(f"> Total Mass: {total_mass:.2f}")
+            #     print(f"> Throttle settings - Climb: {throttle_climb:.2f}, "
+            #           f"Turn: {throttle_turn:.2f}, Level: {throttle_level:.2f}")
         
         except Exception as e:
             print(f"Failed with throttles {throttle_climb:.2f}/{throttle_turn:.2f}/"
@@ -108,16 +140,16 @@ def runMissionGridSearch(hashVal:int,
             continue
    
     print("\nDone!")
-    print(f"\nBest score for Mission 2: {best_score_2}")
-    # print(f"> Total Mass: {best_params_2.m_total:.2f}")
-    print(f"> Throttle settings - Climb: {best_params_2.throttle_climb:.2f}, "
-          f"Turn: {best_params_2.throttle_turn:.2f}, Level: {best_params_2.throttle_level:.2f}")
 
-    print(f"\nBest score for Mission 3: {best_score_3}")
-    # print(f"> Total Mass: {best_params_3.m_total:.2f}")
-    print(f"> Throttle settings - Climb: {best_params_3.throttle_climb:.2f}, "
-          f"Turn: {best_params_3.throttle_turn:.2f}, Level: {best_params_3.throttle_level:.2f}")
-    return [best_score_2, best_score_3], [best_params_2, best_params_3]
+
+    # print(f"\nBest score for Mission 2: {best_score_2}")
+    # print(f"> Throttle settings - Climb: {best_params_2.throttle_climb:.2f}, "
+    #       f"Turn: {best_params_2.throttle_turn:.2f}, Level: {best_params_2.throttle_level:.2f}")
+
+    # print(f"\nBest score for Mission 3: {best_score_3}")
+    # print(f"> Throttle settings - Climb: {best_params_3.throttle_climb:.2f}, "
+    #       f"Turn: {best_params_3.throttle_turn:.2f}, Level: {best_params_3.throttle_level:.2f}")
+    
 
 if __name__=="__main__":
     presetValues = PresetValues(
@@ -155,30 +187,82 @@ if __name__=="__main__":
     missionAnalyzer.run_mission3()
     visualize_mission(missionAnalyzer.stateLog)
 
-def save_mission_results(hashVal, scores, params, csv_path="./data/mission_results.csv"):
+def writeMissionAnalysisResults(hashVal, results, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
+    existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
+    base_row = existing_df[existing_df['hash'] == int(hashVal)]
 
-   # Create dictionary with results
-   results = {
-       'timestamp': time.strftime("%Y-%m-%d %X"),
-       'hash': hashVal,
-       'mission2_score': scores[0],
-       'mission3_score': scores[1],
-    #    'mission2_total_mass': params[0].m_total,
-       'mission2_throttle_climb': params[0].throttle_climb,
-       'mission2_throttle_turn': params[0].throttle_turn,
-       'mission2_throttle_level': params[0].throttle_level,
-    #    'mission3_total_mass': params[1].m_total,
-       'mission3_throttle_climb': params[1].throttle_climb,
-       'mission3_throttle_turn': params[1].throttle_turn, 
-       'mission3_throttle_level': params[1].throttle_level
-   }
+    new_row_df = pd.merge(base_row, results, on = 'hash')
 
-   # Convert to DataFrame
-   df = pd.DataFrame([results])
 
-   # Append to CSV or create new one
-   try:
-       df.to_csv(csv_path, mode='a',  index=False)
-   except Exception as e:
-       print(f"Failed to save results: {str(e)}")
+    if not os.path.isfile(writecsvPath):
+        df_copy = new_row_df.copy()
+        df_copy.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
+    else:
+        df = pd.read_csv(writecsvPath, sep='|', encoding='utf-8')
+        df= pd.concat([df,new_row_df])
+        df_copy = df.copy()
+        df_copy.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
+
+
+# def save_mission_results(hashVal, scores, params, csv_path="./data/total_results.csv"):
+
+#    # Create dictionary with results
+#    results = {
+#        'timestamp': time.strftime("%Y-%m-%d %X"),
+#        'hash': hashVal,
+#        'mission2_score': scores[0],
+#        'mission3_score': scores[1],
+#        'mission2_throttle_climb': params[0].throttle_climb,
+#        'mission2_throttle_turn': params[0].throttle_turn,
+#        'mission2_throttle_level': params[0].throttle_level,
+#        'mission3_throttle_climb': params[1].throttle_climb,
+#        'mission3_throttle_turn': params[1].throttle_turn, 
+#        'mission3_throttle_level': params[1].throttle_level
+#    }
+
+#    # Convert to DataFrame
+#    df = pd.DataFrame([results])
+
+#    # Append to CSV or create new one
+#    try:
+#        df.to_csv(csv_path, mode='a',  index=False)
+#    except Exception as e:
+#        print(f"Failed to save results: {str(e)}")
+
+def ResultAnalysis(presetValues:PresetValues,
+                   readcsvPath:str = "data/total_results.csv",
+                   writecsvPath:str = "data/organized_results.csv"):
+    
+    total_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
+    max_obj2 = total_df['objective_2'].max()
+    max_obj3 = total_df['objective_3'].max()
+
+    total_df['score2'] = total_df['objective_2'] / max_obj2 + 1
+    total_df['score3'] = total_df['objective_3'] / max_obj3 + 2
+    total_df['SCORE'] = total_df['score2']*presetValues.score_weight_ratio + total_df['score3']*(1-presetValues.score_weight_ratio)
+
+    organized_df = total_df[['hash',
+                            'm_total',
+                            'fuel_weight',
+                            'span',
+                            'AR',
+                            'taper',
+                            'twist',
+                            'mission2_throttle_climb',
+                            'mission2_throttle_turn',
+                            'mission2_throttle_level',
+                            'mission3_throttle_climb',
+                            'mission3_throttle_turn',
+                            'mission3_throttle_level',
+                            'flight_time',
+                            'N_laps',
+                            'score2',
+                            'score3',
+                            'SCORE']]
+    
+    organized_df.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
+
+
+
+
 

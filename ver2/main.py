@@ -3,7 +3,7 @@ import pstats
 import pandas as pd
 from pstats import SortKey
 from vsp_grid import runVSPGridAnalysis
-from mission_grid import runMissionGridSearch, save_mission_results
+from mission_grid import runMissionGridSearch, ResultAnalysis
 from vsp_analysis import  loadAnalysisResults, visualize_results, resetAnalysisResults, removeAnalysisResults
 from mission_analysis import MissionAnalyzer, visualize_mission
 from models import *
@@ -11,8 +11,8 @@ from config import *
 
 def main():
 
-    #resetAnalysisResults()
-    removeAnalysisResults()
+    removeAnalysisResults(csvPath = "data/test.csv")
+    removeAnalysisResults(csvPath = "data/total_results.csv")
 
     presetValues = PresetValues(
         m_x1 = 0.25,                        # kg
@@ -21,7 +21,7 @@ def main():
         Thrust_max = 6.6,                   # kg (two motors)
         min_battery_voltage = 21,           # V
         propulsion_efficiency = 0.8,        # Efficiency of the propulsion system
-        score_weight_ratio = 0.3            # mission2/3 score weight ratio
+        score_weight_ratio = 0.5            # mission2/3 score weight ratio
         )
     
     aircraftParamConstraints = AircraftParamConstraints (
@@ -83,41 +83,26 @@ def main():
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
-    
+
     for hashVal in results["hash"]:
         print(f"Analyzing for hash{hashVal}")
-        a=loadAnalysisResults(hashVal)
 
-        #visualize_results(a)
-
-    
-        score, param = runMissionGridSearch(hashVal,
-                              MissionParamConstraints (
-                                  #Constraints for calculating missions
-                                  throttle_climb_min = 0.9,
-                                  throttle_climb_max = 0.9,
-                                  throttle_turn_min = 0.7,
-                                  throttle_turn_max = 0.7,
-                                  throttle_level_min = 0.5,
-                                  throttle_level_max = 0.5,
-                                  throttle_analysis_interval = 0.05,
-                                  ),
-                              presetValues
-                              )
-    
-        save_mission_results(hashVal,score,param)
-
-
-        missionAnalyzer = MissionAnalyzer(a,param[0],presetValues) 
-        missionAnalyzer.run_mission2()
-        #visualize_mission(missionAnalyzer.stateLog)
-
-        missionAnalyzer = MissionAnalyzer(a,param[1],presetValues) 
-        missionAnalyzer.run_mission3()
-        #visualize_mission(missionAnalyzer.stateLog)
-
-    visualize_mission(missionAnalyzer.stateLog)
+        missionParamConstraints = MissionParamConstraints (
+            #Constraints for calculating missions
+            throttle_climb_min = 0.9,
+            throttle_climb_max = 0.9,
+            throttle_turn_min = 0.7,
+            throttle_turn_max = 0.7,
+            throttle_level_min = 0.5,
+            throttle_level_max = 0.5,
+            throttle_analysis_interval = 0.05,
+            )
         
+        runMissionGridSearch(hashVal,missionParamConstraints,presetValues)
+        
+
+    ResultAnalysis(presetValues)
+
     return
 
 
