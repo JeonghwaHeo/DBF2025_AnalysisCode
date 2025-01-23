@@ -48,13 +48,20 @@ class AircraftParamConstraints:
 
 @dataclass
 class MissionParamConstraints:
-    """Constraints for calculating missions"""
-
-    # Throttle
-    throttle_climb_min: float
-    throttle_turn_min: float
-    throttle_level_min: float
-    throttle_climb_max: float
-    throttle_turn_max: float
-    throttle_level_max: float
-    throttle_analysis_interval: float
+    #Constraints for calculating mission2
+    M2_throttle_climb_min : float
+    M2_throttle_climb_max : float
+    M2_throttle_turn_min : float
+    M2_throttle_turn_max : float
+    M2_throttle_level_min : float
+    M2_throttle_level_max : float
+    M2_throttle_analysis_interval : float
+    
+    #Constraints for calculating mission3  
+    M3_throttle_climb_min : float
+    M3_throttle_climb_max : float
+    M3_throttle_turn_min : float
+    M3_throttle_turn_max : float
+    M3_throttle_level_min : float
+    M3_throttle_level_max : float
+    M3_throttle_analysis_interval : float
