@@ -13,6 +13,7 @@ def main():
 
     removeAnalysisResults(csvPath = "data/test.csv")
     removeAnalysisResults(csvPath = "data/total_results.csv")
+    removeAnalysisResults(csvPath = "data/organized_results.csv")
 
     presetValues = PresetValues(
         m_x1 = 0.25,                        # kg

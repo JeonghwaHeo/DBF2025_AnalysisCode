@@ -4,4 +4,4 @@ runContainer.sh
 custom_dir/
 
 .vsp*
-.csv
+data/.csv

@@ -23,27 +23,21 @@ def runMissionGridSearch(hashVal:int,
     analysisResults = loadAnalysisResults(hashVal, csvPath)
     ## Variable lists using for optimization
    
-    throttle_climb_list = np.around(
-        np.arange(
+    throttle_climb_list = np.arange(
             missionParamConstraints.throttle_climb_min, 
-            missionParamConstraints.throttle_climb_max + missionParamConstraints.throttle_analysis_interval, 
+            missionParamConstraints.throttle_climb_max + missionParamConstraints.throttle_analysis_interval/2, 
             missionParamConstraints.throttle_analysis_interval
-        ), decimals=3
-    )
-    throttle_turn_list = np.around(
-        np.arange(
+        )
+    throttle_turn_list = np.arange(
             missionParamConstraints.throttle_turn_min, 
-            missionParamConstraints.throttle_turn_max + missionParamConstraints.throttle_analysis_interval, 
+            missionParamConstraints.throttle_turn_max + missionParamConstraints.throttle_analysis_interval/2, 
             missionParamConstraints.throttle_analysis_interval
-        ), decimals=3
-    )
-    throttle_level_list = np.around(
-        np.arange(
+        )
+    throttle_level_list = np.arange(
             missionParamConstraints.throttle_level_min, 
-            missionParamConstraints.throttle_level_max + missionParamConstraints.throttle_analysis_interval, 
+            missionParamConstraints.throttle_level_max + missionParamConstraints.throttle_analysis_interval/2, 
             missionParamConstraints.throttle_analysis_interval
-        ), decimals=3
-    )
+        )
     
     print(f"\nthrottle climb list: {throttle_climb_list}")
     print(f"throttle turn list: {throttle_turn_list}")
