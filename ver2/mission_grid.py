@@ -253,6 +253,8 @@ def writeMissionAnalysisResults(hashVal, results, readcsvPath:str = "data/test.c
 #        df.to_csv(csv_path, mode='a',  index=False)
 #    except Exception as e:
 #        print(f"Failed to save results: {str(e)}")
+def format_number(n: float) -> str:
+    return f"{n:.6f}"  # 6 decimal places should be sufficient for most cases
 
 def ResultAnalysis(presetValues:PresetValues,
                    readcsvPath:str = "data/total_results.csv",
@@ -266,7 +268,34 @@ def ResultAnalysis(presetValues:PresetValues,
     total_df['score3'] = total_df['objective_3'] / max_obj3 + 2
     total_df['SCORE'] = total_df['score2']*presetValues.score_weight_ratio + total_df['score3']*(1-presetValues.score_weight_ratio)
 
-    organized_df = total_df[['hash',
+    hash_dict = {
+        "hash" : format_number(float(total_df['hash'])),
+        "m_total" : format_number(float(total_df['m_total'])),
+        "m_total" : format_number(float(total_df['m_total'])),
+        "fuel_weight" : format_number(float(total_df['fuel_weight'])),
+        "span" : format_number(float(total_df['span'])),
+        "AR" : format_number(float(total_df['AR'])),
+        "taper" : format_number(float(total_df['taper'])),
+        "twist" : format_number(float(total_df['twist'])),
+        "mission2_throttle_climb" : format_number(float(total_df['mission2_throttle_climb'])),
+        "mission2_throttle_turn" : format_number(float(total_df['mission2_throttle_turn'])),
+        "mission2_throttle_level" : format_number(float(total_df['mission2_throttle_level'])),
+        "mission3_throttle_climb" : format_number(float(total_df['mission3_throttle_climb'])),
+        "mission3_throttle_turn" : format_number(float(total_df['mission3_throttle_turn'])),
+        "mission3_throttle_level" : format_number(float(total_df['mission3_throttle_level'])),
+        "flight_time" : format_number(float(total_df['flight_time'])),
+        "N_laps" : format_number(float(total_df['N_laps'])),
+        "score2" : format_number(float(total_df['score2'])),
+        "score3" : format_number(float(total_df['score3'])),
+        "SCORE" : format_number(float(total_df['SCORE']))
+    }
+
+    json_str = json.dumps(hash_dict, sort_keys=True)
+    hash_obj = hashlib.sha256(json_str.encode())
+    total_df['resultID'] = int.from_bytes(hash_obj.digest()[:8], byteorder='big')
+
+    organized_df = total_df[['resultID',
+                            'hash',
                             'm_total',
                             'fuel_weight',
                             'span',
