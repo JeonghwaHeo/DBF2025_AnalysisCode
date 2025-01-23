@@ -12,27 +12,27 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
         ## Variable lists using for optimization
         span_list = np.arange(
                 aircraftParamConstraint.span_min, 
-                np.around(aircraftParamConstraint.span_max + aircraftParamConstraint.span_interval, decimals=3), 
+                aircraftParamConstraint.span_max + aircraftParamConstraint.span_interval/2, 
                 aircraftParamConstraint.span_interval
                 )
         AR_list = np.arange(
                 aircraftParamConstraint.AR_min, 
-                np.around(aircraftParamConstraint.AR_max + aircraftParamConstraint.AR_interval, decimals=3), 
+                aircraftParamConstraint.AR_max + aircraftParamConstraint.AR_interval/2, 
                 aircraftParamConstraint.AR_interval
                 )
         taper_list = np.arange(
                 aircraftParamConstraint.taper_min, 
-                np.around(aircraftParamConstraint.taper_max + aircraftParamConstraint.taper_interval, decimals=3), 
+                aircraftParamConstraint.taper_max + aircraftParamConstraint.taper_interval/2, 
                 aircraftParamConstraint.taper_interval
                 )
         twist_list = np.arange(
                 aircraftParamConstraint.twist_min, 
-                np.around(aircraftParamConstraint.twist_max + aircraftParamConstraint.twist_interval, decimals=3), 
+                aircraftParamConstraint.twist_max + aircraftParamConstraint.twist_interval/2, 
                 aircraftParamConstraint.twist_interval
                 )
         total_mass_list = np.arange(
                 aircraftParamConstraint.m_total_min, 
-                np.around(aircraftParamConstraint.m_total_max + aircraftParamConstraint.m_total_interval, decimals=3), 
+                aircraftParamConstraint.m_total_max + aircraftParamConstraint.m_total_interval/2, 
                 aircraftParamConstraint.m_total_interval
                 )
 
@@ -47,7 +47,7 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
         total_combinations = np.prod([len(arr) for arr in [span_list,AR_list,taper_list,twist_list,total_mass_list]])
 
         for i, (span, AR, taper, twist, m_total) in enumerate(product(span_list,AR_list,taper_list,twist_list,total_mass_list)):
-                print(f"[{time.strftime('%Y-%m-%d %X')}] Progress: {i+1}/{total_combinations} configurations")
+                print(f"[{time.strftime('%Y-%m-%d %X')}] VSP Grid Progress: {i+1}/{total_combinations} configurations")
                 aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist, m_total = m_total)   
 
                 vspAnalyzer.setup_vsp_model(aircraft)

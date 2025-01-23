@@ -41,7 +41,7 @@ def main():
         AR_interval = 0.5,
         
         taper_min = 0.55,
-        taper_max = 0.65,                      
+        taper_max = 0.55,                      
         taper_interval = 0.1,
         
         twist_min = 0.0,                     # degree
@@ -89,14 +89,23 @@ def main():
         print(f"Analyzing for hash{hashVal}")
 
         missionParamConstraints = MissionParamConstraints (
-            #Constraints for calculating missions
-            throttle_climb_min = 0.9,
-            throttle_climb_max = 0.9,
-            throttle_turn_min = 0.7,
-            throttle_turn_max = 0.7,
-            throttle_level_min = 0.5,
-            throttle_level_max = 0.55,
-            throttle_analysis_interval = 0.05,
+            #Constraints for calculating mission2
+            M2_throttle_climb_min = 0.8,
+            M2_throttle_climb_max = 0.9,
+            M2_throttle_turn_min = 0.5,
+            M2_throttle_turn_max = 0.6,
+            M2_throttle_level_min = 0.5,
+            M2_throttle_level_max = 0.6,
+            M2_throttle_analysis_interval = 0.05,
+
+            #Constraints for calculating mission3  
+            M3_throttle_climb_min = 0.8,
+            M3_throttle_climb_max = 0.9,
+            M3_throttle_turn_min = 0.5,
+            M3_throttle_turn_max = 0.6,
+            M3_throttle_level_min = 0.5,
+            M3_throttle_level_max = 0.6,
+            M3_throttle_analysis_interval = 0.05,
             )
         
         runMissionGridSearch(hashVal,missionParamConstraints,presetValues)
