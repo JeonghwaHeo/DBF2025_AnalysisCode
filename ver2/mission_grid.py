@@ -271,8 +271,6 @@ def ResultAnalysis(presetValues:PresetValues,
     hash_dict = {
         "hash" : format_number(float(total_df['hash'])),
         "m_total" : format_number(float(total_df['m_total'])),
-        "m_total" : format_number(float(total_df['m_total'])),
-        "fuel_weight" : format_number(float(total_df['fuel_weight'])),
         "span" : format_number(float(total_df['span'])),
         "AR" : format_number(float(total_df['AR'])),
         "taper" : format_number(float(total_df['taper'])),
@@ -283,11 +281,7 @@ def ResultAnalysis(presetValues:PresetValues,
         "mission3_throttle_climb" : format_number(float(total_df['mission3_throttle_climb'])),
         "mission3_throttle_turn" : format_number(float(total_df['mission3_throttle_turn'])),
         "mission3_throttle_level" : format_number(float(total_df['mission3_throttle_level'])),
-        "flight_time" : format_number(float(total_df['flight_time'])),
-        "N_laps" : format_number(float(total_df['N_laps'])),
-        "score2" : format_number(float(total_df['score2'])),
-        "score3" : format_number(float(total_df['score3'])),
-        "SCORE" : format_number(float(total_df['SCORE']))
+
     }
 
     json_str = json.dumps(hash_dict, sort_keys=True)
