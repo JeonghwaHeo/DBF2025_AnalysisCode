@@ -32,6 +32,8 @@ class MissionAnalyzer():
 
         self.setAuxVals()
 
+        self.SoC2Vol_interp()
+
     def _convert_units(self, results: AircraftAnalysisResults) -> AircraftAnalysisResults:
         # Create new aircraft instance with converted units
         new_aircraft = Aircraft(
@@ -146,7 +148,6 @@ class MissionAnalyzer():
 
         return True
 
-
     def run_mission2(self) -> float:
 
         mission2 = [
@@ -253,7 +254,6 @@ class MissionAnalyzer():
             phase=self.state.phase
         ))
 
-
     def setAuxVals(self) -> None:
         self.weight = self.aircraft.m_total * g
 
@@ -310,6 +310,47 @@ class MissionAnalyzer():
        #                            bounds_error=False, fill_value='extrapolate') 
         return
 
+    def SoC2Vol_interp(self) -> None:
+        """
+        SOC(State of Charge) 값을 입력받아 대응하는 Voltage 값을 반환하는 함수
+
+        Parameters:
+            file_path (str): CSV 파일 경로
+            soc_input (float or list of floats): 계산할 SOC 값 (0% ~ 100%)
+            C_nom (int): 배터리 정격 용량 (mAh). 기본값 2250 mAh.
+
+        Returns:
+            list: SOC 입력값에 대응하는 Voltage 값
+        """
+        # read data
+        file_path = r"data/2.25Ah Discharge Profile.csv"
+        df = pd.read_csv(file_path, skiprows=17, on_bad_lines='skip') 
+        df.columns = ["Test", "Time (s)", "Voltage (V)", "Current", "Temp (F)"]
+
+        df["Time (s)"] = pd.to_numeric(df["Time (s)"], errors='coerce')
+        df["Voltage (V)"] = pd.to_numeric(df["Voltage (V)"], errors='coerce')
+        df["Current"] = pd.to_numeric(df["Current"], errors='coerce')
+
+        # SOC(State of Charge)
+        dt = 1  # time interval 1 second
+        df["SOC (%)"] = 100 - (df["Current"].cumsum() * dt / 3600) / (self.presetValues.max_battery_capacity / 1000) * 100
+
+        # SoC must be positive
+        filtered_df = df[df["SOC (%)"] > 0]
+
+        SoC_extended = np.linspace(0,100,10000)
+
+        # Interpolation
+        SoC2Vol_table = np.interp(
+            SoC_extended,
+            filtered_df["SOC (%)"],
+            filtered_df["Voltage (V)"], 
+        )
+
+        self.SoC2Vol = lambda SoC: np.interp(SoC, SoC_extended, SoC2Vol_table)
+
+        return
+
     ## Previously battery
     def updateBatteryState(self, T) -> None :
         """
@@ -322,7 +363,7 @@ class MissionAnalyzer():
         # SoC: in units of %
         SoC = self.state.battery_capacity / self.presetValues.max_battery_capacity* 100 
 
-        battery_voltage_one_cell = 1.551936106250200e-09 * SoC**5 + -4.555798937007528e-07 * SoC**4 + 4.990928058346135e-05 * SoC**3 - 0.002445976965781 * SoC**2 + 0.054846035479305 * SoC + 3.316267645398081
+        battery_voltage_one_cell = self.SoC2Vol(SoC)
 
         self.state.battery_voltage = battery_voltage_one_cell * 6
     
@@ -355,8 +396,7 @@ class MissionAnalyzer():
 
     def isBelowFlapTransition(self):
         return self.state.position[2] < self.missionParam.h_flap_transition
-    
-    # dt 0.01
+   
     def takeoff_simulation(self):
         self.dt= 0.01
         self.state.velocity = np.array([0.0, 0.0, 0.0])
@@ -428,7 +468,6 @@ class MissionAnalyzer():
             self.updateBatteryState(self.T_takeoff)
             self.logState()
 
-    # dt 0.01
     def climb_simulation(self, h_target, x_max_distance, direction):
         """
         Args:
@@ -548,7 +587,6 @@ class MissionAnalyzer():
                 # print(f"cruise altitude is {z_pos:.2f} m.")
                 break
 
-    # dt = 0.1!
     def level_flight_simulation(self, x_final, direction):
         #print("\nRunning Level Flight Simulation...")
         max_steps = int(180/self.dt) # max 3 minuites
@@ -640,6 +678,7 @@ class MissionAnalyzer():
 
 
         return
+
     def turn_simulation(self, target_angle_deg, direction):
       """
       Args:
@@ -762,7 +801,6 @@ class MissionAnalyzer():
 
           self.logState() 
 
-
 def RK4_step(v, dt, func):
     """ Given v and a = f(v), solve for (v(t+dt)-v(dt))/dt or approximately a(t+dt/2)"""
 
@@ -776,7 +814,6 @@ def RK4_step(v, dt, func):
 def fast_norm(v):
     """Faster alternative to np.linalg.norm for 3D vectors"""
     return math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
-
 
 def calculate_acceleration_groundroll(v, m_total, Weight,
                                       Sref,
@@ -983,5 +1020,3 @@ def visualize_mission(stateLog):
 
     plt.tight_layout()
     plt.show()
-
-
