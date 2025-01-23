@@ -368,7 +368,7 @@ class MissionAnalyzer():
         self.state.battery_voltage = battery_voltage_one_cell * 6
     
         # Calculate power required (simplified model: P = T^(3/2) / eta) (Watt)
-        power = (T / 2) ** 1.5 / self.presetValues.propulsion_efficiency 
+        power = (T / 2) ** 1.5 / self.presetValues.propulsion_efficiency # + 34.03
 
         # Calculate current draw (I = P / V) in Amps, convert to mA
         self.state.current_draw = (power / self.state.battery_voltage) * 1000.0 

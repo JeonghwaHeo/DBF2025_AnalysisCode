@@ -21,7 +21,7 @@ def main():
         max_battery_capacity = 2250,        # mAh (per one battery)
         Thrust_max = 6.6,                   # kg (two motors)
         min_battery_voltage = 21,           # V
-        propulsion_efficiency = 0.8,        # Efficiency of the propulsion system
+        propulsion_efficiency = 0.13,        # Efficiency of the propulsion system
         score_weight_ratio = 0.5            # mission2/3 score weight ratio
         )
     
