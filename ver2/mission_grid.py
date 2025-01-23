@@ -256,6 +256,7 @@ def writeMissionAnalysisResults(hashVal, results, readcsvPath:str = "data/test.c
 def format_number(n: float) -> str:
     return f"{n:.6f}"  # 6 decimal places should be sufficient for most cases
 
+
 def ResultAnalysis(presetValues:PresetValues,
                    readcsvPath:str = "data/total_results.csv",
                    writecsvPath:str = "data/organized_results.csv"):
@@ -268,27 +269,30 @@ def ResultAnalysis(presetValues:PresetValues,
     total_df['score3'] = total_df['objective_3'] / max_obj3 + 2
     total_df['SCORE'] = total_df['score2']*presetValues.score_weight_ratio + total_df['score3']*(1-presetValues.score_weight_ratio)
 
-    hash_dict = {
-        "hash" : format_number(float(total_df['hash'])),
-        "m_total" : format_number(float(total_df['m_total'])),
-        "span" : format_number(float(total_df['span'])),
-        "AR" : format_number(float(total_df['AR'])),
-        "taper" : format_number(float(total_df['taper'])),
-        "twist" : format_number(float(total_df['twist'])),
-        "mission2_throttle_climb" : format_number(float(total_df['mission2_throttle_climb'])),
-        "mission2_throttle_turn" : format_number(float(total_df['mission2_throttle_turn'])),
-        "mission2_throttle_level" : format_number(float(total_df['mission2_throttle_level'])),
-        "mission3_throttle_climb" : format_number(float(total_df['mission3_throttle_climb'])),
-        "mission3_throttle_turn" : format_number(float(total_df['mission3_throttle_turn'])),
-        "mission3_throttle_level" : format_number(float(total_df['mission3_throttle_level'])),
+    # total_df['resultID'] = 0
 
-    }
 
-    json_str = json.dumps(hash_dict, sort_keys=True)
-    hash_obj = hashlib.sha256(json_str.encode())
-    total_df['resultID'] = int.from_bytes(hash_obj.digest()[:8], byteorder='big')
+    # hash_dict = {
+    #     "hash" : format_number(float(total_df['hash'])),
+    #     "m_total" : format_number(float(total_df['m_total'])),
+    #     "span" : format_number(float(total_df['span'])),
+    #     "AR" : format_number(float(total_df['AR'])),
+    #     "taper" : format_number(float(total_df['taper'])),
+    #     "twist" : format_number(float(total_df['twist'])),
+    #     "mission2_throttle_climb" : format_number(float(total_df['mission2_throttle_climb'])),
+    #     "mission2_throttle_turn" : format_number(float(total_df['mission2_throttle_turn'])),
+    #     "mission2_throttle_level" : format_number(float(total_df['mission2_throttle_level'])),
+    #     "mission3_throttle_climb" : format_number(float(total_df['mission3_throttle_climb'])),
+    #     "mission3_throttle_turn" : format_number(float(total_df['mission3_throttle_turn'])),
+    #     "mission3_throttle_level" : format_number(float(total_df['mission3_throttle_level'])),
 
-    organized_df = total_df[['resultID',
+    # }
+
+    # json_str = json.dumps(hash_dict, sort_keys=True)
+    # hash_obj = hashlib.sha256(json_str.encode())
+    # total_df['resultID'] = int.from_bytes(hash_obj.digest()[:8], byteorder='big')
+
+    organized_df = total_df[[
                             'hash',
                             'm_total',
                             'fuel_weight',
@@ -307,6 +311,10 @@ def ResultAnalysis(presetValues:PresetValues,
                             'score2',
                             'score3',
                             'SCORE']]
+    
+    
+    organized_df['resultID'] = pd.util.hash_pandas_object(organized_df, index=False)
+    organized_df = organized_df[['resultID'] + [col for col in organized_df.columns if col != 'resultID']]
     
     organized_df.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
 
