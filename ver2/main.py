@@ -29,7 +29,7 @@ def main():
         #Constraints for constructing the aircraft
 
         m_total_min = 8500.0,                # g
-        m_total_max = 8600.0,
+        m_total_max = 8500.0,
         m_total_interval = 100.0,
         # wing parameter ranges
         span_min = 1800.0,                   # mm
@@ -90,20 +90,20 @@ def main():
 
         missionParamConstraints = MissionParamConstraints (
             #Constraints for calculating mission2
-            M2_throttle_climb_min = 0.8,
+            M2_throttle_climb_min = 0.9,
             M2_throttle_climb_max = 0.9,
             M2_throttle_turn_min = 0.5,
-            M2_throttle_turn_max = 0.6,
-            M2_throttle_level_min = 0.5,
+            M2_throttle_turn_max = 0.5,
+            M2_throttle_level_min = 0.6,
             M2_throttle_level_max = 0.6,
             M2_throttle_analysis_interval = 0.05,
 
             #Constraints for calculating mission3  
-            M3_throttle_climb_min = 0.8,
+            M3_throttle_climb_min = 0.9,
             M3_throttle_climb_max = 0.9,
             M3_throttle_turn_min = 0.5,
-            M3_throttle_turn_max = 0.6,
-            M3_throttle_level_min = 0.5,
+            M3_throttle_turn_max = 0.5,
+            M3_throttle_level_min = 0.6,
             M3_throttle_level_max = 0.6,
             M3_throttle_analysis_interval = 0.05,
             )
