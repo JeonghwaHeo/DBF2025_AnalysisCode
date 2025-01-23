@@ -29,7 +29,7 @@ def main():
         #Constraints for constructing the aircraft
 
         m_total_min = 8500.0,                # g
-        m_total_max = 8500.0,
+        m_total_max = 8600.0,
         m_total_interval = 100.0,
         # wing parameter ranges
         span_min = 1800.0,                   # mm
@@ -95,7 +95,7 @@ def main():
             throttle_turn_min = 0.7,
             throttle_turn_max = 0.7,
             throttle_level_min = 0.5,
-            throttle_level_max = 0.5,
+            throttle_level_max = 0.55,
             throttle_analysis_interval = 0.05,
             )
         

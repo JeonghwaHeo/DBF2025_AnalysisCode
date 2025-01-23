@@ -256,6 +256,15 @@ def ResultAnalysis(presetValues:PresetValues,
     
     organized_df.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
 
+    max_SCORE = organized_df['SCORE'].max()
+    max_SCORE_row = organized_df[organized_df['SCORE'] == max_SCORE]
+    print('max_SCORE info : \n')
+    print(max_SCORE_row)
+
+    
+
+
+
 
 
 
