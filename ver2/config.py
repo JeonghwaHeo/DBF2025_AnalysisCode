@@ -46,6 +46,10 @@ class AircraftParamConstraints:
     twist_min: float
     twist_interval: float
 
+    # wing loading limit
+    wing_loading_max: float
+    wing_loading_min: float
+
 @dataclass
 class MissionParamConstraints:
     #Constraints for calculating mission2

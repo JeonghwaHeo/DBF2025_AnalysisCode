@@ -20,19 +20,20 @@ def main():
         x1_flight_time = 30,                # sec
         max_battery_capacity = 2250,        # mAh (per one battery)
         Thrust_max = 6.6,                   # kg (two motors)
-        min_battery_voltage = 21,           # V
-        propulsion_efficiency = 0.13,        # Efficiency of the propulsion system
+        min_battery_voltage = 21.8,         # V (3.6 V 을 넘으면 방전이 아주 급격해짐)
+        propulsion_efficiency = 0.1326,     # Efficiency of the propulsion system
         score_weight_ratio = 0.5            # mission2/3 score weight ratio
         )
     
     aircraftParamConstraints = AircraftParamConstraints (
         #Constraints for constructing the aircraft
 
-        m_total_min = 8500.0,                # g
-        m_total_max = 8500.0,
+        m_total_min = 8800.0,                # g
+        m_total_max = 9000.0,
         m_total_interval = 100.0,
+
         # wing parameter ranges
-        span_min = 1800.0,                   # mm
+        span_min = 1600.0,                   # mm
         span_max = 1800.0,                   
         span_interval = 100.0,
     
@@ -47,6 +48,10 @@ def main():
         twist_min = 0.0,                     # degree
         twist_max = 0.0,                     
         twist_interval = 1.0,
+
+        # wing loading limit
+        wing_loading_min = 5,
+        wing_loading_max = 15
         )
     
     baseAircraft = Aircraft(
@@ -79,14 +84,13 @@ def main():
         vertical_ThickChord = 9  
         )
 
-    
     runVSPGridAnalysis(aircraftParamConstraints, presetValues, baseAircraft)
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
 
     for hashVal in results["hash"]:
-        print(f"Analyzing for hash{hashVal}")
+        print(f"\nAnalyzing for hash{hashVal})")
 
         missionParamConstraints = MissionParamConstraints (
             #Constraints for calculating mission2

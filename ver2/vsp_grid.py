@@ -35,25 +35,33 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
                 aircraftParamConstraint.m_total_max + aircraftParamConstraint.m_total_interval/2, 
                 aircraftParamConstraint.m_total_interval
                 )
+        
+        filtered_combinations = []
+        for span, AR, taper, twist, m_total in product(span_list, AR_list, taper_list, twist_list, total_mass_list):
+                wing_area = (span*0.001)**2 / AR # wing area
+                wing_loading = (m_total*0.001) / wing_area # wing loading
+                if aircraftParamConstraint.wing_loading_min <= wing_loading <= aircraftParamConstraint.wing_loading_max:
+                        filtered_combinations.append((span, AR, taper, twist, m_total))
 
+        print(f"총 조합 수 (필터 적용 전): {len(span_list) * len(AR_list) * len(taper_list) * len(twist_list) * len(total_mass_list)}")
+        print(f"유효한 조합 수 (필터 적용 후): {len(filtered_combinations)}")
+        
         print(f"\nspan list: {span_list}")
         print(f"AR list: {AR_list}")
         print(f"taper list: {taper_list}")
         print(f"twist list: {twist_list}")
-        print(f"total mass list: {total_mass_list}\n")
+        print(f"total mass list: {total_mass_list}")
 
         vspAnalyzer = VSPAnalyzer(presetValues)
 
-        total_combinations = np.prod([len(arr) for arr in [span_list,AR_list,taper_list,twist_list,total_mass_list]])
-
-        for i, (span, AR, taper, twist, m_total) in enumerate(product(span_list,AR_list,taper_list,twist_list,total_mass_list)):
-                print(f"[{time.strftime('%Y-%m-%d %X')}] VSP Grid Progress: {i+1}/{total_combinations} configurations")
+        for i, (span, AR, taper, twist, m_total) in enumerate(filtered_combinations):
+                print(f"\n[{time.strftime('%Y-%m-%d %X')}] VSP Grid Progress: {i+1}/{len(filtered_combinations)} configurations")
                 aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist, m_total = m_total)   
 
                 vspAnalyzer.setup_vsp_model(aircraft)
                 analResults = vspAnalyzer.calculateCoefficients(
-                alpha_start = -3.5, alpha_end = 13, alpha_step = 0.5,
-                CD_fuse = np.full(int(round((13 - (-3.5)) / 0.5)) + 1, 0.03),
+                alpha_start = -3, alpha_end = 13, alpha_step = 1,
+                CD_fuse = np.full(int(round((13 - (-3)) / 1)) + 1, 0.03),
 
                 AOA_stall = 13,
                 AOA_takeoff_max = 10,

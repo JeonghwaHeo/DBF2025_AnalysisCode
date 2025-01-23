@@ -278,7 +278,6 @@ class VSPAnalyzer:
             'CD': CDwing_list
         }
 
-
     def createMainWing(self, aircraft: Aircraft) -> str:
 
         s9027_path  = os.path.join(os.path.join(self.dataPath, "s9027.dat"))
