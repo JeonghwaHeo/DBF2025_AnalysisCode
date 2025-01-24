@@ -10,10 +10,6 @@ def get_result_by_id(resultID: int, csvPath: str="data/organized_results.csv") -
     resultID_df = resultID_df[resultID_df['resultID'] == resultID]
     return resultID_df
     
-    
-    
-
-
 
 if __name__ == "__main__":
     
@@ -26,16 +22,13 @@ if __name__ == "__main__":
     show_aircraft_parser = show_subparsers.add_parser("aircraft", help="Show aircraft analysis results.")
     show_aircraft_parser.add_argument("hashVal", type=int, help="Enter the aircraft hash which you want to check.")
     
-    show_aircraft_parser = show_subparsers.add_parser("mission", help="Show aircraft analysis results.")
-    show_aircraft_parser.add_argument("resultID", type=int, help="Enter the resultID which you want to check.")
+    show_mission_parser = show_subparsers.add_parser("mission", help="Show aircraft analysis results.")
+    show_mission_parser.add_argument("resultID", type=int, help="Enter the resultID which you want to check.")
     
     
     args = parser.parse_args()
     if args.main_command == "show":
         if args.type == "aircraft":
-            # resultID_df = get_result_by_id(args.resultID)
-            # hashVal = resultID_df.loc[:,'hash']
-            # hashVal = hashVal.iloc[0]
             aircraft_result = loadAnalysisResults(args.hashVal)
             visualize_results(aircraft_result)
             
