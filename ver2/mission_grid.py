@@ -138,7 +138,7 @@ def runMissionGridSearch(hashVal:int,
     
             results = pd.DataFrame([results])
     
-            writeMissionAnalysisResults(hashVal, results)
+            writeMissionAnalysisResults(hashVal, results, presetValues)
 
             # # Update best score if current score is better
             # if score_2 > best_score_2:
@@ -212,12 +212,15 @@ if __name__=="__main__":
     missionAnalyzer.run_mission3()
     visualize_mission(missionAnalyzer.stateLog)
 
-def writeMissionAnalysisResults(hashVal, results, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
+def writeMissionAnalysisResults(hashVal, results, presetValues, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
     existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
     base_row = existing_df[existing_df['hash'] == int(hashVal)]
-
-    new_row_df = pd.merge(base_row, results, on = 'hash')
-
+    preset_dict = vars(presetValues)
+    preset_row = pd.DataFrame([preset_dict])
+    common_row = pd.concat([base_row, preset_row],axis=1)
+    
+    new_row_df = pd.merge(common_row, results, on = 'hash')
+    new_row_df['resultID'] = pd.util.hash_pandas_object(new_row_df, index=False)
 
     if not os.path.isfile(writecsvPath):
         df_copy = new_row_df.copy()
@@ -292,7 +295,7 @@ def ResultAnalysis(presetValues:PresetValues,
     # hash_obj = hashlib.sha256(json_str.encode())
     # total_df['resultID'] = int.from_bytes(hash_obj.digest()[:8], byteorder='big')
 
-    organized_df = total_df[[
+    organized_df = total_df[['resultID',
                             'hash',
                             'm_total',
                             'fuel_weight',
@@ -313,8 +316,8 @@ def ResultAnalysis(presetValues:PresetValues,
                             'SCORE']]
     
     
-    organized_df['resultID'] = pd.util.hash_pandas_object(organized_df, index=False)
-    organized_df = organized_df[['resultID'] + [col for col in organized_df.columns if col != 'resultID']]
+    # organized_df['resultID'] = pd.util.hash_pandas_object(organized_df, index=False)
+    # organized_df = organized_df[['resultID'] + [col for col in organized_df.columns if col != 'resultID']]
     
     organized_df.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
 
