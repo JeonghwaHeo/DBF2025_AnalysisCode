@@ -3,9 +3,10 @@ from vsp_analysis import loadAnalysisResults, visualize_results
 import pandas as pd
 from mission_analysis import MissionAnalyzer, visualize_mission
 from models import MissionParameters
+from config import PresetValues
+import numpy as np
 
-
-def get_result_by_id(resultID: int, csvPath: str="data/organized_results.csv") -> pd.DataFrame:
+def get_result_by_id(resultID:str, csvPath: str="data/total_results.csv")->pd.DataFrame:
     resultID_df = pd.read_csv(csvPath, sep='|',encoding='utf-8')
     resultID_df = resultID_df[resultID_df['resultID'] == resultID]
     return resultID_df
@@ -23,7 +24,7 @@ if __name__ == "__main__":
     show_aircraft_parser.add_argument("hashVal", type=int, help="Enter the aircraft hash which you want to check.")
     
     show_mission_parser = show_subparsers.add_parser("mission", help="Show aircraft analysis results.")
-    show_mission_parser.add_argument("resultID", type=int, help="Enter the resultID which you want to check.")
+    show_mission_parser.add_argument("resultID", type=str, help="Enter the resultID which you want to check.")
     
     
     args = parser.parse_args()
@@ -32,32 +33,57 @@ if __name__ == "__main__":
             aircraft_result = loadAnalysisResults(args.hashVal)
             visualize_results(aircraft_result)
             
-        # elif args.type == "mission":
-        #     resultID_df = get_result_by_id(args.resultID)
-        #     hashVal = resultID_df.loc[:,'hash']
-        #     hashVal = hashVal.iloc[0]   
-        #     aircraft = loadAnalysisResults(hashVal)     
+        elif args.type == "mission":
+            resultID = "'" + args.resultID + "'"
+            resultID_df = get_result_by_id(resultID)
+            hashVal = resultID_df['hash']  
+            aircraft = loadAnalysisResults(hashVal.iloc[0])     
+            param2 = MissionParameters(
+                            max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0],
+                            throttle_takeoff = 0.9,              # Fixed
+                            throttle_climb = resultID_df['mission2_throttle_climb'].iloc[0],
+                            throttle_level = resultID_df['mission2_throttle_level'].iloc[0],
+                            throttle_turn = resultID_df['mission2_throttle_turn'].iloc[0],                
+                            max_climb_angle = 40,                # Fixed
+                            max_speed= 40,                       # Fixed
+                            max_load_factor = 4.0,               # Fixed
+                            h_flap_transition = 5                # Fixed
+            )
             
-        #     param = MissionParameters(
-        #                     max_battery_capacity = presetValues.max_battery_capacity,
-        #                     throttle_takeoff = 0.9,              # Fixed
-        #                     throttle_climb = M3_throttle_climb,
-        #                     throttle_level = M3_throttle_level,
-        #                     throttle_turn = M3_throttle_turn,                
-        #                     max_climb_angle = 40,                # Fixed
-        #                     max_speed= 40,                       # Fixed
-        #                     max_load_factor = 4.0,               # Fixed
-        #                     h_flap_transition = 5                # Fixed
-        #     )
+            # param3 = MissionParameters(
+            #                 max_battery_capacity = resultID_df['max_battery_capacity'],
+            #                 throttle_takeoff = 0.9,              # Fixed
+            #                 throttle_climb = resultID_df['mission3_throttle_climb'],
+            #                 throttle_level = resultID_df['mission3_throttle_level'],
+            #                 throttle_turn = resultID_df['mission3_throttle_turn'],                
+            #                 max_climb_angle = 40,                # Fixed
+            #                 max_speed= 40,                       # Fixed
+            #                 max_load_factor = 4.0,               # Fixed
+            #                 h_flap_transition = 5                # Fixed
+            # )
             
-            
+            presetValues = PresetValues(
+                            m_x1= resultID_df['max_battery_capacity'].iloc[0],
+                            x1_flight_time= resultID_df['x1_flight_time'].iloc[0],
+
+                            max_battery_capacity= resultID_df['max_battery_capacity'].iloc[0],
+                            min_battery_voltage= resultID_df['min_battery_voltage'].iloc[0],
+
+                            Thrust_max= resultID_df['Thrust_max'].iloc[0],
+                            propulsion_efficiency= resultID_df['propulsion_efficiency'].iloc[0],
+                            score_weight_ratio= resultID_df['score_weight_ratio'].iloc[0]               
                 
-        #     missionAnalyzer = MissionAnalyzer(aircraft,)
-        #     resultID_df = get_result_by_id(args.resultID)
-        #     hashVal = resultID_df.loc[:,'hash']
-        #     hashVal = hashVal.iloc[0]
-        #     aircraft_result = loadAnalysisResults(hashVal)
-        #     visualize_results(aircraft_result)            
-          
+            )
+                
+            missionAnalyzer2 = MissionAnalyzer(aircraft,param2,presetValues)
+            missionAnalyzer2.SoC2Vol_interp()
+            
+            
+            # missionAnalyzer2.run_mission2()
+            # visualize_results(missionAnalyzer2.stateLog)  
+                      
+            # missionAnalyzer3 = MissionAnalyzer(aircraft,param3,presetValues)
+            # missionAnalyzer3.run_mission2()
+            # visualize_results(missionAnalyzer3.stateLog)  
     
 
