@@ -28,10 +28,10 @@ def main():
     aircraftParamConstraints = AircraftParamConstraints (
         #Constraints for constructing the aircraft
 
-        m_total_min = 8800.0,                # g
-        m_total_max = 9000.0,
+        m_total_min = 8500.0,                # g
+        m_total_max = 8600.0,
         m_total_interval = 100.0,
-
+        
         # wing parameter ranges
         span_min = 1600.0,                   # mm
         span_max = 1800.0,                   
@@ -50,8 +50,8 @@ def main():
         twist_interval = 1.0,
 
         # wing loading limit
-        wing_loading_min = 5,
-        wing_loading_max = 15
+        wing_loading_min = 1,
+        wing_loading_max = 17
         )
     
     baseAircraft = Aircraft(
@@ -90,7 +90,7 @@ def main():
     print(results.head()) 
 
     for hashVal in results["hash"]:
-        print(f"\nAnalyzing for hash{hashVal})")
+        print(f"\nAnalyzing for hash{hashVal}")
 
         missionParamConstraints = MissionParamConstraints (
             #Constraints for calculating mission2
@@ -98,7 +98,7 @@ def main():
             M2_throttle_climb_max = 0.9,
             M2_throttle_turn_min = 0.5,
             M2_throttle_turn_max = 0.5,
-            M2_throttle_level_min = 0.6,
+            M2_throttle_level_min = 0.5,
             M2_throttle_level_max = 0.6,
             M2_throttle_analysis_interval = 0.05,
 
@@ -109,12 +109,12 @@ def main():
             M3_throttle_turn_max = 0.5,
             M3_throttle_level_min = 0.6,
             M3_throttle_level_max = 0.6,
-            M3_throttle_analysis_interval = 0.05,
+            M3_throttle_analysis_interval = 0.05
             )
         
         runMissionGridSearch(hashVal,missionParamConstraints,presetValues)
         
-
+    
     ResultAnalysis(presetValues)
 
     return

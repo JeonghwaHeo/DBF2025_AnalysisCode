@@ -18,7 +18,7 @@ from scipy.interpolate import interp1d
 import configparser
 import pandas as pd
 import io
-
+from matplotlib.ticker import MultipleLocator
 from models import Aircraft, AircraftAnalysisResults
 from config import PhysicalConstants, PresetValues
 
@@ -574,26 +574,99 @@ def loadAnalysisResults(hashValue:int, csvPath:str = "data/test.csv")-> Aircraft
 
 def visualize_results(results: AircraftAnalysisResults):
     """Visualize CL and CD data with flap points"""
+    fig = plt.figure(figsize=(16,6))
+    grid = fig.add_gridspec(1, 3, width_ratios=[1, 1, 1])
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    ax_table = fig.add_subplot(grid[0, 0])
+    ax_table.axis('tight')
+    ax_table.axis('off')
+    table1_data=[
+        ["MTOW (g)",f"{results.m_total:.2f}"],
+        ["m_wing (g)",f"{results.m_wing:.2f}"],
+        ["m_boom (g)",f"{results.m_boom:.2f}"],
+        ["m_fuse (g)",f"{results.aircraft.m_fuselage:.2f}"],
+        ["m_fuel (g)",f"{results.m_fuel:.2f}"],
+        ["S (m^2)",f"{results.Sref/1000000:.4f}"],
+        ["Wing Loading (kg/m^2)",f"{float(results.m_total * 1000 / results.Sref):.2f}"]
+    ]
+    table1 = ax_table.table(cellText=table1_data,cellLoc='center',loc='upper center')
+    table1.auto_set_font_size(False)
+    table1.set_fontsize(14)
+    for (row, col), cell in table1.get_celld().items():
+        if col==0:
+            cell.set_width(0.6)
+        elif col==1:
+            cell.set_width(0.4)            
+        cell.set_height(0.08)
     
-    # Plot CL
-    ax1.plot(results.alpha_list, results.CL, 'b-', label='No Flaps')
+    table2_data=[
+        ["Span (m)",f"{results.span/1000:.2f}"],
+        ["AR",f"{results.AR:.2f}"],
+        ["Taper",f"{results.taper:.2f}"],
+        ["Incidence (degree)",f"{results.aircraft.mainwing_incidence:.2f}"],
+        ["Twist (degree)",f"{results.twist:.2f}"]
+    ]
+    table2 = ax_table.table(cellText=table2_data,cellLoc='center',loc='lower center')
+    table2.auto_set_font_size(False)
+    table2.set_fontsize(14)
+    for (row, col), cell in table2.get_celld().items():
+        if col==0:
+            cell.set_width(0.6)
+        elif col==1:
+            cell.set_width(0.4)     
+        cell.set_height(0.07)
+    
+    
+    
+    ax1 = fig.add_subplot(grid[0, 1])
+    ax1.plot(results.alpha_list, results.CL, 'b-', label='Flap OFF')
     ax1.scatter([0, results.AOA_stall], [results.CL_flap_zero, results.CL_flap_max], 
-                c='r', marker='o', label='With Flaps')
+                c='r', marker='o', label='Flap ON')
     ax1.set_xlabel('Angle of Attack (degrees)')
     ax1.set_ylabel('Lift Coefficient (CL)')
-    ax1.grid(True)
-    ax1.legend()
+    ax1.grid(which='major', linestyle='-', linewidth=1.0)
+    ax1.grid(which='minor', linestyle='--', linewidth=0.5)  
+    ax1.xaxis.set_major_locator(MultipleLocator(1.0))
+    ax1.xaxis.set_minor_locator(MultipleLocator(0.5))
+    ax1.yaxis.set_major_locator(MultipleLocator(0.2))
+    ax1.yaxis.set_minor_locator(MultipleLocator(0.05))
+    ax1.legend()    
     
-    # Plot CD
-    ax2.plot(results.alpha_list, results.CD_total, 'b-', label='No Flaps')
+    ax2 = fig.add_subplot(grid[0, 2])
+    ax2.plot(results.alpha_list, results.CD_total, 'b-', label='CD Total')
+    ax2.plot(results.alpha_list, results.CD_wing, 'r-', label='CD Wing')
+    ax2.plot(results.alpha_list, results.CD_fuse, 'g-', label='CD Fuselage')
     ax2.scatter([0, results.AOA_stall], [results.CD_flap_zero, results.CD_flap_max],
-                c='r', marker='o', label='With Flaps')
+                c='r', marker='o', label='Flap ON')
     ax2.set_xlabel('Angle of Attack (degrees)')
     ax2.set_ylabel('Drag Coefficient (CD)')
-    ax2.grid(True)
-    ax2.legend()
+    ax2.grid(which='major', linestyle='-', linewidth=1.0)
+    ax2.grid(which='minor', linestyle='--', linewidth=0.5)      
+    ax2.xaxis.set_major_locator(MultipleLocator(1.0))
+    ax2.xaxis.set_minor_locator(MultipleLocator(0.5))
+    ax2.yaxis.set_major_locator(MultipleLocator(0.01))
+    ax2.yaxis.set_minor_locator(MultipleLocator(0.005))
+    ax2.legend()    
+    # ax_table.axis('off')
+    # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+    
+    # # Plot CL
+    # ax1.plot(results.alpha_list, results.CL, 'b-', label='No Flaps')
+    # ax1.scatter([0, results.AOA_stall], [results.CL_flap_zero, results.CL_flap_max], 
+    #             c='r', marker='o', label='With Flaps')
+    # ax1.set_xlabel('Angle of Attack (degrees)')
+    # ax1.set_ylabel('Lift Coefficient (CL)')
+    # ax1.grid(True)
+    # ax1.legend()
+    
+    # # Plot CD
+    # ax2.plot(results.alpha_list, results.CD_total, 'b-', label='No Flaps')
+    # ax2.scatter([0, results.AOA_stall], [results.CD_flap_zero, results.CD_flap_max],
+    #             c='r', marker='o', label='With Flaps')
+    # ax2.set_xlabel('Angle of Attack (degrees)')
+    # ax2.set_ylabel('Drag Coefficient (CD)')
+    # ax2.grid(True)
+    # ax2.legend()
     
     plt.tight_layout()
     plt.show()
