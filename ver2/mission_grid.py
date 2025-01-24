@@ -220,7 +220,10 @@ def writeMissionAnalysisResults(hashVal, results, presetValues, readcsvPath:str 
     common_row = pd.concat([base_row, preset_row],axis=1)
     
     new_row_df = pd.merge(common_row, results, on = 'hash')
-    new_row_df['resultID'] = pd.util.hash_pandas_object(new_row_df, index=False)
+    resultID = pd.util.hash_pandas_object(new_row_df, index=False)
+    new_row_df['resultID'] = str(resultID.iloc[0])
+    new_row_df['resultID'] = "'" + new_row_df['resultID'] + "'"
+    
 
     if not os.path.isfile(writecsvPath):
         df_copy = new_row_df.copy()

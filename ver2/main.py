@@ -11,7 +11,7 @@ from config import *
 
 def main():
 
-    removeAnalysisResults(csvPath = "data/test.csv")
+    # removeAnalysisResults(csvPath = "data/test.csv")
     removeAnalysisResults(csvPath = "data/total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
 
@@ -29,7 +29,7 @@ def main():
         #Constraints for constructing the aircraft
 
         m_total_min = 8500.0,                # g
-        m_total_max = 8500.0,
+        m_total_max = 8600.0,
         m_total_interval = 100.0,
         
         # wing parameter ranges
