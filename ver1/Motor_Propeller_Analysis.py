@@ -89,6 +89,7 @@ def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:floa
     max_rpm = min(motor_sorted[:, 1].max(), expanded_results_array[:, 0].max())
 
     if max_rpm < min_rpm: # Propeller Windmilling
+        # print("Can't make thrust")
         return expanded_results_array[0,0],0,0,0,0
 
     rpm_interp = np.linspace(min_rpm, max_rpm, 500)
@@ -105,6 +106,7 @@ def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:floa
         I = min(max_current,max_power/voltage)
         Power = I * voltage
         Thrust = np.interp(Torque,propeller_sorted[:, 1], propeller_sorted[:, 2])
+        # print("Over-current")
         return RPM, Torque, I, Power, Thrust
 
     idx = sign_changes[0]
