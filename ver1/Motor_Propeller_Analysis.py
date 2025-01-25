@@ -2,95 +2,77 @@ import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import time
 
-def find_intersection(df1, df2):
+csvPath = "Mission_analysis/Propeller10x6E.csv"
+propeller_df = pd.read_csv(csvPath,skiprows=[1])
+propeller_df.dropna(how='any',inplace=True)
+propeller_df = propeller_df.sort_values(by=['RPM', 'V(speed)']).reset_index(drop=True)
 
-    df1_sorted = df1.sort_values('RPM').reset_index(drop=True)
-    df2_sorted = df2.sort_values('RPM').reset_index(drop=True)
+rpm_array = propeller_df['RPM'].to_numpy()
+v_speed_array = propeller_df['V(speed)'].to_numpy()
+torque_array = propeller_df['Torque'].to_numpy()
+thrust_array = propeller_df['Thrust'].to_numpy()
+propeller_array = np.column_stack((rpm_array, v_speed_array, torque_array, thrust_array))
 
-    min_rpm = max(df1_sorted['RPM'].min(), df2_sorted['RPM'].min())
-    max_rpm = min(df1_sorted['RPM'].max(), df2_sorted['RPM'].max())
+def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:float, max_current:float, max_power:float, propeller_array:np.ndarray, graphFlag:bool):
 
-    if max_rpm < min_rpm:
-        return None, None
-
-    rpm_interp = np.linspace(min_rpm, max_rpm, 1000)
-
-    torque1 = np.interp(rpm_interp, df1_sorted['RPM'], df1_sorted['Torque'])  # Propeller
-    torque2 = np.interp(rpm_interp, df2_sorted['RPM'], df2_sorted['Torque'])  # Motor
-    diff = torque1 - torque2
-    
-    sign_changes = np.where(np.diff(np.sign(diff)) != 0)[0]
-    if len(sign_changes) == 0:
-        return None, None
-
-    idx = sign_changes[0]
-    
-    return rpm_interp[idx], torque1[idx]
-
-def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:float, max_current:float, max_power:float, csvPath:str, graphFlag:bool):
-
-    
-    propeller_df = pd.read_csv(csvPath,skiprows=[1])
-    propeller_df.dropna(how='any',inplace=True)
     results=[]
-    unique_rpms = sorted(propeller_df['RPM'].unique())
 
+    rpm_array = propeller_array[:, 0]      
+    v_speed_array = propeller_array[:, 1]    
+    torque_array = propeller_array[:, 2]    
+    thrust_array = propeller_array[:, 3]     
+    
+    unique_rpms = sorted(set(rpm_array))
     
     for rpm in unique_rpms:
-        
-        subset = propeller_df[propeller_df['RPM'] == rpm].copy()
-        subset = subset.sort_values(by='V(speed)')
+    
+        mask = rpm_array == rpm
 
-        min_v = subset['V(speed)'].min()
-        max_v = subset['V(speed)'].max()
+        v_subset = v_speed_array[mask]
+        torque_subset = torque_array[mask]
+        thrust_subset = thrust_array[mask]
+    
+        min_v = v_subset.min()
+        max_v = v_subset.max()
 
         if min_v <= speed <= max_v:
-            torque_at_v = np.interp(speed, subset['V(speed)'], subset['Torque'])
-            thrust_at_v = np.interp(speed, subset['V(speed)'], subset['Thrust'])
-        else:
-            torque_at_v = None
-            thrust_at_v = None
-
-        results.append({
+            torque_at_v = np.interp(speed, v_subset, torque_subset)
+            thrust_at_v = np.interp(speed, v_subset, thrust_subset)
+            results.append({
             'RPM': rpm,
             'Torque': torque_at_v,
             'Thrust': thrust_at_v
-        })
-    results_df = pd.DataFrame(results)
-    results_df.dropna(how='any',inplace=True)
+            })
+        
+    results_array = np.array([(d['RPM'], d['Torque'], d['Thrust']) for d in results])
 
-    df_sorted = results_df.sort_values('RPM').reset_index(drop=True)
-
-    min_rpm = df_sorted['RPM'].min()
-    max_rpm = df_sorted['RPM'].max()
+    rpm_values = results_array[:, 0]  # RPM 값
+    torque_values = results_array[:, 1]  # Torque 값
+    thrust_values = results_array[:, 2]  # Thrust 값
+    
+    min_rpm = int(rpm_values.min())
+    max_rpm = int(rpm_values.max())
 
     new_rpm_values = np.arange(min_rpm, max_rpm + 1, 100)
 
-    torque_interpolated = np.interp(new_rpm_values, df_sorted['RPM'], df_sorted['Torque'])
-    thrust_interpolated = np.interp(new_rpm_values, df_sorted['RPM'], df_sorted['Thrust'])
-
-    df_expanded_results = pd.DataFrame({
-        'RPM': new_rpm_values,
-        'Torque': torque_interpolated,
-        'Thrust': thrust_interpolated
-    })
+    torque_interpolated = np.interp(new_rpm_values, rpm_values, torque_values)
+    thrust_interpolated = np.interp(new_rpm_values, rpm_values, thrust_values)
+    
+    expanded_results_array = np.column_stack((new_rpm_values, torque_interpolated, thrust_interpolated))
 
     I_list = np.arange(0,min(max_current,max_power/voltage)+0.5,1)
     RPM_list = Kv * (voltage * throttle - I_list * R) * 30 / math.pi
     Torque_list = I_list / Kv
 
-    motor_df = pd.DataFrame({
-        'I': I_list,
-        'RPM': RPM_list,
-        'Torque': Torque_list
-    })
+    motor_results_array = np.column_stack((I_list,RPM_list,Torque_list))
 
     if graphFlag == 1:
     
         plt.figure(figsize=(6, 3))
-        plt.plot(df_expanded_results['RPM'], df_expanded_results['Torque'], label='Propeller')
-        plt.plot(motor_df['RPM'],motor_df['Torque'], label='Motor')
+        plt.plot( expanded_results_array[:,0], expanded_results_array[:,1], label='Propeller')
+        plt.plot(motor_results_array[:,1],motor_results_array[:,2], label='Motor')
 
         plt.xlabel('RPM')
         plt.ylabel('Torque')
@@ -101,32 +83,54 @@ def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:floa
         plt.show()
         
 
-    RPM, Torque = find_intersection(motor_df, df_expanded_results)
-    if RPM == None or Torque == None:
-        print("적절하지 않음.\n")
-        return 0,0,0,0,0
-    I = np.interp(Torque,motor_df['Torque'],motor_df['I'])
-    Power = voltage * I
-    Thrust = np.interp(RPM,df_expanded_results['RPM'],df_expanded_results['Thrust'])
+    motor_sorted = motor_results_array[motor_results_array[:, 1].argsort()] 
 
+    min_rpm = max(motor_sorted[:, 1].min(), expanded_results_array[:, 0].min())
+    max_rpm = min(motor_sorted[:, 1].max(), expanded_results_array[:, 0].max())
+
+    if max_rpm < min_rpm: # Propeller Windmilling
+        return expanded_results_array[0,0],0,0,0,0
+
+    rpm_interp = np.linspace(min_rpm, max_rpm, 500)
+
+    torque1 = np.interp(rpm_interp, motor_sorted[:, 1], motor_sorted[:, 2]) 
+    torque2 = np.interp(rpm_interp, expanded_results_array[:, 0], expanded_results_array[:, 1]) 
+    diff = torque1 - torque2
+
+    sign_changes = np.where(np.diff(np.sign(diff)) != 0)[0]
+    if len(sign_changes) == 0: # Overcurrent
+        Torque = motor_sorted[0,2]
+        propeller_sorted = expanded_results_array[expanded_results_array[:, 1].argsort()] 
+        RPM = np.interp(Torque, propeller_sorted[:, 1], propeller_sorted[:, 0])
+        I = min(max_current,max_power/voltage)
+        Power = I * voltage
+        Thrust = np.interp(Torque,propeller_sorted[:, 1], propeller_sorted[:, 2])
+        return RPM, Torque, I, Power, Thrust
+
+    idx = sign_changes[0]
+
+    RPM = rpm_interp[idx]
+    Torque = torque1[idx]
+    motor_torque_sorted = motor_sorted[motor_sorted[:, 2].argsort()]  
+    I = np.interp(Torque,motor_torque_sorted[:, 2], motor_torque_sorted[:, 0])
+    Power = I * voltage
+    Thrust = np.interp(RPM,expanded_results_array[:, 0], expanded_results_array[:, 2])
+    
     return RPM, Torque, I, Power, Thrust
 
-csvPath = r"C:\Users\user\Desktop\Propeller10x6E.csv"
-speed = 0
+speed = 20
 Kv = 109.91
 R = 0.062
-throttle = 0.9
+throttle = 0.6
 max_current = 60
 max_power = 1332
 voltage = 23.0
-graphFlag = 1
+graphFlag = 0
 
-# analysis sweep
-# for throttle in np.arange(0.2,1.05,0.1):
-#     print(f"throttle = {throttle:.2f}\n")
-#     RPM, Torque, I, Power, Thrust = thrust_analysis(throttle, speed, voltage, Kv, R, max_current, max_power, csvPath, graphFlag)
-#     print(f"RPM = {RPM:.0f}\nThrust(kg) = {Thrust:.2f}\nI(A) = {I:.2f}\nPower(W) = {Power:.2f}\nTorque(Nm) = {Torque:.2f}\n")
-    
 
-RPM, Torque, I, Power, Thrust = thrust_analysis(throttle, speed, voltage, Kv, R, max_current, max_power, csvPath, graphFlag)
+start_time = time.time()    
+RPM, Torque, I, Power, Thrust = thrust_analysis(throttle, speed, voltage, Kv, R, max_current, max_power, propeller_array, graphFlag)
+end_time = time.time()
+execution_time = end_time - start_time
+print(f"Execution time: {execution_time} seconds")
 print(f"RPM = {RPM:.0f}\nThrust(kg) = {Thrust:.2f}\nI(A) = {I:.2f}\nPower(W) = {Power:.2f}\nTorque(Nm) = {Torque:.2f}\n")
