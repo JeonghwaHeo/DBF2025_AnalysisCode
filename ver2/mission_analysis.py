@@ -5,7 +5,6 @@ import pandas as pd
 import math
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
-from scipy.interpolate import interp1d
 from config import PhysicalConstants, PresetValues
 from models import MissionParameters, AircraftAnalysisResults, PlaneState, PhaseType, MissionConfig, Aircraft
 
