@@ -108,7 +108,7 @@ def main():
             M2_throttle_turn_min = 0.5,
             M2_throttle_turn_max = 0.5,
             M2_throttle_level_min = 0.5,
-            M2_throttle_level_max = 0.6,
+            M2_throttle_level_max = 0.55,
             M2_throttle_analysis_interval = 0.05,
 
             #Constraints for calculating mission3  
@@ -122,8 +122,7 @@ def main():
             )
         
         runMissionGridSearch(hashVal,presetValues,missionParamConstraints,propulsionSpecs)
-        
-    return    
+          
     
     ResultAnalysis(presetValues)
 

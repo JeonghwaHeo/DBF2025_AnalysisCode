@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 from config import PhysicalConstants, PresetValues, PropulsionSpecs
 from models import MissionParameters, AircraftAnalysisResults, PlaneState, PhaseType, MissionConfig, Aircraft
-from propulsion import thrust_analysis, determine_max_thrust, thrust_reverse_solve
+from propulsion import thrust_analysis, determine_max_thrust, thrust_reverse_solve, SoC2Vol
 
 ## Constant values
 g = PhysicalConstants.g
@@ -149,18 +149,9 @@ class MissionAnalyzer():
         SoC_array = SoC_array[mask]
         battery_array = np.column_stack((time_array, voltage_array, current_array, SoC_array))
         self.battery_array = battery_array[battery_array[:, 3].argsort()]
-
+        
         return
-        
-    def SoC2Vol(self,SoC):
-      
-        voltage_array = self.battery_array[:,1]
-        SoC_array = self.battery_array[:,3]
-        voltage = np.interp(SoC,SoC_array, voltage_array)
-        return voltage 
-        
-        
-            
+          
     def run_mission(self, missionPlan: List[MissionConfig],clearState = True) -> int:
 
         if(clearState): self.clearState()
@@ -405,7 +396,7 @@ class MissionAnalyzer():
         # SoC: in units of %
         SoC = self.state.battery_capacity / self.presetValues.max_battery_capacity* 100 
 
-        battery_voltage_one_cell = self.SoC2Vol(SoC)
+        battery_voltage_one_cell = SoC2Vol(SoC,self.battery_array)
 
         self.state.battery_voltage = battery_voltage_one_cell * 6
     
@@ -593,11 +584,16 @@ class MissionAnalyzer():
 
             # print(f"Gamma: f{gamma_rad}") 
             self.state.acceleration = RK4_step(self.state.velocity,self.dt,
-                         lambda v: calculate_acceleration_climb(v, self.aircraft.m_total,self.weight,
+                         lambda v: calculate_acceleration_climb(v, 
+                                                                self.aircraft.m_total,
+                                                                self.weight,
                                                                 self.analResult.Sref,
-                                                                self.CL_func,self.CD_func,
-                                                                self.analResult.CL_flap_max,self.analResult.CD_flap_max,
-                                                                alpha_w_deg,gamma_rad,
+                                                                self.CL_func,
+                                                                self.CD_func,
+                                                                self.analResult.CL_flap_max,
+                                                                self.analResult.CD_flap_max,
+                                                                alpha_w_deg,
+                                                                gamma_rad,
                                                                 self.T_climb,
                                                                 not self.isBelowFlapTransition()
                                                                 ))
@@ -912,11 +908,10 @@ def calculate_acceleration_climb(v, m_total, Weight,
     D = 0.5 * rho * speed**2 * Sref * CD
     L = 0.5 * rho * speed**2 * Sref * CL
 
-
     a_x = (T_climb * math.cos(theta_rad) - L * math.sin(gamma_rad) - D * math.cos(gamma_rad) )/ m_total
     a_z = (T_climb * math.sin(theta_rad) + L * math.cos(gamma_rad) - D * math.sin(gamma_rad) - Weight )/ m_total
-
-    return np.array([a_x, 0, a_z])
+    
+    return np.array([a_x,0,a_z])
 
 def get_state_df(stateLog):
     # Convert numpy arrays to lists for proper DataFrame conversion

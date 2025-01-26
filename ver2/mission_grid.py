@@ -117,7 +117,7 @@ def runMissionGridSearch(hashVal:int,
             analysisResults_for_mission3 = replace(analysisResults,
                                                 m_total=analysisResults.m_total - analysisResults.m_fuel,
                                                 m_fuel=0.0)
-            mission3Analyzer = MissionAnalyzer(analysisResults_for_mission3, mission3Params, presetValues)
+            mission3Analyzer = MissionAnalyzer(analysisResults_for_mission3, mission3Params, presetValues, propulsionSpecs)
             N_laps = mission3Analyzer.run_mission3()
             obj3 = N_laps + 2.5 / (presetValues.m_x1 * 2.204)
 
@@ -148,49 +148,15 @@ def runMissionGridSearch(hashVal:int,
    
     print("\nDone Mission Analysis ^_^")
 
-if __name__=="__main__":
-    presetValues = PresetValues(
-            m_x1 = 0.2,                       # kg
-            x1_flight_time = 30,              # sec
-            max_battery_capacity = 2250,      # mAh (per one battery)
-            Thrust_max = 6.6,                 # kg (two motors)
-            min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
-            propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
-            score_weight_ratio = 1            # mission2/3 score weight ratio
-            )
-    a=loadAnalysisResults(687192594661440415)
-    score, param = runMissionGridSearch(687192594661440415,
-                          MissionParamConstraints (
-                              
-                              m_total_max = 8000,
-                              m_total_min = 6000,
-                              m_total_interval = 5000,
-                              
-                              throttle_climb_min = 1.0,
-                              throttle_climb_max = 1.0,
-                              throttle_turn_min = 0.7,
-                              throttle_turn_max = 0.7,
-                              throttle_level_min = 1.0,
-                              throttle_level_max = 1.0,
-                              throttle_analysis_interval = 0.05,
-                              ),
-                          presetValues
-                          )
-
-    missionAnalyzer = MissionAnalyzer(a,param[0],presetValues) 
-    missionAnalyzer.run_mission2()
-    visualize_mission(missionAnalyzer.stateLog)
-    missionAnalyzer = MissionAnalyzer(a,param[1],presetValues) 
-    missionAnalyzer.run_mission3()
-    visualize_mission(missionAnalyzer.stateLog)
-
-def writeMissionAnalysisResults(hashVal, results, presetValues, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
+def writeMissionAnalysisResults(hashVal, results, presetValues:PresetValues, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
     existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
     base_row = existing_df[existing_df['hash'] == int(hashVal)]
+    base_row_dict = base_row.to_dict(orient="records")[0]
     preset_dict = vars(presetValues)
-    preset_row = pd.DataFrame([preset_dict])
-    common_row = pd.concat([base_row, preset_row],axis=1)
     
+    combined_dict = {**base_row_dict, **preset_dict}
+    common_row = pd.DataFrame([combined_dict])
+ 
     new_row_df = pd.merge(common_row, results, on = 'hash')
     resultID = pd.util.hash_pandas_object(new_row_df, index=False)
     new_row_df['resultID'] = str(resultID.iloc[0])
@@ -251,6 +217,41 @@ def ResultAnalysis(presetValues:PresetValues,
     
 
 
+if __name__=="__main__":
+    presetValues = PresetValues(
+            m_x1 = 0.2,                       # kg
+            x1_flight_time = 30,              # sec
+            max_battery_capacity = 2250,      # mAh (per one battery)
+            Thrust_max = 6.6,                 # kg (two motors)
+            min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
+            propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
+            score_weight_ratio = 1            # mission2/3 score weight ratio
+            )
+    a=loadAnalysisResults(687192594661440415)
+    score, param = runMissionGridSearch(687192594661440415,
+                          MissionParamConstraints (
+                              
+                              m_total_max = 8000,
+                              m_total_min = 6000,
+                              m_total_interval = 5000,
+                              
+                              throttle_climb_min = 1.0,
+                              throttle_climb_max = 1.0,
+                              throttle_turn_min = 0.7,
+                              throttle_turn_max = 0.7,
+                              throttle_level_min = 1.0,
+                              throttle_level_max = 1.0,
+                              throttle_analysis_interval = 0.05,
+                              ),
+                          presetValues
+                          )
+
+    missionAnalyzer = MissionAnalyzer(a,param[0],presetValues) 
+    missionAnalyzer.run_mission2()
+    visualize_mission(missionAnalyzer.stateLog)
+    missionAnalyzer = MissionAnalyzer(a,param[1],presetValues) 
+    missionAnalyzer.run_mission3()
+    visualize_mission(missionAnalyzer.stateLog)
 
 
 

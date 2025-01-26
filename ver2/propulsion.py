@@ -207,6 +207,18 @@ def thrust_reverse_solve(T_desired,speed,voltage, Kv, R, propeller_array):
     
     return RPM_desired, torque_desired, I, Power, throttle
 
+
+def SoC2Vol(SoC,battery_array):
+    #battery_array must be sorted by SoC
+    
+    voltage_array = battery_array[:,1]
+    SoC_array = battery_array[:,3]
+    voltage = np.interp(SoC,SoC_array, voltage_array)
+    return voltage 
+    
+
+
+
 if __name__=="__main__":
     csvPath = "data/Propeller10x6E.csv"
     propeller_df = pd.read_csv(csvPath,skiprows=[1])
@@ -241,5 +253,28 @@ if __name__=="__main__":
     voltage = 23.0
     RPM, Torque, I, Power, throttle = thrust_reverse_solve(T_desired,speed,voltage, Kv, R, propeller_array)
     print(f"RPM = {RPM:.0f}\nThrottle(kg) = {throttle:.2f}\nI(A) = {I:.2f}\nPower(W) = {Power:.2f}\nTorque(Nm) = {Torque:.2f}\n")
+    
+    
+    max_battery_capacity = 2250
+    
+    df = pd.read_csv("data/Maxamps_2250mAh_6S.csv",skiprows=[1]) 
+    time_array = df['Time'].to_numpy()
+    voltage_array = df['Voltage'].to_numpy()
+    current_array = df['Current'].to_numpy()
+    dt_array = np.diff(time_array, prepend=time_array[0])
+    cumulative_current = np.cumsum(current_array*dt_array)
+    SoC_array = 100 - (1000 * cumulative_current / (36 * max_battery_capacity))
+    mask = SoC_array >= 0
+    time_array = time_array[mask]
+    voltage_array = voltage_array[mask]
+    current_array = current_array[mask]
+    SoC_array = SoC_array[mask]
+    battery_array = np.column_stack((time_array, voltage_array, current_array, SoC_array))
+    battery_array = battery_array[battery_array[:, 3].argsort()]
+    
+    voltage_at_50= SoC2Vol(50,battery_array)
+    print(f"battery voltage at 50% SoC : {voltage_at_50:.2f}\n")
+    
+    
     
     
