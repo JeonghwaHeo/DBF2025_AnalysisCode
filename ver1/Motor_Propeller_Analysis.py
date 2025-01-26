@@ -79,51 +79,7 @@ def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:floa
 
 
 def determine_max_thrust(speed:float, voltage:float, Kv:float, R:float, max_current:float, max_power:float, propeller_array:np.ndarray, graphFlag:bool):
-    
-    # results=[]
 
-    # rpm_array = propeller_array[:, 0]      
-    # v_speed_array = propeller_array[:, 1]    
-    # torque_array = propeller_array[:, 2]    
-    # thrust_array = propeller_array[:, 3]     
-    
-    # unique_rpms = sorted(set(rpm_array))
-    
-    # for rpm in unique_rpms:
-    
-    #     mask = rpm_array == rpm
-
-    #     v_subset = v_speed_array[mask]
-    #     torque_subset = torque_array[mask]
-    #     thrust_subset = thrust_array[mask]
-    
-    #     min_v = v_subset.min()
-    #     max_v = v_subset.max()
-
-    #     if min_v <= speed <= max_v:
-    #         torque_at_v = np.interp(speed, v_subset, torque_subset)
-    #         thrust_at_v = np.interp(speed, v_subset, thrust_subset)
-    #         results.append({
-    #         'RPM': rpm,
-    #         'Torque': torque_at_v,
-    #         'Thrust': thrust_at_v
-    #         })
-            
-    # results_array = np.array([(d['RPM'], d['Torque'], d['Thrust']) for d in results])
-
-    # rpm_values = results_array[:, 0]  # RPM 값
-    # torque_values = results_array[:, 1]  # Torque 값
-    # thrust_values = results_array[:, 2]  # Thrust 값   
-    
-    # min_rpm = int(rpm_values.min())
-    # max_rpm = int(rpm_values.max())
-
-    # expanded_rpm_values = np.arange(min_rpm, max_rpm + 1, 100)
-
-    # torque_interpolated = np.interp(expanded_rpm_values, rpm_values, torque_values)
-    # thrust_interpolated = np.interp(expanded_rpm_values, rpm_values, thrust_values)
-    # propeller_array_fixspeed = np.column_stack((expanded_rpm_values, torque_interpolated, thrust_interpolated)) 
-    
     propeller_array_fixspeed = propeller_fixspeed_data(speed,propeller_array)
     
     propeller_sortedby_torque = propeller_array_fixspeed[propeller_array_fixspeed[:, 1].argsort()]  
@@ -151,7 +107,7 @@ def determine_max_thrust(speed:float, voltage:float, Kv:float, R:float, max_curr
         axs[0].grid(True)
         axs[0].legend()
         
-        axs[1].plot(expanded_rpm_values,thrust_interpolated, label='Propeller')
+        axs[1].plot(propeller_array_fixspeed[:,0],propeller_array_fixspeed[:,2], label='Propeller')
         axs[1].set_xlabel('RPM')
         axs[1].set_ylabel('Thrust')
         axs[1].set_title('Thrust vs RPM')
