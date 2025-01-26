@@ -219,14 +219,14 @@ if __name__=="__main__":
     thrust_array = propeller_df['Thrust'].to_numpy()
     propeller_array = np.column_stack((rpm_array, v_speed_array, torque_array, thrust_array))
     
-    speed = 20
-    Kv = 109.91
-    R = 0.062
-    throttle = 0.6
-    max_current = 60
-    max_power = 1332
-    voltage = 23.0
-    graphFlag = 0
+    speed = 20          # m/s
+    Kv = 109.91         # rad/s/V
+    R = 0.062           # ohm
+    throttle = 0.6      # 0~1
+    max_current = 60    # A
+    max_power = 1332    # W
+    voltage = 23.0      # V
+    graphFlag = 0       # 0 : off 1 : on
     
     RPM, Torque, I, Power, Thrust = thrust_analysis(throttle, speed, voltage, Kv, R, max_current, max_power, propeller_array, graphFlag)
     print(f"RPM = {RPM:.0f}\nThrust(kg) = {Thrust:.2f}\nI(A) = {I:.2f}\nPower(W) = {Power:.2f}\nTorque(Nm) = {Torque:.2f}\n")
