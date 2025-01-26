@@ -5,8 +5,9 @@ import pandas as pd
 import math
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
-from config import PhysicalConstants, PresetValues
+from config import PhysicalConstants, PresetValues, PropulsionSpecs
 from models import MissionParameters, AircraftAnalysisResults, PlaneState, PhaseType, MissionConfig, Aircraft
+from propulsion import thrust_analysis, determine_max_thrust, thrust_reverse_solve, SoC2Vol
 
 ## Constant values
 g = PhysicalConstants.g
@@ -17,21 +18,21 @@ class MissionAnalyzer():
                  analResult:AircraftAnalysisResults, 
                  missionParam:MissionParameters, 
                  presetValues:PresetValues,
+                 propulsionSpecs : PropulsionSpecs,
                  dt:float=0.1):
 
         self.analResult = self._convert_units(analResult)
         self.aircraft = self.analResult.aircraft
         self.missionParam = missionParam
         self.presetValues = presetValues
+        self.propulsionSpecs = propulsionSpecs
         self.dt = dt
 
-        # self.analResult.m_fuel += missionParam.m_total - self.aircraft.m_total
-
+        self.convert_propellerCSV_to_ndarray(self.propulsionSpecs.propeller_data_path)
+        self.convert_batteryCSV_to_ndarray(self.propulsionSpecs.battery_data_path)
         self.clearState()
-
         self.setAuxVals()
-
-        self.SoC2Vol_interp()
+        # self.SoC2Vol_interp()
 
     def _convert_units(self, results: AircraftAnalysisResults) -> AircraftAnalysisResults:
         # Create new aircraft instance with converted units
@@ -118,6 +119,39 @@ class MissionAnalyzer():
             CD_flap_zero=results.CD_flap_zero
         )
 
+    def convert_propellerCSV_to_ndarray(self, csvPath):
+
+        propeller_df = pd.read_csv(csvPath,skiprows=[1])
+        propeller_df.dropna(how='any',inplace=True)
+        propeller_df = propeller_df.sort_values(by=['RPM', 'V(speed)']).reset_index(drop=True)
+
+        rpm_array = propeller_df['RPM'].to_numpy()
+        v_speed_array = propeller_df['V(speed)'].to_numpy()
+        torque_array = propeller_df['Torque'].to_numpy()
+        thrust_array = propeller_df['Thrust'].to_numpy()
+        self.propeller_array = np.column_stack((rpm_array, v_speed_array, torque_array, thrust_array))
+    
+        return
+    
+    def convert_batteryCSV_to_ndarray(self, csvPath):
+
+        df = pd.read_csv(csvPath,skiprows=[1]) 
+        time_array = df['Time'].to_numpy()
+        voltage_array = df['Voltage'].to_numpy()
+        current_array = df['Current'].to_numpy()
+        dt_array = np.diff(time_array, prepend=time_array[0])
+        cumulative_current = np.cumsum(current_array*dt_array)
+        SoC_array = 100 - (1000 * cumulative_current / (36 * self.presetValues.max_battery_capacity))
+        mask = SoC_array >= 0
+        time_array = time_array[mask]
+        voltage_array = voltage_array[mask]
+        current_array = current_array[mask]
+        SoC_array = SoC_array[mask]
+        battery_array = np.column_stack((time_array, voltage_array, current_array, SoC_array))
+        self.battery_array = battery_array[battery_array[:, 3].argsort()]
+        
+        return
+          
     def run_mission(self, missionPlan: List[MissionConfig],clearState = True) -> int:
 
         if(clearState): self.clearState()
@@ -309,46 +343,46 @@ class MissionAnalyzer():
        #                            bounds_error=False, fill_value='extrapolate') 
         return
 
-    def SoC2Vol_interp(self) -> None:
-        """
-        SOC(State of Charge) 값을 입력받아 대응하는 Voltage 값을 반환하는 함수
+    # def SoC2Vol_interp(self) -> None:
+    #     """
+    #     SOC(State of Charge) 값을 입력받아 대응하는 Voltage 값을 반환하는 함수
 
-        Parameters:
-            file_path (str): CSV 파일 경로
-            soc_input (float or list of floats): 계산할 SOC 값 (0% ~ 100%)
-            C_nom (int): 배터리 정격 용량 (mAh). 기본값 2250 mAh.
+    #     Parameters:
+    #         file_path (str): CSV 파일 경로
+    #         soc_input (float or list of floats): 계산할 SOC 값 (0% ~ 100%)
+    #         C_nom (int): 배터리 정격 용량 (mAh). 기본값 2250 mAh.
 
-        Returns:
-            list: SOC 입력값에 대응하는 Voltage 값
-        """
-        # read data
-        file_path = r"data/2.25Ah Discharge Profile.csv"
-        df = pd.read_csv(file_path, skiprows=17, on_bad_lines='skip') 
-        df.columns = ["Test", "Time (s)", "Voltage (V)", "Current", "Temp (F)"]
+    #     Returns:
+    #         list: SOC 입력값에 대응하는 Voltage 값
+    #     """
+    #     # read data
+    #     file_path = r"data/2.25Ah Discharge Profile.csv"
+    #     df = pd.read_csv(file_path, skiprows=17, on_bad_lines='skip') 
+    #     df.columns = ["Test", "Time (s)", "Voltage (V)", "Current", "Temp (F)"]
 
-        df["Time (s)"] = pd.to_numeric(df["Time (s)"], errors='coerce')
-        df["Voltage (V)"] = pd.to_numeric(df["Voltage (V)"], errors='coerce')
-        df["Current"] = pd.to_numeric(df["Current"], errors='coerce')
+    #     df["Time (s)"] = pd.to_numeric(df["Time (s)"], errors='coerce')
+    #     df["Voltage (V)"] = pd.to_numeric(df["Voltage (V)"], errors='coerce')
+    #     df["Current"] = pd.to_numeric(df["Current"], errors='coerce')
 
-        # SOC(State of Charge)
-        dt = 1  # time interval 1 second
-        df["SOC (%)"] = 100 - (df["Current"].cumsum() * dt / 3600) / (self.presetValues.max_battery_capacity / 1000) * 100
+    #     # SOC(State of Charge)
+    #     dt = 1  # time interval 1 second
+    #     df["SOC (%)"] = 100 - (df["Current"].cumsum() * dt / 3600) / (self.presetValues.max_battery_capacity / 1000) * 100
 
-        # SoC must be positive
-        filtered_df = df[df["SOC (%)"] > 0]
+    #     # SoC must be positive
+    #     filtered_df = df[df["SOC (%)"] > 0]
 
-        SoC_extended = np.linspace(0,100,10000)
+    #     SoC_extended = np.linspace(0,100,10000)
 
-        # Interpolation
-        SoC2Vol_table = np.interp(
-            SoC_extended,
-            filtered_df["SOC (%)"],
-            filtered_df["Voltage (V)"], 
-        )
+    #     # Interpolation
+    #     SoC2Vol_table = np.interp(
+    #         SoC_extended,
+    #         filtered_df["SOC (%)"],
+    #         filtered_df["Voltage (V)"], 
+    #     )
 
-        self.SoC2Vol = lambda SoC: np.interp(SoC, SoC_extended, SoC2Vol_table)
+    #     self.SoC2Vol = lambda SoC: np.interp(SoC, SoC_extended, SoC2Vol_table)
 
-        return
+    #     return
 
     ## Previously battery
     def updateBatteryState(self, T) -> None :
@@ -362,7 +396,7 @@ class MissionAnalyzer():
         # SoC: in units of %
         SoC = self.state.battery_capacity / self.presetValues.max_battery_capacity* 100 
 
-        battery_voltage_one_cell = self.SoC2Vol(SoC)
+        battery_voltage_one_cell = SoC2Vol(SoC,self.battery_array)
 
         self.state.battery_voltage = battery_voltage_one_cell * 6
     
@@ -550,11 +584,16 @@ class MissionAnalyzer():
 
             # print(f"Gamma: f{gamma_rad}") 
             self.state.acceleration = RK4_step(self.state.velocity,self.dt,
-                         lambda v: calculate_acceleration_climb(v, self.aircraft.m_total,self.weight,
+                         lambda v: calculate_acceleration_climb(v, 
+                                                                self.aircraft.m_total,
+                                                                self.weight,
                                                                 self.analResult.Sref,
-                                                                self.CL_func,self.CD_func,
-                                                                self.analResult.CL_flap_max,self.analResult.CD_flap_max,
-                                                                alpha_w_deg,gamma_rad,
+                                                                self.CL_func,
+                                                                self.CD_func,
+                                                                self.analResult.CL_flap_max,
+                                                                self.analResult.CD_flap_max,
+                                                                alpha_w_deg,
+                                                                gamma_rad,
                                                                 self.T_climb,
                                                                 not self.isBelowFlapTransition()
                                                                 ))
@@ -869,11 +908,10 @@ def calculate_acceleration_climb(v, m_total, Weight,
     D = 0.5 * rho * speed**2 * Sref * CD
     L = 0.5 * rho * speed**2 * Sref * CL
 
-
     a_x = (T_climb * math.cos(theta_rad) - L * math.sin(gamma_rad) - D * math.cos(gamma_rad) )/ m_total
     a_z = (T_climb * math.sin(theta_rad) + L * math.cos(gamma_rad) - D * math.sin(gamma_rad) - Weight )/ m_total
-
-    return np.array([a_x, 0, a_z])
+    
+    return np.array([a_x,0,a_z])
 
 def get_state_df(stateLog):
     # Convert numpy arrays to lists for proper DataFrame conversion

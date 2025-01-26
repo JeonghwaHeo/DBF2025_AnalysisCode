@@ -21,8 +21,15 @@ class PresetValues:
     propulsion_efficiency: float
     score_weight_ratio: float=0.5 
 
-
-
+@dataclass
+class PropulsionSpecs:
+    propeller_data_path: str
+    battery_data_path : str
+    Kv : float
+    R : float
+    max_current : float
+    max_power : float
+    
 @dataclass
 class AircraftParamConstraints:
     """Constraints for constructing the aircraft"""
