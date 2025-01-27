@@ -122,14 +122,14 @@ class MissionAnalyzer():
 
     def convert_propellerCSV_to_ndarray(self, csvPath):
 
-        propeller_df = pd.read_csv(csvPath,skiprows=[1])
+        propeller_df = pd.read_csv(csvPath)
         propeller_df.dropna(how='any',inplace=True)
-        propeller_df = propeller_df.sort_values(by=['RPM', 'V(speed)']).reset_index(drop=True)
+        propeller_df = propeller_df.sort_values(by=['RPM', 'V(speed) (m/s)']).reset_index(drop=True)
 
         rpm_array = propeller_df['RPM'].to_numpy()
-        v_speed_array = propeller_df['V(speed)'].to_numpy()
-        torque_array = propeller_df['Torque'].to_numpy()
-        thrust_array = propeller_df['Thrust'].to_numpy()
+        v_speed_array = propeller_df['V(speed) (m/s)'].to_numpy()
+        torque_array = propeller_df['Torque (N-m)'].to_numpy()
+        thrust_array = propeller_df['Thrust (kg)'].to_numpy()
         self.propeller_array = np.column_stack((rpm_array, v_speed_array, torque_array, thrust_array))
     
         return
@@ -298,11 +298,12 @@ class MissionAnalyzer():
         #  Function that calculates the AOA required for level flight using the velocity vector and thrust
         speed = fast_norm(v)
         def equation(alpha:float):
-            CL = float(self.CL_func(alpha))
+
+            CL = float(self.CL_func(alpha)[0])
             L,_ = self.calculate_Lift_and_Loadfactor(CL,float(speed))
             return float(L-self.weight)
 
-        alpha_solution = fsolve(equation, 5, xtol=1e-8, maxfev=1000)
+        alpha_solution = fsolve(equation, 5, xtol=1e-4, maxfev=1000)
         return alpha_solution[0]
     
     def calculate_Lift_and_Loadfactor(self, CL, speed:float=-1):

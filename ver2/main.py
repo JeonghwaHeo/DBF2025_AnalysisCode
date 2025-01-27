@@ -11,7 +11,7 @@ from config import *
 
 def main():
 
-    # removeAnalysisResults(csvPath = "data/test.csv")
+    removeAnalysisResults(csvPath = "data/test.csv")
     removeAnalysisResults(csvPath = "data/total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
 
@@ -27,8 +27,8 @@ def main():
         )
     
     propulsionSpecs = PropulsionSpecs(
-        propeller_data_path = "data/Propeller10x6E.csv",
-        battery_data_path = "data/Maxamps_2250mAh_6S.csv",
+        propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
+        battery_data_path = "data/batteryDataCSV/Maxamps_2250mAh_6S.csv",
         Kv = 109.91,
         R = 0.062,
         number_of_battery = 2,
@@ -52,7 +52,7 @@ def main():
     
         AR_min = 5.45,                  
         AR_max = 5.45,
-        AR_interval = 0.5,
+        AR_interval = 0.05,
         
         taper_min = 0.55,
         taper_max = 0.55,                      
@@ -97,7 +97,7 @@ def main():
         vertical_ThickChord = 9  
         )
 
-    # runVSPGridAnalysis(aircraftParamConstraints,presetValues,baseAircraft)
+    runVSPGridAnalysis(aircraftParamConstraints,presetValues,baseAircraft)
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
@@ -118,9 +118,9 @@ def main():
             #Constraints for calculating mission3  
             M3_throttle_climb_min = 0.9,
             M3_throttle_climb_max = 0.9,
-            M3_throttle_turn_min = 0.5,
+            M3_throttle_turn_min = 0.6,
             M3_throttle_turn_max = 0.6,
-            M3_throttle_level_min = 0.6,
+            M3_throttle_level_min = 0.5,
             M3_throttle_level_max = 0.6,
             M3_throttle_analysis_interval = 0.05
             )
