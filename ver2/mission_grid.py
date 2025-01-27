@@ -139,7 +139,7 @@ def runMissionGridSearch(hashVal:int,
     
             results = pd.DataFrame([results])
     
-            writeMissionAnalysisResults(hashVal, results, presetValues)
+            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs)
 
         except Exception as e:
             print(f"Failed with throttles M2 : Climb({M2_throttle_climb:.2f}) Trun({M2_throttle_turn:.2f}) Level ({M2_throttle_level:.2f})")
@@ -148,13 +148,14 @@ def runMissionGridSearch(hashVal:int,
    
     print("\nDone Mission Analysis ^_^")
 
-def writeMissionAnalysisResults(hashVal, results, presetValues:PresetValues, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
+def writeMissionAnalysisResults(hashVal, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
     existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
     base_row = existing_df[existing_df['hash'] == int(hashVal)]
     base_row_dict = base_row.to_dict(orient="records")[0]
     preset_dict = vars(presetValues)
+    propulsion_dict = vars(propulsionSpecs)
     
-    combined_dict = {**base_row_dict, **preset_dict}
+    combined_dict = {**base_row_dict, **preset_dict, **propulsion_dict}
     common_row = pd.DataFrame([combined_dict])
  
     new_row_df = pd.merge(common_row, results, on = 'hash')

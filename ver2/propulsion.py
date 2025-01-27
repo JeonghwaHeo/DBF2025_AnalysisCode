@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:float, max_current:float, max_power:float, propeller_array:np.ndarray, graphFlag:bool):
 
     expanded_results_array = propeller_fixspeed_data(speed,propeller_array)
+    if (expanded_results_array==-1).all()==True : return 0,0,0,0,0
     
-    I_list = np.arange(0,min(max_current,max_power/voltage)+0.5,1)
+    I_list = np.arange(0,max(min(max_current,max_power/voltage),0)+0.5,1)
     RPM_list = Kv * (voltage * throttle - I_list * R) * 30 / math.pi
     Torque_list = I_list / Kv
 
@@ -71,6 +72,7 @@ def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:floa
 def determine_max_thrust(speed:float, voltage:float, Kv:float, R:float, max_current:float, max_power:float, propeller_array:np.ndarray, graphFlag:bool):
 
     propeller_array_fixspeed = propeller_fixspeed_data(speed,propeller_array)
+    if (propeller_array_fixspeed==-1).all()==True : return 0
     
     propeller_sortedby_torque = propeller_array_fixspeed[propeller_array_fixspeed[:, 1].argsort()]  
     
@@ -81,7 +83,7 @@ def determine_max_thrust(speed:float, voltage:float, Kv:float, R:float, max_curr
 
     if graphFlag == 1:
         
-        I_list = np.arange(0,min(max_current,max_power/voltage)+0.5,1)
+        I_list = np.arange(0,max(min(max_current,max_power/voltage),0)+0.5,1)
         RPM_list = Kv * (voltage - I_list * R) * 30 / math.pi
         Torque_list = I_list / Kv
 
@@ -112,7 +114,7 @@ def determine_max_thrust(speed:float, voltage:float, Kv:float, R:float, max_curr
     else:
         
         ## find intersection
-        I_list = np.arange(0,min(max_current,max_power/voltage)+0.5,1)
+        I_list = np.arange(0,max(min(max_current,max_power/voltage),0)+0.5,1)
         RPM_list_fullthrottle = Kv * (voltage - I_list * R) * 30 / math.pi
         Torque_list_fullthrottle = I_list / Kv
 
@@ -175,7 +177,8 @@ def propeller_fixspeed_data(speed,propeller_array):
             })
             
     results_array = np.array([(d['RPM'], d['Torque'], d['Thrust']) for d in results])
-
+    if results_array.shape[0] == 0: return np.array([-1]) 
+    
     rpm_values = results_array[:, 0] 
     torque_values = results_array[:, 1]  
     thrust_values = results_array[:, 2] 
@@ -194,6 +197,8 @@ def propeller_fixspeed_data(speed,propeller_array):
 def thrust_reverse_solve(T_desired,speed,voltage, Kv, R, propeller_array):
     
     propeller_array_fixspeed = propeller_fixspeed_data(speed,propeller_array)
+    if (propeller_array_fixspeed==-1).all()==True : return 0,0,0,0,0
+    
     propeller_sortedby_thrust = propeller_array_fixspeed[propeller_array_fixspeed[:, 2].argsort()]
     
     RPM_desired = np.interp(T_desired,propeller_sortedby_thrust[:,2],propeller_sortedby_thrust[:,0])
@@ -234,7 +239,7 @@ if __name__=="__main__":
     speed = 20          # m/s
     Kv = 109.91         # rad/s/V
     R = 0.062           # ohm
-    throttle = 0.6      # 0~1
+    throttle = 0.5      # 0~1
     max_current = 60    # A
     max_power = 1332    # W
     voltage = 23.0      # V
@@ -248,7 +253,7 @@ if __name__=="__main__":
     
     T_desired = 1.0
     speed = 20
-    Kv = 109.91
+    Kv = 110
     R = 0.062
     voltage = 23.0
     RPM, Torque, I, Power, throttle = thrust_reverse_solve(T_desired,speed,voltage, Kv, R, propeller_array)
