@@ -238,7 +238,7 @@ def SoC2Vol(SoC,battery_array):
 
 
 if __name__=="__main__":
-    csvPath = "data/Propeller10x6E.csv"
+    csvPath = "data/propDataCSV/PER3_10x6E.csv"
     propeller_df = pd.read_csv(csvPath,skiprows=[1])
     propeller_df.dropna(how='any',inplace=True)
     propeller_df = propeller_df.sort_values(by=['RPM', 'V(speed)']).reset_index(drop=True)

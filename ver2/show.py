@@ -104,6 +104,7 @@ if __name__ == "__main__":
             presetValues = PresetValues(
                             m_x1= resultID_df['m_x1'].iloc[0],
                             x1_flight_time= resultID_df['x1_flight_time'].iloc[0],
+                            number_of_motor=resultID_df['number_of_motor'].iloc[0],
 
                             max_battery_capacity= resultID_df['max_battery_capacity'].iloc[0],
                             min_battery_voltage= resultID_df['min_battery_voltage'].iloc[0],
@@ -115,12 +116,15 @@ if __name__ == "__main__":
             )
              
             propulsionSpecs = PropulsionSpecs(
-            propeller_data_path = "data/Propeller10x6E.csv",
-            battery_data_path = "data/Maxamps_2250mAh_6S.csv",
-            Kv = 109.91,
-            R = 0.062,
-            max_current = 60,
-            max_power = 1332    
+                propeller_data_path = resultID_df['propeller_data_path'].iloc[0],
+                battery_data_path = resultID_df['battery_data_path'].iloc[0],
+                Kv = resultID_df['Kv'].iloc[0],
+                R = resultID_df['R'].iloc[0],
+                number_of_battery= resultID_df['number_of_battery'].iloc[0],
+                n_cell = resultID_df['n_cell'].iloc[0], 
+                battery_Wh= resultID_df['battery_Wh'].iloc[0],
+                max_current = resultID_df['max_current'].iloc[0],
+                max_power = resultID_df['max_power'].iloc[0]    
             )  
                      
             missionAnalyzer3 = MissionAnalyzer(aircraft,param3,presetValues,propulsionSpecs)

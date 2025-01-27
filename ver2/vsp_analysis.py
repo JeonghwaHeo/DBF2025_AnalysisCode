@@ -280,7 +280,7 @@ class VSPAnalyzer:
 
     def createMainWing(self, aircraft: Aircraft) -> str:
 
-        s9027_path  = os.path.join(os.path.join(self.dataPath, "s9027.dat"))
+        s9027_path  = "data/airfoilDAT/s9027.dat"
 
         
         """ Create Main Wing, Included Parameters are FIXED """
@@ -373,7 +373,7 @@ class VSPAnalyzer:
         """ Create Horizontal Tail, Included Parameters are FIXED """
 
         # Airfoil path
-        naca0008_path = os.path.join(os.path.join(self.dataPath, airfoilName))
+        naca0008_path = "data/airfoilDAT/naca0008.dat"
 
         # Horizontal Tail ID
         tailwing_id = vsp.AddGeom("WING", "")
@@ -430,7 +430,7 @@ class VSPAnalyzer:
 
     def createVerticalTailWings(self,aircraft:Aircraft,airfoilName:str="naca0009.dat") -> List[str]:
 
-        naca0009_path = os.path.join(os.path.join(self.dataPath, airfoilName))
+        naca0009_path = "data/airfoilDAT/naca0009.dat"
 
         """ Create Vertical Wing (Right), Included Parameters are FIXED """
         # Vertical Wing (Right) ID
