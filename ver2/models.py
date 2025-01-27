@@ -167,23 +167,23 @@ class PlaneState:
     velocity: np.ndarray=field(default_factory= lambda: np.zeros(3))
     acceleration: np.ndarray=field(default_factory= lambda: np.zeros(3))
 
-
     time: float=0
 
-
-    throttle: float=0 # in percent
+    throttle: float=0 
+    thrust : float=0
 
     loadfactor: float=0
-    AOA: float=0
     
+    AOA: float=0
     climb_pitch_angle: float=0
     bank_angle: float=0
 
-    phase: int=0
-    
-    battery_capacity: float=0
+    battery_SoC: float=0
     battery_voltage: float=0
-    current_draw: float=0
+    Amps: float=0
+    motor_input_power: float=0
+    
+    phase: int=0
 
 
 class PhaseType(Enum):

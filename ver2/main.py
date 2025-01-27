@@ -18,8 +18,9 @@ def main():
     presetValues = PresetValues(
         m_x1 = 0.25,                        # kg
         x1_flight_time = 30,                # sec
+        number_of_motor = 2,                 
         max_battery_capacity = 2250,        # mAh (per one battery)
-        Thrust_max = 6.6,                   # kg (two motors)
+        Thrust_max = 6.0,                   # kg (two motors)
         min_battery_voltage = 21.8,         # V 
         propulsion_efficiency = 0.1326,     # Efficiency of the propulsion system
         score_weight_ratio = 0.5            # mission2/3 score weight ratio
@@ -30,6 +31,9 @@ def main():
         battery_data_path = "data/Maxamps_2250mAh_6S.csv",
         Kv = 109.91,
         R = 0.062,
+        number_of_battery = 2,
+        n_cell = 6,
+        battery_Wh = 49.95,
         max_current = 60,
         max_power = 1332    
     )
@@ -37,8 +41,8 @@ def main():
     aircraftParamConstraints = AircraftParamConstraints (
         #Constraints for constructing the aircraft
 
-        m_total_min = 8600.0,                # g
-        m_total_max = 8600.0,
+        m_total_min = 8500.0,                # g
+        m_total_max = 8500.0,
         m_total_interval = 100.0,
         
         # wing parameter ranges
@@ -108,14 +112,14 @@ def main():
             M2_throttle_turn_min = 0.5,
             M2_throttle_turn_max = 0.5,
             M2_throttle_level_min = 0.5,
-            M2_throttle_level_max = 0.55,
+            M2_throttle_level_max = 0.5,
             M2_throttle_analysis_interval = 0.05,
 
             #Constraints for calculating mission3  
             M3_throttle_climb_min = 0.9,
             M3_throttle_climb_max = 0.9,
             M3_throttle_turn_min = 0.5,
-            M3_throttle_turn_max = 0.5,
+            M3_throttle_turn_max = 0.6,
             M3_throttle_level_min = 0.6,
             M3_throttle_level_max = 0.6,
             M3_throttle_analysis_interval = 0.05

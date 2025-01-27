@@ -139,7 +139,7 @@ def runMissionGridSearch(hashVal:int,
     
             results = pd.DataFrame([results])
     
-            writeMissionAnalysisResults(hashVal, results, presetValues)
+            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs)
 
         except Exception as e:
             print(f"Failed with throttles M2 : Climb({M2_throttle_climb:.2f}) Trun({M2_throttle_turn:.2f}) Level ({M2_throttle_level:.2f})")
@@ -148,13 +148,14 @@ def runMissionGridSearch(hashVal:int,
    
     print("\nDone Mission Analysis ^_^")
 
-def writeMissionAnalysisResults(hashVal, results, presetValues:PresetValues, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
+def writeMissionAnalysisResults(hashVal, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
     existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
     base_row = existing_df[existing_df['hash'] == int(hashVal)]
     base_row_dict = base_row.to_dict(orient="records")[0]
     preset_dict = vars(presetValues)
+    propulsion_dict = vars(propulsionSpecs)
     
-    combined_dict = {**base_row_dict, **preset_dict}
+    combined_dict = {**base_row_dict, **preset_dict, **propulsion_dict}
     common_row = pd.DataFrame([combined_dict])
  
     new_row_df = pd.merge(common_row, results, on = 'hash')
@@ -221,26 +222,22 @@ if __name__=="__main__":
     presetValues = PresetValues(
             m_x1 = 0.2,                       # kg
             x1_flight_time = 30,              # sec
+            number_of_motor= 1,
             max_battery_capacity = 2250,      # mAh (per one battery)
-            Thrust_max = 6.6,                 # kg (two motors)
             min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
+            Thrust_max = 6.0,
             propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
-            score_weight_ratio = 1            # mission2/3 score weight ratio
+            score_weight_ratio = 0.5            # mission2/3 score weight ratio
             )
-    a=loadAnalysisResults(687192594661440415)
-    score, param = runMissionGridSearch(687192594661440415,
+    a=loadAnalysisResults(6941088787683630519)
+    score, param = runMissionGridSearch(6941088787683630519,
                           MissionParamConstraints (
-                              
-                              m_total_max = 8000,
-                              m_total_min = 6000,
-                              m_total_interval = 5000,
-                              
-                              throttle_climb_min = 1.0,
-                              throttle_climb_max = 1.0,
-                              throttle_turn_min = 0.7,
-                              throttle_turn_max = 0.7,
-                              throttle_level_min = 1.0,
-                              throttle_level_max = 1.0,
+                              throttle_climb_min = 0.9,
+                              throttle_climb_max = 0.9,
+                              throttle_turn_min = 0.5,
+                              throttle_turn_max = 0.5,
+                              throttle_level_min = 0.5,
+                              throttle_level_max = 0.5,
                               throttle_analysis_interval = 0.05,
                               ),
                           presetValues
