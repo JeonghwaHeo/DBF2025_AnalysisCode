@@ -213,6 +213,7 @@ class MissionAnalyzer():
 
     def run_mission2(self) -> float:
 
+        
         mission2 = [
                 MissionConfig(PhaseType.TAKEOFF, []),
                 MissionConfig(PhaseType.CLIMB, [25,-140], "left"),
@@ -237,13 +238,17 @@ class MissionAnalyzer():
                 MissionConfig(PhaseType.TURN, [180], "CW"),
                 MissionConfig(PhaseType.LEVEL_FLIGHT, [0], "left"),
                 ]
-        result = self.run_mission(mission2)        
-
+        result = self.run_mission(mission2)  
+        
+        first_state = self.stateLog[0]
+        first_state.mission = 2      
+        self.state.N_laps = 3
         if(result == -1): return 0
         
         return self.analResult.m_fuel, self.state.time
 
     def run_mission3(self) -> float:
+        
         mission3 = [
                 MissionConfig(PhaseType.TAKEOFF, []),
                 MissionConfig(PhaseType.CLIMB, [60,-140], "left"),
@@ -259,11 +264,12 @@ class MissionAnalyzer():
 
         # Run initial mission sequence
         result = self.run_mission(mission3)
-
+        first_state = self.stateLog[0]
+        first_state.mission = 3
         if(result == -1): return 0
 
         # Store starting index for each lap to handle truncation if needed
-        N_laps = 1
+        self.state.N_laps = 1
         time_limit = 300 - self.presetValues.x1_flight_time  # 270 seconds
 
         # Define lap2 phases
@@ -279,7 +285,7 @@ class MissionAnalyzer():
 
         while True:
             lap_start_index = len(self.stateLog)
-            N_laps += 1
+            self.state.N_laps += 1
 
             self.run_mission(lap2,clearState=False)
             
@@ -289,10 +295,10 @@ class MissionAnalyzer():
                 #print("Time ran out")
                 # Truncate the results and finish
                 self.stateLog = self.stateLog[:lap_start_index]
-                N_laps -= 1
+                self.state.N_laps -= 1
                 break
         
-        return N_laps
+        return self.state.N_laps
         
     def calculate_level_alpha(self, v):
         #  Function that calculates the AOA required for level flight using the velocity vector and thrust
@@ -366,7 +372,7 @@ class MissionAnalyzer():
 
             self.state.AOA = 0
             self.state.climb_pitch_angle =np.nan
-            self.state.bank_angle = 0
+            self.state.bank_angle = np.nan
 
             self.updateBatteryState(self.state.battery_SoC)
             self.logState()
@@ -405,7 +411,7 @@ class MissionAnalyzer():
 
             self.state.AOA=0
             self.state.climb_pitch_angle=np.nan
-            self.state.bank_angle = 0
+            self.state.bank_angle = np.nan
 
             self.updateBatteryState(self.state.battery_SoC)
             self.logState()
@@ -539,7 +545,7 @@ class MissionAnalyzer():
              
             self.state.AOA = alpha_w_deg
             self.state.climb_pitch_angle =alpha_w_deg + math.degrees(gamma_rad)
-            self.state.bank_angle = 0
+            self.state.bank_angle = np.nan
 
 
             self.updateBatteryState(self.state.battery_SoC)
@@ -648,7 +654,7 @@ class MissionAnalyzer():
             
             self.state.loadfactor = load_factor 
             self.state.AOA = alpha_w_deg
-            self.state.bank_angle = 0
+            self.state.bank_angle = np.nan
             self.state.climb_pitch_angle = np.nan
             self.logState()
             
@@ -813,6 +819,8 @@ class MissionAnalyzer():
     def logState(self) -> None:
         # Append current state as a copy
         self.stateLog.append(PlaneState(
+            mission=self.state.mission,
+            N_laps=self.state.N_laps,
             position=self.state.position.copy(),
             velocity=self.state.velocity.copy(), 
             acceleration=self.state.acceleration.copy(),
@@ -912,6 +920,8 @@ def get_state_df(stateLog):
     states_dict = []
     for state in stateLog:
         state_dict = {
+            'mission' : state.mission,
+            "N_laps" : state.N_laps,
             'position': np.array([state.position[0],state.position[1],state.position[2]]),
             'velocity': np.array([state.velocity[0],state.velocity[1],state.velocity[2]]),
             'acceleration': np.array([state.acceleration[0],state.acceleration[1],state.acceleration[2]]),
@@ -935,28 +945,29 @@ def visualize_mission(stateLog):
     """Generate all visualization plots for the mission in a single window"""
     stateLog = get_state_df(stateLog)
 
-    fig = plt.figure(figsize=(20, 15))
-    gs = fig.add_gridspec(3, 3)
+    fig = plt.figure(figsize=(15, 8))
+    gs = fig.add_gridspec(3, 4)
     
     # Get phases and colors
     phases = stateLog['phase'].unique()
-    colors = plt.cm.rainbow(np.random.rand(len(phases)))
+    # colors = plt.cm.rainbow(np.random.rand(len(phases)))
+    color_list = ['red', 'green', 'blue', 'orange', 'black']
+    colors = [color_list[i % len(color_list)] for i in range(len(phases))]
     
-    # 3D trajectory colored by phase
-    ax_3d = fig.add_subplot(gs[0:2, 0], projection='3d')
+    # Graph1 : 3D trajectory colored by phase
+    ax_3d = fig.add_subplot(gs[0:2,0], projection='3d')
     for phase, color in zip(phases, colors):
         mask = stateLog['phase'] == phase
         ax_3d.plot(stateLog[mask]['position'].apply(lambda x: x[0]), 
                   stateLog[mask]['position'].apply(lambda x: x[1]), 
                   stateLog[mask]['position'].apply(lambda x: x[2]),
                   color=color, label=f'Phase {phase}')
-    ax_3d.set_xlabel('X Position (m)')
-    ax_3d.set_ylabel('Y Position (m)')
-    ax_3d.set_zlabel('Altitude (m)')
+        
+    ax_3d.set_xlabel('X')
+    ax_3d.set_ylabel('Y')
+    ax_3d.set_zlabel('Z')
     ax_3d.set_title('3D Trajectory')
-    # ax_3d.legend()
-    
-    # Set equal scale for 3D plot
+
     x_lims = ax_3d.get_xlim3d()
     y_lims = ax_3d.get_ylim3d()
     z_lims = ax_3d.get_zlim3d()
@@ -966,10 +977,24 @@ def visualize_mission(stateLog):
     z_center = (z_lims[1] + z_lims[0]) / 2
     ax_3d.set_xlim3d([x_center - max_range/2, x_center + max_range/2])
     ax_3d.set_ylim3d([y_center - max_range/2, y_center + max_range/2])
-    ax_3d.set_zlim3d([0, z_lims[1]*1.5])
+    ax_3d.set_zlim3d([0, z_lims[1]*1.2])
 
-    # Top-down view colored by phase
-    ax_top = fig.add_subplot(gs[2, 0])
+    # Graph2 : Side view colored by phase
+    ax_side = fig.add_subplot(gs[2, 0])
+    for phase, color in zip(phases, colors):
+        mask = stateLog['phase'] == phase
+        ax_side.plot(stateLog[mask]['position'].apply(lambda x: x[0]), 
+                    stateLog[mask]['position'].apply(lambda x: x[2]),
+                    color=color, label=f'Phase {phase}')
+    ax_side.set_xlabel('X Position (m)')
+    ax_side.set_ylabel('Altitude (m)')
+    ax_side.set_title('Side View')
+    ax_side.grid(True)
+    ax_side.set_aspect(2)
+
+
+    # Graph3 : Top-down view colored by phase
+    ax_top = fig.add_subplot(gs[0,1])
     for phase, color in zip(phases, colors):
         mask = stateLog['phase'] == phase
         ax_top.plot(stateLog[mask]['position'].apply(lambda x: x[0]), 
@@ -982,8 +1007,38 @@ def visualize_mission(stateLog):
     ax_top.set_aspect('equal')
     # ax_top.legend()
 
-    # Speed
-    ax_speed = fig.add_subplot(gs[0, 1])
+    # Graph4 : AOA
+    ax_aoa = fig.add_subplot(gs[1, 1])
+    for phase, color in zip(phases, colors):
+        mask = stateLog['phase'] == phase
+        ax_aoa.plot(stateLog[mask]['time'], 
+                    stateLog[mask]['AOA'],
+                    color=color)
+    ax_aoa.set_xlabel('Time (s)')
+    ax_aoa.set_ylabel('AOA (degrees)')
+    ax_aoa.set_xlim(0,None)
+    ax_aoa.set_ylim(-0.3,14.3)
+    ax_aoa.set_yticks(np.arange(0, 14.1, 2))
+    ax_aoa.set_yticks(np.arange(0, 14.1, 1),minor=True)
+    ax_aoa.set_title('Angle of Attack')
+    ax_aoa.grid(True, which='major', linestyle='-', linewidth=1) 
+    ax_aoa.grid(True, which='minor', linestyle=':', linewidth=0.5)
+    
+
+    # Graph5 : Bank, Pitch angle
+    ax_angles = fig.add_subplot(gs[2, 1])
+
+    ax_angles.plot(stateLog['time'], stateLog['bank_angle'], label='Bank Angle', color='blue')
+    ax_angles.set_xlabel('Time (s)')
+    ax_angles.set_ylabel('Angle (degrees)') 
+    ax_angles.plot(stateLog['time'], stateLog['climb_pitch_angle'], label='Climb Pitch Angle', color='red')
+    ax_angles.grid(True) 
+    ax_angles.set_title('Bank, Pitch Angles')
+  
+
+
+    # Graph6 : speed
+    ax_speed = fig.add_subplot(gs[0, 2])
     speeds = np.sqrt(stateLog['velocity'].apply(lambda x: x[0]**2 + x[1]**2 + x[2]**2))
     for phase, color in zip(phases, colors):
         mask = stateLog['phase'] == phase
@@ -992,66 +1047,85 @@ def visualize_mission(stateLog):
     ax_speed.set_xlabel('Time (s)')
     ax_speed.set_ylabel('Speed (m/s)')
     ax_speed.set_title('Speed by Phase')
-    ax_speed.grid(True)
-    # ax_speed.legend()
+    ax_speed.set_yticks(np.arange(0, max(speeds)+6, 5),minor=True)
+    ax_speed.grid(True, which='major', linestyle='-', linewidth=1) 
+    ax_speed.grid(True, which='minor', linestyle=':', linewidth=0.5)
+    
+    # Graph7 : throttle
+    ax_throttle = fig.add_subplot(gs[1, 2])
+    ax_throttle.plot(stateLog['time'], stateLog['throttle']*100,'r-')
+    ax_throttle.set_ylim(40,100)
+    ax_throttle.set_title('Throttle level')
+    ax_throttle.set_xlabel('Time (s)')
+    ax_throttle.set_ylabel('Throttle (%)')
+    ax_throttle.tick_params(axis='y')
+    ax_throttle.set_yticks(np.arange(40, 101, 5),minor=True)
+    ax_throttle.grid(True, which='major', linestyle='-', linewidth=1) 
+    ax_throttle.grid(True, which='minor', linestyle=':', linewidth=0.5)
+    
 
-    # Load factor
-    ax_load = fig.add_subplot(gs[0, 2])
+    # Graph8 : thrust
+    ax_thrust = fig.add_subplot(gs[2, 2])
+    ax_thrust.plot(stateLog['time'], stateLog['thrust'],'r-', label='Thrust')
+    ax_thrust.set_ylim(0,max(stateLog['thrust'])+1)
+    ax_thrust.tick_params(axis='y')
+    ax_thrust.set_yticks(np.arange(0, max(stateLog['thrust'])+0.5, 1),minor=True)
+    ax_thrust.set_title('Thrust')
+    ax_thrust.set_xlabel('Time (s)')
+    ax_thrust.set_ylabel('Thrust (kg)')
+    ax_thrust.grid(True, which='major', linestyle='-', linewidth=1) 
+    ax_thrust.grid(True, which='minor', linestyle=':', linewidth=0.5)
+
+    # Graph9 :Load factor
+    ax_load = fig.add_subplot(gs[0, 3])
     for phase, color in zip(phases, colors):
         mask = stateLog['phase'] == phase
         ax_load.plot(stateLog[mask]['time'], 
                     stateLog[mask]['loadfactor'], 
                     color=color, label=f'Phase {phase}')
+    ax_load.tick_params(axis='y')
+    ax_load.set_yticks(np.arange(0, max(stateLog['loadfactor'])+0.5, 1),minor=True)
     ax_load.set_xlabel('Time (s)')
     ax_load.set_ylabel('Load Factor')
     ax_load.set_title('Load Factor by Phase')
-    ax_load.grid(True)
-    # ax_load.legend()
+    ax_load.grid(True, which='major', linestyle='-', linewidth=1) 
+    ax_load.grid(True, which='minor', linestyle=':', linewidth=0.5)
 
-    # Angles
-    ax_angles = fig.add_subplot(gs[1, 1])
-    ax_angles.plot(stateLog['time'], stateLog['AOA'], label='Angle of Attack')
-    ax_angles.plot(stateLog['time'], stateLog['climb_pitch_angle'], label='Climb Pitch Angle')
-    ax_angles.plot(stateLog['time'], stateLog['bank_angle'], label='Bank Angle')
-    ax_angles.set_xlabel('Time (s)')
-    ax_angles.set_ylabel('Angle (degrees)')
-    ax_angles.set_title('Aircraft Angles')
-    ax_angles.grid(True)
-    ax_angles.legend()
+    # Graph10 : SoC, Voltage
+    ax_SoC = fig.add_subplot(gs[1, 3])
 
-    # Battery and throttle
-    ax_battery = fig.add_subplot(gs[1, 2])
-    ax_battery.plot(stateLog['time'], stateLog['battery_SoC'], label='Battery SoC')
-    ax_battery.set_xlabel('Time (s)')
-    ax_battery.set_ylabel('Battery SoC (%)')
-    ax_battery.set_title('Battery SoC')
-    ax_battery.grid(True)
+    ax_SoC.plot(stateLog['time'], stateLog['battery_SoC'], label='SoC', color='blue')
+    ax_SoC.set_xlabel('Time (s)')
+    ax_SoC.set_ylabel('SoC (%)', color='blue')
+    ax_SoC.set_ylim(0,100)
+    ax_SoC.set_yticks(np.arange(0, 100+0.5, 20))
+    ax_SoC.grid(True)
 
-    ax_throttle = ax_battery.twinx()
-    ax_throttle.plot(stateLog['time'], stateLog['throttle'], 
-                    'r-', label='Throttle')
-    ax_throttle.set_ylabel('Throttle', color='r')
-    ax_throttle.tick_params(axis='y', labelcolor='r')
+    ax_voltage = ax_SoC.twinx()  
+    ax_voltage.plot(stateLog['time'], stateLog['battery_voltage'], label='voltage', color='red')
+    ax_voltage.set_ylabel('Voltage(V)', color='red')
+    ax_voltage.set_ylim(22,25.5)
+    ax_voltage.set_yticks(np.arange(21, 25.6, 1.0))
+    ax_voltage.set_yticks(np.arange(21, 25.6, 0.5),minor=True)
+    ax_voltage.tick_params(axis='y', labelcolor='red') 
+    ax_voltage.grid(True, linestyle=':', linewidth=0.5)  
+    ax_voltage.grid(True, which='minor',linestyle=':', linewidth=0.5)  
+    ax_SoC.set_title('SoC, Voltage')
 
-    lines1, labels1 = ax_battery.get_legend_handles_labels()
-    lines2, labels2 = ax_throttle.get_legend_handles_labels()
-    ax_battery.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+    
+    # Graph11 : Amps
+    ax_amps = fig.add_subplot(gs[2, 3])
+    ax_amps.plot(stateLog['time'], stateLog['Amps'], color='red')
+    ax_amps.set_xlabel('Time (s)')
+    ax_amps.set_ylabel('Current (A)')
+    ax_amps.set_title('Current')
+    ax_amps.grid(True)
 
-    # Side view colored by phase
-    ax_side = fig.add_subplot(gs[2, 1:])
-    for phase, color in zip(phases, colors):
-        mask = stateLog['phase'] == phase
-        ax_side.plot(stateLog[mask]['position'].apply(lambda x: x[0]), 
-                    stateLog[mask]['position'].apply(lambda x: x[2]),
-                    color=color, label=f'Phase {phase}')
-    ax_side.set_xlabel('X Position (m)')
-    ax_side.set_ylabel('Altitude (m)')
-    ax_side.set_title('Side View')
-    ax_side.grid(True)
-    ax_side.set_aspect('equal')
-    # ax_side.legend()
 
-    plt.tight_layout()
+    plt.suptitle(f"Mission : {stateLog['mission'].iloc[0]}        Total flight time : {stateLog['time'].iloc[-1]:.2f}s        N_laps : {stateLog['N_laps'].iloc[-1]}", fontsize = 16, y = 0.95)
+
+    
+    plt.tight_layout(rect=[0, 0, 1, 0.93])
     plt.show()
 
 

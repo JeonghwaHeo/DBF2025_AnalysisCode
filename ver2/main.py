@@ -11,7 +11,7 @@ from config import *
 
 def main():
 
-    removeAnalysisResults(csvPath = "data/test.csv")
+    # removeAnalysisResults(csvPath = "data/test.csv")
     removeAnalysisResults(csvPath = "data/total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
 
@@ -27,7 +27,7 @@ def main():
         )
     
     propulsionSpecs = PropulsionSpecs(
-        propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
+        propeller_data_path = "data/propDataCSV/PER3_8x6E.csv",
         battery_data_path = "data/batteryDataCSV/Maxamps_2250mAh_6S.csv",
         Kv = 109.91,
         R = 0.062,
@@ -97,7 +97,7 @@ def main():
         vertical_ThickChord = 9  
         )
 
-    runVSPGridAnalysis(aircraftParamConstraints,presetValues,baseAircraft)
+    # runVSPGridAnalysis(aircraftParamConstraints,presetValues,baseAircraft)
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
