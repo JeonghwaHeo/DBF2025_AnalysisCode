@@ -8,6 +8,8 @@ from scipy.optimize import fsolve
 from config import PhysicalConstants, PresetValues, PropulsionSpecs
 from models import MissionParameters, AircraftAnalysisResults, PlaneState, PhaseType, MissionConfig, Aircraft
 from propulsion import thrust_analysis, determine_max_thrust, thrust_reverse_solve, SoC2Vol
+from vsp_analysis import  loadAnalysisResults
+
 
 ## Constant values
 g = PhysicalConstants.g
@@ -32,7 +34,6 @@ class MissionAnalyzer():
         self.convert_batteryCSV_to_ndarray(self.propulsionSpecs.battery_data_path)
         self.clearState()
         self.setAuxVals()
-        # self.SoC2Vol_interp()
 
     def _convert_units(self, results: AircraftAnalysisResults) -> AircraftAnalysisResults:
         # Create new aircraft instance with converted units
@@ -140,8 +141,8 @@ class MissionAnalyzer():
         voltage_array = df['Voltage'].to_numpy()
         current_array = df['Current'].to_numpy()
         dt_array = np.diff(time_array, prepend=time_array[0])
-        cumulative_current = np.cumsum(current_array*dt_array)
-        SoC_array = 100 - (1000 * cumulative_current / (36 * self.presetValues.max_battery_capacity))
+        cumulative_Wh = np.cumsum(voltage_array*current_array*dt_array) * self.propulsionSpecs.n_cell / 3600
+        SoC_array = 100 - (cumulative_Wh / self.propulsionSpecs.battery_Wh)*100
         mask = SoC_array >= 0
         time_array = time_array[mask]
         voltage_array = voltage_array[mask]
@@ -149,9 +150,38 @@ class MissionAnalyzer():
         SoC_array = SoC_array[mask]
         battery_array = np.column_stack((time_array, voltage_array, current_array, SoC_array))
         self.battery_array = battery_array[battery_array[:, 3].argsort()]
-        
         return
-          
+    
+    def clearState(self):
+        self.state = PlaneState()
+        self.stateLog = []
+    
+    def setAuxVals(self) -> None:
+        
+        self.weight = self.aircraft.m_total * g
+        
+        self.v_takeoff = (math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_flap_max)))
+
+        self.T_max = self.presetValues.Thrust_max * g    # Convert kgf to N
+
+        # Create focused alpha range from -10 to 10 degrees
+        alpha_extended = np.linspace(-10, 10, 2000)  # 0.01 degree resolution
+    
+        # Create lookup tables
+        CL_table = np.interp(alpha_extended, 
+                            self.analResult.alpha_list,
+                            self.analResult.CL)
+        CD_table = np.interp(alpha_extended, 
+                            self.analResult.alpha_list,
+                            self.analResult.CD_total)
+        
+        # Create lambda functions for faster lookup
+        self.CL_func = lambda alpha: np.interp(alpha, alpha_extended, CL_table)
+        self.CD_func = lambda alpha: np.interp(alpha, alpha_extended, CD_table)
+        self.alpha_func = lambda CL: np.interp(CL, CL_table, alpha_extended)
+        return
+    
+    
     def run_mission(self, missionPlan: List[MissionConfig],clearState = True) -> int:
 
         if(clearState): self.clearState()
@@ -252,7 +282,7 @@ class MissionAnalyzer():
             N_laps += 1
 
             self.run_mission(lap2,clearState=False)
-
+            
             # Check if we've exceeded time limit or voltage limit
             if (self.state.time > time_limit or 
                 self.state.battery_voltage < self.presetValues.min_battery_voltage):
@@ -264,241 +294,119 @@ class MissionAnalyzer():
         
         return N_laps
         
-    def clearState(self):
-        self.state = PlaneState()
-        self.stateLog = []
-
-    # update the current state of the simulation
-    def logState(self) -> None:
-        # Append current state as a copy
-        self.stateLog.append(PlaneState(
-            position=self.state.position.copy(),
-            velocity=self.state.velocity.copy(), 
-            acceleration=self.state.acceleration.copy(),
-            time=self.state.time,
-            throttle=self.state.throttle,
-            loadfactor=self.state.loadfactor,
-            AOA=self.state.AOA,
-            climb_pitch_angle=self.state.climb_pitch_angle,
-            bank_angle=self.state.bank_angle,
-            battery_capacity=self.state.battery_capacity,
-            battery_voltage=self.state.battery_voltage,
-            current_draw=self.state.current_draw,
-            phase=self.state.phase
-        ))
-
-    def setAuxVals(self) -> None:
-        self.weight = self.aircraft.m_total * g
-
-        # self.v_stall = math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_max))
-        self.v_takeoff = (math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_flap_max)))
-
-        # Convert kgf to N
-        self.T_max = self.presetValues.Thrust_max * g 
-
-        # Calculate maximum thrust at each phase (N)
-        self.T_takeoff = self.missionParam.throttle_takeoff * self.T_max
-        self.T_climb = self.missionParam.throttle_climb * self.T_max
-        self.T_level = self.missionParam.throttle_level * self.T_max
-        self.T_turn = self.missionParam.throttle_turn * self.T_max
-
-        ## calulate lift, drag coefficient at a specific AOA using interpolation function (with no flap)
-        # how to use : if you want to know CL at AOA 3.12, use float(CL_func(3.12)) 
-        # multiply (lh-lw) / lh at CL to consider the effect from horizontal tail wing
-        # interpolate CD using quadratic function 
-        # alpha_func : function to calculate AOA from given CL value
-
-
-         # Create focused alpha range from -10 to 10 degrees
-        alpha_extended = np.linspace(-10, 10, 2000)  # 0.01 degree resolution
-    
-        # Create lookup tables
-        CL_table = np.interp(alpha_extended, 
-                            self.analResult.alpha_list,
-                            self.analResult.CL)
-        CD_table = np.interp(alpha_extended, 
-                            self.analResult.alpha_list,
-                            self.analResult.CD_total)
-        
-        # Create lambda functions for faster lookup
-        self.CL_func = lambda alpha: np.interp(alpha, alpha_extended, CL_table)
-        self.CD_func = lambda alpha: np.interp(alpha, alpha_extended, CD_table)
-        self.alpha_func = lambda CL: np.interp(CL, CL_table, alpha_extended)
-
-       # self.CL_func = interp1d(self.analResult.alpha_list,
-       #                         float((self.analResult.Lh-self.analResult.Lw) / self.analResult.Lh) * np.array(self.analResult.CL), 
-       #                         kind = 'linear', 
-       #                         bounds_error = False, fill_value = "extrapolate")
-
-       # self.CD_func = interp1d(self.analResult.alpha_list, 
-       #                         self.analResult.CD_total, 
-       #                         kind = 'quadratic',
-       #                         bounds_error = False, fill_value = 'extrapolate')
-
-       # self.alpha_func = interp1d(
-       #                         (self.analResult.Lh-self.analResult.Lw) 
-       #                         / self.analResult.Lh * np.array(self.analResult.CL), 
-       #                            self.analResult.alpha_list, 
-       #                            kind='linear',
-       #                            bounds_error=False, fill_value='extrapolate') 
-        return
-
-    # def SoC2Vol_interp(self) -> None:
-    #     """
-    #     SOC(State of Charge) 값을 입력받아 대응하는 Voltage 값을 반환하는 함수
-
-    #     Parameters:
-    #         file_path (str): CSV 파일 경로
-    #         soc_input (float or list of floats): 계산할 SOC 값 (0% ~ 100%)
-    #         C_nom (int): 배터리 정격 용량 (mAh). 기본값 2250 mAh.
-
-    #     Returns:
-    #         list: SOC 입력값에 대응하는 Voltage 값
-    #     """
-    #     # read data
-    #     file_path = r"data/2.25Ah Discharge Profile.csv"
-    #     df = pd.read_csv(file_path, skiprows=17, on_bad_lines='skip') 
-    #     df.columns = ["Test", "Time (s)", "Voltage (V)", "Current", "Temp (F)"]
-
-    #     df["Time (s)"] = pd.to_numeric(df["Time (s)"], errors='coerce')
-    #     df["Voltage (V)"] = pd.to_numeric(df["Voltage (V)"], errors='coerce')
-    #     df["Current"] = pd.to_numeric(df["Current"], errors='coerce')
-
-    #     # SOC(State of Charge)
-    #     dt = 1  # time interval 1 second
-    #     df["SOC (%)"] = 100 - (df["Current"].cumsum() * dt / 3600) / (self.presetValues.max_battery_capacity / 1000) * 100
-
-    #     # SoC must be positive
-    #     filtered_df = df[df["SOC (%)"] > 0]
-
-    #     SoC_extended = np.linspace(0,100,10000)
-
-    #     # Interpolation
-    #     SoC2Vol_table = np.interp(
-    #         SoC_extended,
-    #         filtered_df["SOC (%)"],
-    #         filtered_df["Voltage (V)"], 
-    #     )
-
-    #     self.SoC2Vol = lambda SoC: np.interp(SoC, SoC_extended, SoC2Vol_table)
-
-    #     return
-
-    ## Previously battery
-    def updateBatteryState(self, T) -> None :
-        """
-        T: 두 모터의 총 추력(N), 배터리 하나의 전기용량으로 계산하기 때문에 power 계산식에서 /2
-    
-        SoC vs Voltage 정보는 노션 Sizing/추친 참고
-        """
-        # TODO power 계산식 정확한 식으로 수정 필요하다.
-
-        # SoC: in units of %
-        SoC = self.state.battery_capacity / self.presetValues.max_battery_capacity* 100 
-
-        battery_voltage_one_cell = SoC2Vol(SoC,self.battery_array)
-
-        self.state.battery_voltage = battery_voltage_one_cell * 6
-    
-        # Calculate power required (simplified model: P = T^(3/2) / eta) (Watt)
-        power = (T / 2) ** 1.5 / self.presetValues.propulsion_efficiency # + 34.03
-
-        # Calculate current draw (I = P / V) in Amps, convert to mA
-        self.state.current_draw = (power / self.state.battery_voltage) * 1000.0 
-
-        # Convert mA to mAh/s, calculate battery_capacity
-        self.state.battery_capacity -= (self.state.current_draw / 3600.0) * self.dt     
-
-        return
-
-    def calculate_level_alpha(self, T, v):
+    def calculate_level_alpha(self, v):
         #  Function that calculates the AOA required for level flight using the velocity vector and thrust
         speed = fast_norm(v)
         def equation(alpha:float):
             CL = float(self.CL_func(alpha))
-            L,_ = self.calculateLift(CL,float(speed))
-            return float(L + T * math.sin(math.radians(alpha)) - self.weight)
+            L,_ = self.calculate_Lift_and_Loadfactor(CL,float(speed))
+            return float(L-self.weight)
 
         alpha_solution = fsolve(equation, 5, xtol=1e-8, maxfev=1000)
         return alpha_solution[0]
     
-    def calculateLift(self, CL, speed:float=-1):
+    def calculate_Lift_and_Loadfactor(self, CL, speed:float=-1):
         if(speed == -1): speed = fast_norm(self.state.velocity)
-        L = 0.5 * rho * fast_norm(self.state.velocity)**2 * self.analResult.Sref * CL
+        L = 0.5 * rho * speed**2 * self.analResult.Sref * CL
         return L, L/self.weight 
 
     def isBelowFlapTransition(self):
-        return self.state.position[2] < self.missionParam.h_flap_transition
+        return self.state.position[2] < self.missionParam.h_flap_transition  
+    
+    def updateBatteryState(self,SoC):
+        capacity = self.propulsionSpecs.battery_Wh * SoC / 100
+        capacity -= self.state.motor_input_power * self.dt / 3600 
+        self.state.battery_SoC = capacity/self.propulsionSpecs.battery_Wh * 100  
+        voltage_per_cell = SoC2Vol(self.state.battery_SoC,self.battery_array)
+        self.state.battery_voltage = self.propulsionSpecs.n_cell * voltage_per_cell
+        return
+        
    
     def takeoff_simulation(self):
-        self.dt= 0.01
+    
+        self.dt= 0.1
         self.state.velocity = np.array([0.0, 0.0, 0.0])
         self.state.position = np.array([0.0, 0.0, 0.0])
         self.state.time = 0.0
-
-        self.state.battery_capacity = self.presetValues.max_battery_capacity
-        
+        self.state.battery_voltage = 4.2 * self.propulsionSpecs.n_cell 
+        self.state.battery_SoC = 100.0
         # Ground roll until 0.9 times takeoff speed
         while fast_norm(self.state.velocity) < 0.9 * self.v_takeoff:
             
             self.state.time += self.dt
-
+            
+            self.state.throttle = self.missionParam.throttle_takeoff
+            _, _, self.state.Amps, self.state.motor_input_power, thrust_per_motor = thrust_analysis(
+                            self.state.throttle,
+                            fast_norm(self.state.velocity),
+                            self.state.battery_voltage,
+                            self.propulsionSpecs,
+                            self.propeller_array,
+                            0 #graphFlag
+            )
+            self.state.thrust = self.presetValues.number_of_motor * thrust_per_motor 
+            T_takeoff = self.state.thrust * g
+            
+            
             self.state.acceleration = calculate_acceleration_groundroll(
                     self.state.velocity,
                     self.aircraft.m_total,
                     self.weight,
                     self.analResult.Sref,
                     self.analResult.CD_flap_zero, self.analResult.CL_flap_zero,
-                    self.T_takeoff
+                    T_takeoff
                     )
 
             self.state.velocity -= self.state.acceleration * self.dt
             self.state.position += self.state.velocity * self.dt
             
-            L, loadfactor = self.calculateLift(self.analResult.CL_flap_zero)
-            
+            _, loadfactor = self.calculate_Lift_and_Loadfactor(self.analResult.CL_flap_zero)
             self.state.loadfactor = loadfactor
 
-            self.state.throttle = self.missionParam.throttle_takeoff
-            
             self.state.AOA = 0
             self.state.climb_pitch_angle =np.nan
-            self.state.bank_angle = np.degrees(0)
+            self.state.bank_angle = 0
 
-
-            self.updateBatteryState(self.T_takeoff)
+            self.updateBatteryState(self.state.battery_SoC)
             self.logState()
 
-
-
-            
         # Ground rotation until takeoff speed    
         while 0.9 * self.v_takeoff <= fast_norm(self.state.velocity) <= self.v_takeoff:
-
             self.state.time += self.dt
 
+            self.state.throttle = self.missionParam.throttle_takeoff
+            _, _, self.state.Amps, self.state.motor_input_power, thrust_per_motor = thrust_analysis(
+                            self.missionParam.throttle_takeoff,
+                            fast_norm(self.state.velocity),
+                            self.state.battery_voltage,
+                            self.propulsionSpecs,
+                            self.propeller_array,
+                            0 #graphFlag
+            )
+            self.state.thrust = self.presetValues.number_of_motor * thrust_per_motor 
+            T_takeoff = self.state.thrust * g
+            
             self.state.acceleration = calculate_acceleration_groundrotation(
                     self.state.velocity,
                     self.aircraft.m_total,
                     self.weight,
                     self.analResult.Sref,
                     self.analResult.CD_flap_max, self.analResult.CL_flap_max,
-                    self.T_takeoff
+                    T_takeoff
                     )
             self.state.velocity -= self.state.acceleration * self.dt
             self.state.position += self.state.velocity * self.dt
             
-            L, loadfactor = self.calculateLift(self.analResult.CL_flap_max)
+           
+            
+            _, loadfactor = self.calculate_Lift_and_Loadfactor(self.analResult.CL_flap_max)
             self.state.loadfactor = loadfactor
 
-            self.state.throttle = self.missionParam.throttle_takeoff
-            
             self.state.AOA=0
             self.state.climb_pitch_angle=np.nan
-            self.state.bank_angle = np.degrees(0)
+            self.state.bank_angle = 0
 
-
-            self.updateBatteryState(self.T_takeoff)
+            self.updateBatteryState(self.state.battery_SoC)
             self.logState()
 
     def climb_simulation(self, h_target, x_max_distance, direction):
@@ -508,26 +416,29 @@ class MissionAnalyzer():
             x_max_distance (float): Restricted x-coordinate for climb (m)
             direction (string): The direction of movement. Must be either 'left' or 'right'.
         """
+     
+        
         if self.state.position[2] > h_target: return
-        self.dt = 0.01
+        self.dt = 0.1
         n_steps = int(60 / self.dt)  # Max 60 seconds simulation
         break_flag = False
         alpha_w_deg = 0 
+        
         for step in range(n_steps):
-
+        
             self.state.time += self.dt
 
             # Calculate climb angle
             gamma_rad = math.atan2(self.state.velocity[2], abs(self.state.velocity[0]))
 
             if direction == 'right':
-                # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
+                # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -5 degree)
                 if(self.state.position[2] < self.missionParam.h_flap_transition and 
                    self.state.position[0] < x_max_distance):
                     alpha_w_deg = self.analResult.AOA_takeoff_max
                 elif(self.missionParam.h_flap_transition <= self.state.position[2] < h_target and 
                      self.state.position[0] < x_max_distance):
-                    load_factor = self.calculateLift(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
+                    load_factor = self.calculate_Lift_and_Loadfactor(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
             
                     if (load_factor < self.missionParam.max_load_factor and 
                         gamma_rad < math.radians(self.missionParam.max_climb_angle)):
@@ -545,17 +456,17 @@ class MissionAnalyzer():
                         alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)
                     else:
-                        alpha_w_deg -= 0.1
+                        alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)
             
             elif direction == 'left':
-                # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -2 degree)
+                # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -5 degree)
                 if(self.state.position[2] < self.missionParam.h_flap_transition and 
                    self.state.position[0] > x_max_distance):
                     alpha_w_deg = self.analResult.AOA_takeoff_max
                 elif(self.missionParam.h_flap_transition <= self.state.position[2] < h_target and 
                      self.state.position[0] > x_max_distance):
-                    load_factor = self.calculateLift(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
+                    load_factor = self.calculate_Lift_and_Loadfactor(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
             
                     if (load_factor < self.missionParam.max_load_factor and 
                         gamma_rad < math.radians(self.missionParam.max_climb_angle)):
@@ -573,16 +484,29 @@ class MissionAnalyzer():
                         alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)
                     else:
-                        alpha_w_deg -= 0.1
+                        alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)            
                     
-            # Calculate load factor
+                    
             if (self.isBelowFlapTransition()):
                 CL = self.analResult.CL_flap_max
             else:
                 CL = float(self.CL_func(alpha_w_deg))
-
-            # print(f"Gamma: f{gamma_rad}") 
+                
+            speed = fast_norm(self.state.velocity)  
+              
+            T_climb_max_per_motor = determine_max_thrust(speed,
+                                               self.state.battery_voltage,
+                                               self.propulsionSpecs,
+                                               self.propeller_array,
+                                               0#graphFlag
+            ) #kg
+            thrust_per_motor = T_climb_max_per_motor * self.missionParam.throttle_climb #kg
+            
+            _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
+            
+            T_climb = thrust_per_motor * self.presetValues.number_of_motor * g # total N
+            
             self.state.acceleration = RK4_step(self.state.velocity,self.dt,
                          lambda v: calculate_acceleration_climb(v, 
                                                                 self.aircraft.m_total,
@@ -594,7 +518,7 @@ class MissionAnalyzer():
                                                                 self.analResult.CD_flap_max,
                                                                 alpha_w_deg,
                                                                 gamma_rad,
-                                                                self.T_climb,
+                                                                T_climb,
                                                                 not self.isBelowFlapTransition()
                                                                 ))
             self.state.velocity[2] += self.state.acceleration[2]*self.dt
@@ -606,7 +530,7 @@ class MissionAnalyzer():
             self.state.position[0] += self.state.velocity[0]* self.dt
             self.state.position[2] += self.state.velocity[2]* self.dt
 
-            L, loadfactor = self.calculateLift(CL)
+            _, loadfactor = self.calculate_Lift_and_Loadfactor(CL)
             
             self.state.loadfactor = loadfactor
 
@@ -614,10 +538,10 @@ class MissionAnalyzer():
              
             self.state.AOA = alpha_w_deg
             self.state.climb_pitch_angle =alpha_w_deg + math.degrees(gamma_rad)
-            self.state.bank_angle = np.degrees(0)
+            self.state.bank_angle = 0
 
 
-            self.updateBatteryState(self.T_climb)
+            self.updateBatteryState(self.state.battery_SoC)
             self.logState()
 
             # break when climb angle goes to zero
@@ -626,6 +550,7 @@ class MissionAnalyzer():
                 break
 
     def level_flight_simulation(self, x_final, direction):
+     
         #print("\nRunning Level Flight Simulation...")
         max_steps = int(180/self.dt) # max 3 minuites
         # print(max_steps)
@@ -648,12 +573,9 @@ class MissionAnalyzer():
             speed = fast_norm(self.state.velocity)
             
             # Calculate alpha_w first
-            alpha_w_deg=self.calculate_level_alpha(self.T_level,self.state.velocity)
+            alpha_w_deg = self.calculate_level_alpha(self.state.velocity)
                 
-            
-
             # Speed limiting while maintaining direction
-
             if speed > self.missionParam.max_speed:  # Original speed limit
                 cruise_flag = 1
 
@@ -661,27 +583,53 @@ class MissionAnalyzer():
                 self.state.velocity = self.state.velocity * (self.missionParam.max_speed / speed)
                 T_cruise = 0.5 * rho * self.missionParam.max_speed**2 \
                                 * self.analResult.Sref * float(self.CD_func(alpha_w_deg))
+                T_cruise_max = determine_max_thrust(speed,
+                                               self.state.battery_voltage,
+                                               self.propulsionSpecs,
+                                               self.propeller_array,
+                                               0#graphFlag
+                ) #kg
+                T_cruise_max = T_cruise_max * self.presetValues.number_of_motor * g
+                T_cruise = min(T_cruise, T_cruise_max )
+                self.state.thrust = T_cruise / g #kg
+            
+                alpha_w_deg = self.calculate_level_alpha(self.state.velocity)
+                _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(
+                    self.state.thrust/self.presetValues.number_of_motor,
+                    speed,self.state.battery_voltage,
+                    self.propulsionSpecs.Kv,
+                    self.propulsionSpecs.R,
+                    self.propeller_array)
 
-                alpha_w_deg = self.calculate_level_alpha(T_cruise,self.state.velocity)
-                self.state.throttle = T_cruise / self.T_max
-
-                self.updateBatteryState(T_cruise)
+                self.updateBatteryState(self.state.battery_SoC)
     
                 self.state.acceleration = RK4_step(self.state.velocity,self.dt,
                              lambda v: calculate_acceleration_level(v,self.aircraft.m_total, 
                                                                     self.analResult.Sref,
                                                                     self.CD_func, alpha_w_deg,
                                                                     T_cruise))
+                if abs(self.state.acceleration[0]) > 0.1 : cruise_flag = 0
             else:
-                self.state.throttle= self.missionParam.throttle_level
-
-                self.updateBatteryState(self.T_level)
+                
+                T_level_max_per_motor = determine_max_thrust(
+                                                speed,
+                                                self.state.battery_voltage,
+                                                self.propulsionSpecs,
+                                                self.propeller_array,
+                                                0#graphFlag
+                ) #kg
+                thrust_per_motor = T_level_max_per_motor * self.missionParam.throttle_level #kg
+                self.state.thrust = self.presetValues.number_of_motor * thrust_per_motor #kg
+                _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
+                
+                T_climb = self.state.thrust * g # total N
+                self.updateBatteryState(self.state.battery_SoC)
 
                 self.state.acceleration =  RK4_step(self.state.velocity,self.dt,
                              lambda v: calculate_acceleration_level(v,self.aircraft.m_total, 
                                                                     self.analResult.Sref,
                                                                     self.CD_func, alpha_w_deg,
-                                                                    self.T_level))
+                                                                    T_climb))
 
                 
             # Update Acc, Vel, position
@@ -695,17 +643,14 @@ class MissionAnalyzer():
             
             # Calculate and store results
 
-            # TODO: 원본파일 (mission2 line 444)에선 speed를 다시 계산하지 않음!
-
-            L,load_factor = self.calculateLift(float(self.CL_func(alpha_w_deg)))
+            _,load_factor = self.calculate_Lift_and_Loadfactor(float(self.CL_func(alpha_w_deg)))
             
             self.state.loadfactor = load_factor 
             self.state.AOA = alpha_w_deg
-            self.state.bank_angle = math.degrees(0)
+            self.state.bank_angle = 0
             self.state.climb_pitch_angle = np.nan
-
-            
             self.logState()
+            
             # Check if we've reached target x position
             if direction == 'right':
                 if self.state.position[0] >= x_final:
@@ -713,7 +658,6 @@ class MissionAnalyzer():
             elif direction == 'left':
                 if self.state.position[0] <= x_final:
                     break
-
 
         return
 
@@ -723,8 +667,10 @@ class MissionAnalyzer():
           target_angle_degree (float): Required angle of coordinate level turn (degree)
           direction (string): The direction of movement. Must be either 'CW' or 'CCW'.
       """     
+    
+      
       speed = fast_norm(self.state.velocity) 
-
+      self.dt = 0.1  
       # Initialize turn tracking
       target_angle_rad = math.radians(target_angle_deg)
       turned_angle_rad = 0
@@ -743,56 +689,79 @@ class MissionAnalyzer():
           self.state.time += self.dt
 
           if speed < max_speed:
-              # Pre-calculate shared terms
-              dynamic_pressure = dynamic_pressure_base * speed * speed
+                # Pre-calculate shared terms
+                dynamic_pressure = dynamic_pressure_base * speed * speed
+                
+                CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
+                        float((max_load * weight)/(dynamic_pressure)))
+
+                alpha_turn = float(self.alpha_func(CL))
+                L = dynamic_pressure * CL
+                phi_rad = math.acos(weight/L)
+                
+                a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
+                R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
+                omega = speed / R
+
+                self.state.loadfactor = 1 / math.cos(phi_rad)
+
+                CD = float(self.CD_func(alpha_turn))
+                D = CD * dynamic_pressure
               
-              CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
-                      float((max_load * weight)/(dynamic_pressure)))
-
-              alpha_turn = float(self.alpha_func(CL))
-              L = dynamic_pressure * CL
-              phi_rad = math.acos(weight/L)
-              
-              a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
-              R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
-              omega = speed / R
-
-              self.state.loadfactor = 1 / math.cos(phi_rad)
-
-              CD = float(self.CD_func(alpha_turn))
-              D = CD * dynamic_pressure
-
-              a_tangential = (self.T_turn - D) / self.aircraft.m_total
-              self.state.throttle = self.missionParam.throttle_turn
-
-              speed += a_tangential * self.dt
-              self.updateBatteryState(self.T_turn)
+                T_turn_max_per_motor = determine_max_thrust(
+                                                speed,
+                                                self.state.battery_voltage,
+                                                self.propulsionSpecs,
+                                                self.propeller_array,
+                                                0#graphFlag
+                ) #kg
+                thrust_per_motor = T_turn_max_per_motor * self.missionParam.throttle_turn #kg
+                self.state.thrust = self.presetValues.number_of_motor * thrust_per_motor #kg
+                _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
+                
+                T_turn = self.state.thrust * g # total N              
+                a_tangential = (T_turn - D) / self.aircraft.m_total
+                
+                speed += a_tangential * self.dt
+                self.updateBatteryState(self.state.battery_SoC)
 
           else:
-              speed = max_speed
-              dynamic_pressure = dynamic_pressure_base * speed * speed
+                speed = max_speed
+                dynamic_pressure = dynamic_pressure_base * speed * speed
               
-              CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
+                CL = min(float(self.CL_func(self.analResult.AOA_turn_max)), 
                       float((max_load * weight)/(dynamic_pressure)))
                       
-              alpha_turn = float(self.alpha_func(CL))
-              L = dynamic_pressure * CL
-              phi_rad = math.acos(weight/L)
+                alpha_turn = float(self.alpha_func(CL))
+                L = dynamic_pressure * CL
+                phi_rad = math.acos(weight/L)
 
-              a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
-              R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
-              omega = speed / R
+                a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
+                R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
+                omega = speed / R
 
-              self.state.loadfactor = 1 / math.cos(phi_rad)
+                self.state.loadfactor = 1 / math.cos(phi_rad)
 
-              CD = float(self.CD_func(alpha_turn))
-              D = CD * dynamic_pressure
-              T = min(D, self.T_turn)
-              self.state.throttle = T/self.T_max
-              a_tangential = (T - D) / self.aircraft.m_total
-              speed += a_tangential * self.dt
+                CD = float(self.CD_func(alpha_turn))
+                D = CD * dynamic_pressure
+              
+                T_turn_max_per_motor = determine_max_thrust(
+                                                speed,
+                                                self.state.battery_voltage,
+                                                self.propulsionSpecs,
+                                                self.propeller_array,
+                                                0#graphFlag
+                ) #kg
+                
+                T = min(D, T_turn_max_per_motor*self.presetValues.number_of_motor*g)
+                self.state.thrust = T/g
+                thrust_per_motor = self.state.thrust / self.presetValues.number_of_motor
+                _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
+                
+                a_tangential = (T - D) / self.aircraft.m_total
+                speed += a_tangential * self.dt
 
-              self.updateBatteryState(T)
+                self.updateBatteryState(self.state.battery_SoC)
 
           # Calculate turn center
           sin_current = math.sin(current_angle_rad)
@@ -838,6 +807,30 @@ class MissionAnalyzer():
           self.state.climb_pitch_angle = np.nan
 
           self.logState() 
+
+        # update the current state of the simulation
+    def logState(self) -> None:
+        # Append current state as a copy
+        self.stateLog.append(PlaneState(
+            position=self.state.position.copy(),
+            velocity=self.state.velocity.copy(), 
+            acceleration=self.state.acceleration.copy(),
+            time=self.state.time,
+            throttle=self.state.throttle,
+            thrust=self.state.thrust,
+            loadfactor=self.state.loadfactor,
+            AOA=self.state.AOA,
+            climb_pitch_angle=self.state.climb_pitch_angle,
+            bank_angle=self.state.bank_angle,
+            phase=self.state.phase,
+            battery_SoC=self.state.battery_SoC,
+            battery_voltage=self.state.battery_voltage,
+            Amps=self.state.Amps
+        ))
+    
+## end of class    
+#########################################################
+
 
 def RK4_step(v, dt, func):
     """ Given v and a = f(v), solve for (v(t+dt)-v(dt))/dt or approximately a(t+dt/2)"""
@@ -923,14 +916,16 @@ def get_state_df(stateLog):
             'acceleration': np.array([state.acceleration[0],state.acceleration[1],state.acceleration[2]]),
             'time': state.time,
             'throttle': state.throttle,
+            'thrust' : state.thrust,
             'loadfactor': state.loadfactor,
             'AOA': state.AOA,
             'climb_pitch_angle': state.climb_pitch_angle,
             'bank_angle': state.bank_angle,
             'phase': state.phase,
-            'battery_capacity': state.battery_capacity,
+            'battery_SoC': state.battery_SoC,
             'battery_voltage': state.battery_voltage,
-            'current_draw': state.current_draw
+            'Amps' : state.Amps,
+            'motor_input_power': state.motor_input_power
         }
         states_dict.append(state_dict)
     return pd.DataFrame(states_dict)
@@ -1025,10 +1020,10 @@ def visualize_mission(stateLog):
 
     # Battery and throttle
     ax_battery = fig.add_subplot(gs[1, 2])
-    ax_battery.plot(stateLog['time'], stateLog['battery_capacity'], label='Battery Capacity')
+    ax_battery.plot(stateLog['time'], stateLog['battery_SoC'], label='Battery SoC')
     ax_battery.set_xlabel('Time (s)')
-    ax_battery.set_ylabel('Battery Capacity (mAh)')
-    ax_battery.set_title('Battery Capacity')
+    ax_battery.set_ylabel('Battery SoC (%)')
+    ax_battery.set_title('Battery SoC')
     ax_battery.grid(True)
 
     ax_throttle = ax_battery.twinx()
@@ -1057,3 +1052,58 @@ def visualize_mission(stateLog):
 
     plt.tight_layout()
     plt.show()
+
+
+if __name__=="__main__":
+    presetValues = PresetValues(
+            m_x1 = 0.2,                       # kg
+            x1_flight_time = 30,              # sec
+            number_of_motor= 1,
+            max_battery_capacity = 2250,      # mAh (per one battery)
+            min_battery_voltage = 21.9,       # 3.65 * 6
+            Thrust_max = 6.0,
+            propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
+            score_weight_ratio = 0.5            # mission2/3 score weight ratio
+            )
+    a=loadAnalysisResults(1963897528543531429)
+    param = MissionParameters(
+        max_battery_capacity = 2250,
+        throttle_takeoff = 0.9,              # Fixed
+        throttle_climb = 0.9,
+        throttle_level = 0.5,
+        throttle_turn = 0.5,                
+        max_climb_angle = 40,                # Fixed
+        max_speed= 40,                       # Fixed
+        max_load_factor = 4.0,               # Fixed
+        h_flap_transition = 5                # Fixed
+    )
+    
+    presetValues = PresetValues(
+        m_x1= 0.20,
+        x1_flight_time= 30,
+        number_of_motor= 2,
+        max_battery_capacity= 2250,
+        min_battery_voltage= 21.6,
+
+        Thrust_max= 6.0,
+        propulsion_efficiency= 0.2,
+        score_weight_ratio= 0.5               
+    )
+        
+    propulsionSpecs = PropulsionSpecs(
+        propeller_data_path = "data/Propeller10x6E.csv",
+        battery_data_path = "data/Maxamps_2250mAh_6S.csv",
+        Kv = 109.91,
+        R = 0.062,
+        number_of_battery = 2,
+        n_cell = 6,
+        battery_Wh = 49.95,
+        max_current = 60,
+        max_power = 1332    
+    )
+        
+        
+    missionAnalyzer = MissionAnalyzer(a,param,presetValues, propulsionSpecs)
+    missionAnalyzer.run_mission3()
+    visualize_mission(missionAnalyzer.stateLog)  
+ 

@@ -13,10 +13,10 @@ PhysicalConstants = __PhysicalConstants__()
 class PresetValues:
     m_x1: float
     x1_flight_time: float
+    number_of_motor : int
 
     max_battery_capacity: float
     min_battery_voltage: float
-
     Thrust_max: float
     propulsion_efficiency: float
     score_weight_ratio: float=0.5 
@@ -27,6 +27,9 @@ class PropulsionSpecs:
     battery_data_path : str
     Kv : float
     R : float
+    number_of_battery : int
+    n_cell : int
+    battery_Wh : float
     max_current : float
     max_power : float
     

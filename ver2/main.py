@@ -18,6 +18,7 @@ def main():
     presetValues = PresetValues(
         m_x1 = 0.25,                        # kg
         x1_flight_time = 30,                # sec
+        number_of_motor = 2,                 
         max_battery_capacity = 2250,        # mAh (per one battery)
         Thrust_max = 6.0,                   # kg (two motors)
         min_battery_voltage = 21.8,         # V 
@@ -30,6 +31,9 @@ def main():
         battery_data_path = "data/Maxamps_2250mAh_6S.csv",
         Kv = 109.91,
         R = 0.062,
+        number_of_battery = 2,
+        n_cell = 6,
+        battery_Wh = 49.95,
         max_current = 60,
         max_power = 1332    
     )

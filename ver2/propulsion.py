@@ -2,11 +2,16 @@ import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from config import PropulsionSpecs
 
 
+def thrust_analysis(throttle:float, speed:float, voltage:float, propulsionSpecs:PropulsionSpecs, propeller_array:np.ndarray, graphFlag:bool):
 
-def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:float, max_current:float, max_power:float, propeller_array:np.ndarray, graphFlag:bool):
-
+    Kv = propulsionSpecs.Kv
+    R = propulsionSpecs.R
+    max_current = propulsionSpecs.max_current
+    max_power = propulsionSpecs.max_power
+    
     expanded_results_array = propeller_fixspeed_data(speed,propeller_array)
     if (expanded_results_array==-1).all()==True : return 0,0,0,0,0
     
@@ -69,8 +74,13 @@ def thrust_analysis(throttle:float, speed:float, voltage:float, Kv:float, R:floa
     return RPM, Torque, I, Power, Thrust
 
 
-def determine_max_thrust(speed:float, voltage:float, Kv:float, R:float, max_current:float, max_power:float, propeller_array:np.ndarray, graphFlag:bool):
+def determine_max_thrust(speed:float, voltage:float, propulsionSpecs:PropulsionSpecs, propeller_array:np.ndarray, graphFlag:bool):
 
+    Kv = propulsionSpecs.Kv
+    R = propulsionSpecs.R
+    max_current = propulsionSpecs.max_current
+    max_power = propulsionSpecs.max_power
+    
     propeller_array_fixspeed = propeller_fixspeed_data(speed,propeller_array)
     if (propeller_array_fixspeed==-1).all()==True : return 0
     
@@ -110,7 +120,7 @@ def determine_max_thrust(speed:float, voltage:float, Kv:float, R:float, max_curr
         
     if motor_max_rpm >= propeller_max_rpm:
         max_thrust = np.interp(max_torque,propeller_sortedby_torque[:,1],propeller_sortedby_torque[:,2])
-        return max_thrust
+        return max(max_thrust,0)
     else:
         
         ## find intersection
@@ -135,14 +145,15 @@ def determine_max_thrust(speed:float, voltage:float, Kv:float, R:float, max_curr
 
         sign_changes = np.where(np.diff(np.sign(diff)) != 0)[0]
         if len(sign_changes) == 0: # Overcurrent
-            return np.interp(max_torque,propeller_sortedby_torque[:,1],propeller_sortedby_torque[:,2])
+            max_thrust = np.interp(max_torque,propeller_sortedby_torque[:,1],propeller_sortedby_torque[:,2]) 
+            return max(max_thrust,0)
 
         idx = sign_changes[0]
 
         RPM = rpm_interp[idx]
         max_thrust = np.interp(RPM,propeller_array_fixspeed[:, 0], propeller_array_fixspeed[:, 2])
         
-        return max_thrust
+        return max(max_thrust,0)
     
     
 def propeller_fixspeed_data(speed,propeller_array):
@@ -195,6 +206,8 @@ def propeller_fixspeed_data(speed,propeller_array):
     return propeller_array_fixspeed
 
 def thrust_reverse_solve(T_desired,speed,voltage, Kv, R, propeller_array):
+    
+    if T_desired == 0 : return 0,0,0,0,0
     
     propeller_array_fixspeed = propeller_fixspeed_data(speed,propeller_array)
     if (propeller_array_fixspeed==-1).all()==True : return 0,0,0,0,0
