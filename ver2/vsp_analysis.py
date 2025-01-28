@@ -64,10 +64,10 @@ class VSPAnalyzer:
                               boom_density_big:float=0.098,
                               clearModel:bool=True):
         print("Starting Analysis")
-            # Calculate coefficients with flaps at zero
+        # Calculate coefficients with flaps at zero
         results_no_flap = self._calculate_coeffs_helper(fileName, alpha_start, alpha_end, alpha_step,
-                                                   CD_fuse, Re, Mach, boom_density_2018, boom_density_1614,
-                                                   boom_density_86, boom_density_big, clearModel, 0.0)
+                                                        Re, Mach, boom_density_2018, boom_density_1614,
+                                                        boom_density_86, boom_density_big, clearModel, 0.0)
         
         # Find index closest to AOA_stall and zero
         alpha_list = results_no_flap['alpha_list']
@@ -76,10 +76,9 @@ class VSPAnalyzer:
 
         # Calculate coefficients with flaps at max angle
         results_flap_max = self._calculate_coeffs_helper(fileName, 0, AOA_stall, AOA_stall,
-                                                  np.full(2, CD_fuse[0]), 
-                                                         Re, Mach, boom_density_2018, boom_density_1614,
-                                                  boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
-                                                         do_mass_analysis=False)
+                                                        Re, Mach, boom_density_2018, boom_density_1614,
+                                                        boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
+                                                        do_mass_analysis=False)
 
         # Get CL_max from the zero flaps data
         # CL_max = results_no_flap['CL'][stall_idx]
@@ -116,20 +115,20 @@ class VSPAnalyzer:
                 AOA_turn_max=AOA_turn_max,
                 CL_flap_max=CL_flap_max,
                 CL_flap_zero=CL_flap_zero,
-                CD_flap_max=CD_flap_max,
-                CD_flap_zero=CD_flap_zero
+                CD_flap_max=CD_flap_max + CD_fuse[-1],
+                CD_flap_zero=CD_flap_zero + CD_fuse[0]
         )
 
     def _calculate_coeffs_helper(self, fileName, alpha_start, alpha_end, alpha_step,
-                           CD_fuse, Re, Mach, boom_density_2018, boom_density_1614,
-                           boom_density_86, boom_density_big, clearModel, flap_angle, 
-                                 do_mass_analysis=True, do_geom_analysis=True):
+                                Re, Mach, boom_density_2018, boom_density_1614,
+                                boom_density_86, boom_density_big, clearModel, flap_angle, 
+                                do_mass_analysis=True, do_geom_analysis=True):
         """Helper method to calculate coefficients for a given flap angle"""
         
         point_number = round(int((alpha_end - alpha_start) / alpha_step) + 1)
         
-        if(CD_fuse.size != point_number):
-            raise ValueError(f"CD_fuse size({CD_fuse.size}) doesn't match point_number({point_number})")
+        # if(CD_fuse.size != point_number):
+        #     raise ValueError(f"CD_fuse size({CD_fuse.size}) doesn't match point_number({point_number})")
 
         if(clearModel):
             vsp.ClearVSPModel()
