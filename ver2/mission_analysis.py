@@ -1157,20 +1157,19 @@ if __name__=="__main__":
     )
     
     presetValues = PresetValues(
-        m_x1= 0.20,
-        x1_flight_time= 30,
-        number_of_motor= 2,
-        max_battery_capacity= 2250,
-        min_battery_voltage= 21.6,
-
-        Thrust_max= 6.0,
-        propulsion_efficiency= 0.2,
-        score_weight_ratio= 0.5               
+        m_x1 = 0.25,                        # kg
+        x1_flight_time = 30,                # sec
+        number_of_motor = 2,                 
+        max_battery_capacity = 2250,        # mAh (per one battery)
+        Thrust_max = 6.0,                   # kg (two motors)
+        min_battery_voltage = 21.8,         # V 
+        propulsion_efficiency = 0.1326,     # Efficiency of the propulsion system
+        score_weight_ratio = 0.5            # mission2/3 score weight ratio            
     )
         
     propulsionSpecs = PropulsionSpecs(
-        propeller_data_path = "data/Propeller10x6E.csv",
-        battery_data_path = "data/Maxamps_2250mAh_6S.csv",
+        propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
+        battery_data_path = "data/batteryDataCSV/Maxamps_2250mAh_6S.CSV",
         Kv = 109.91,
         R = 0.062,
         number_of_battery = 2,
@@ -1180,8 +1179,7 @@ if __name__=="__main__":
         max_power = 1332    
     )
         
-        
     missionAnalyzer = MissionAnalyzer(a,param,presetValues, propulsionSpecs)
     missionAnalyzer.run_mission3()
-    visualize_mission(missionAnalyzer.stateLog)  
+    visualize_mission(missionAnalyzer.stateLog)
  
