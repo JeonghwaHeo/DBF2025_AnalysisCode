@@ -17,7 +17,6 @@ class PresetValues:
 
     max_battery_capacity: float
     min_battery_voltage: float
-    Thrust_max: float
     propulsion_efficiency: float
     score_weight_ratio: float=0.5 
 

@@ -162,8 +162,6 @@ class MissionAnalyzer():
         
         self.v_takeoff = (math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_flap_max)))
 
-        self.T_max = self.presetValues.Thrust_max * g    # Convert kgf to N
-
         # Create focused alpha range from -10 to 10 degrees
         alpha_extended = np.linspace(-10, 10, 2000)  # 0.01 degree resolution
     
@@ -817,6 +815,7 @@ class MissionAnalyzer():
           self.logState() 
 
         # update the current state of the simulation
+    
     def logState(self) -> None:
         # Append current state as a copy
         self.stateLog.append(PlaneState(
@@ -1133,17 +1132,9 @@ def visualize_mission(stateLog):
 
 
 if __name__=="__main__":
-    presetValues = PresetValues(
-            m_x1 = 0.2,                       # kg
-            x1_flight_time = 30,              # sec
-            number_of_motor= 1,
-            max_battery_capacity = 2250,      # mAh (per one battery)
-            min_battery_voltage = 21.9,       # 3.65 * 6
-            Thrust_max = 6.0,
-            propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
-            score_weight_ratio = 0.5            # mission2/3 score weight ratio
-            )
+
     a=loadAnalysisResults(1963897528543531429)
+    
     param = MissionParameters(
         max_battery_capacity = 2250,
         throttle_takeoff = 0.9,              # Fixed
@@ -1161,7 +1152,6 @@ if __name__=="__main__":
         x1_flight_time = 30,                # sec
         number_of_motor = 2,                 
         max_battery_capacity = 2250,        # mAh (per one battery)
-        Thrust_max = 6.0,                   # kg (two motors)
         min_battery_voltage = 21.8,         # V 
         propulsion_efficiency = 0.1326,     # Efficiency of the propulsion system
         score_weight_ratio = 0.5            # mission2/3 score weight ratio            
@@ -1179,7 +1169,7 @@ if __name__=="__main__":
         max_power = 1332    
     )
         
-    missionAnalyzer = MissionAnalyzer(a,param,presetValues, propulsionSpecs)
+    missionAnalyzer = MissionAnalyzer(a, param, presetValues, propulsionSpecs)
     missionAnalyzer.run_mission3()
     visualize_mission(missionAnalyzer.stateLog)
  
