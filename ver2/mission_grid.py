@@ -143,7 +143,8 @@ def runMissionGridSearch(hashVal:int,
 
         except Exception as e:
             print(f"Failed with throttles M2 : Climb({M2_throttle_climb:.2f}) Trun({M2_throttle_turn:.2f}) Level ({M2_throttle_level:.2f})")
-            print(f"Failed with throttles M3 : Climb({M3_throttle_climb:.2f}) Trun({M3_throttle_turn:.2f}) Level ({M3_throttle_level:.2f}): {str(e)}")
+            print(f"Failed with throttles M3 : Climb({M3_throttle_climb:.2f}) Trun({M3_throttle_turn:.2f}) Level ({M3_throttle_level:.2f})")
+            print(f"Error : {str(e)}")
             continue
    
     print("\nDone Mission Analysis ^_^")
