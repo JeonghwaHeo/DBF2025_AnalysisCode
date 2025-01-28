@@ -21,7 +21,7 @@ if __name__ == "__main__":
     show_subparsers = show_parser.add_subparsers(dest="type", required=True)
     
     show_aircraft_parser = show_subparsers.add_parser("aircraft", help="Show aircraft analysis results.")
-    show_aircraft_parser.add_argument("hashVal", type=int, help="Enter the aircraft hash which you want to check.")
+    show_aircraft_parser.add_argument("hashVal", type=str, help="Enter the aircraft hash which you want to check.")
     
     show_mission_parser = show_subparsers.add_parser("mission2", help="Show aircraft analysis results.")
     show_mission_parser.add_argument("resultID", type=str, help="Enter the resultID which you want to check.")
@@ -33,7 +33,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.main_command == "show":
         if args.type == "aircraft":
-            aircraft_result = loadAnalysisResults(args.hashVal)
+            hashVal = "'" + args.hashVal +"'"
+            aircraft_result = loadAnalysisResults(hashVal)
             visualize_results(aircraft_result)
             
         elif args.type == "mission2":

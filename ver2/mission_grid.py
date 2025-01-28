@@ -13,7 +13,7 @@ import time
 from dataclasses import asdict
 import csv
 
-def runMissionGridSearch(hashVal:int, 
+def runMissionGridSearch(hashVal:str, 
                           presetValues:PresetValues,
                           missionParamConstraints:MissionParamConstraints, 
                           propulsionSpecs:PropulsionSpecs,
@@ -149,9 +149,9 @@ def runMissionGridSearch(hashVal:int,
    
     print("\nDone Mission Analysis ^_^")
 
-def writeMissionAnalysisResults(hashVal, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
+def writeMissionAnalysisResults(hashVal:str, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
     existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
-    base_row = existing_df[existing_df['hash'] == int(hashVal)]
+    base_row = existing_df[existing_df['hash'] == hashVal]
     base_row_dict = base_row.to_dict(orient="records")[0]
     preset_dict = vars(presetValues)
     propulsion_dict = vars(propulsionSpecs)

@@ -11,7 +11,7 @@ from config import *
 
 def main():
 
-    # removeAnalysisResults(csvPath = "data/test.csv")
+    removeAnalysisResults(csvPath = "data/test.csv")
     removeAnalysisResults(csvPath = "data/total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
 
@@ -53,7 +53,7 @@ def main():
         AR_max = 5.45,
         AR_interval = 0.5,
         
-        taper_min = 0.55,
+        taper_min = 0.45,
         taper_max = 0.55,                      
         taper_interval = 0.1,
         

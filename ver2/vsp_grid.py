@@ -43,8 +43,8 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
                 if aircraftParamConstraint.wing_loading_min <= wing_loading <= aircraftParamConstraint.wing_loading_max:
                         filtered_combinations.append((span, AR, taper, twist, m_total))
 
-        print(f"총 조합 수 (필터 적용 전): {len(span_list) * len(AR_list) * len(taper_list) * len(twist_list) * len(total_mass_list)}")
-        print(f"유효한 조합 수 (필터 적용 후): {len(filtered_combinations)}")
+        print(f"Total number of combinations (before applying constraints): {len(span_list) * len(AR_list) * len(taper_list) * len(twist_list) * len(total_mass_list)}")
+        print(f"Valid number of combinations (after applying constraints): {len(filtered_combinations)}")
         
         print(f"\nspan list: {span_list}")
         print(f"AR list: {AR_list}")

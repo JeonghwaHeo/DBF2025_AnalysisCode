@@ -84,7 +84,6 @@ class Aircraft:
             # Create a hash using SHA-256
             hash_obj = hashlib.sha256(json_str.encode())
             
-            # Convert the first 8 bytes of the hash to an integer
             return int.from_bytes(hash_obj.digest()[:8], byteorder='big')
 
 
