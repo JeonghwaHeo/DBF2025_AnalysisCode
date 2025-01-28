@@ -42,16 +42,16 @@ def main():
 
         m_total_min = 8500.0,                # g
         m_total_max = 8500.0,
-        m_total_interval = 100.0,
+        m_total_interval = 500.0,
         
         # wing parameter ranges
         span_min = 1800.0,                   # mm
         span_max = 1800.0,                   
-        span_interval = 50.0,
+        span_interval = 100.0,
     
         AR_min = 5.45,                  
         AR_max = 5.45,
-        AR_interval = 0.05,
+        AR_interval = 0.5,
         
         taper_min = 0.55,
         taper_max = 0.55,                      
@@ -62,8 +62,8 @@ def main():
         twist_interval = 1.0,
 
         # wing loading limit
-        wing_loading_min = 1,
-        wing_loading_max = 17
+        wing_loading_min = 5,
+        wing_loading_max = 15
         )
     
     baseAircraft = Aircraft(
@@ -96,7 +96,7 @@ def main():
         vertical_ThickChord = 9  
         )
 
-    # runVSPGridAnalysis(aircraftParamConstraints,presetValues,baseAircraft)
+    runVSPGridAnalysis(aircraftParamConstraints,presetValues,baseAircraft)
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
@@ -119,7 +119,7 @@ def main():
             M3_throttle_climb_max = 0.9,
             M3_throttle_turn_min = 0.6,
             M3_throttle_turn_max = 0.6,
-            M3_throttle_level_min = 0.5,
+            M3_throttle_level_min = 0.6,
             M3_throttle_level_max = 0.6,
             M3_throttle_analysis_interval = 0.05
             )
