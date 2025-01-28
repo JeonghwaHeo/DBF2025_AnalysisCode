@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-from config import PropulsionSpecs
+from setup_dataclass import PropulsionSpecs
 
 
 def thrust_analysis(throttle:float, speed:float, voltage:float, propulsionSpecs:PropulsionSpecs, propeller_array:np.ndarray, graphFlag:bool):

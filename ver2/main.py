@@ -6,8 +6,8 @@ from vsp_grid import runVSPGridAnalysis
 from mission_grid import runMissionGridSearch, ResultAnalysis
 from vsp_analysis import  loadAnalysisResults, visualize_results, resetAnalysisResults, removeAnalysisResults
 from mission_analysis import MissionAnalyzer, visualize_mission
-from models import *
-from config import *
+from internal_dataclass import *
+from setup_dataclass import *
 
 def main():
 

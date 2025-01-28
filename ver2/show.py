@@ -2,8 +2,8 @@ import argparse
 from vsp_analysis import loadAnalysisResults, visualize_results
 import pandas as pd
 from mission_analysis import MissionAnalyzer, visualize_mission
-from models import MissionParameters
-from config import PresetValues, PropulsionSpecs
+from internal_dataclass import MissionParameters
+from setup_dataclass import PresetValues, PropulsionSpecs
 import numpy as np
 
 def get_result_by_id(resultID:str, csvPath: str="data/total_results.csv")->pd.DataFrame:

@@ -5,7 +5,14 @@ from dataclasses import dataclass, field
 import hashlib
 import json
 from enum import Enum
-from config import PhysicalConstants, PresetValues
+from setup_dataclass import PresetValues
+
+@dataclass
+class __PhysicalConstants__:
+    g: float = 9.81
+    rho: float = 1.20
+
+PhysicalConstants = __PhysicalConstants__()
 
 @dataclass
 class Aircraft:

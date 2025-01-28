@@ -2,9 +2,9 @@ import numpy as np
 from itertools import product
 from dataclasses import replace
 import time
-from config import *
+from setup_dataclass import *
 from vsp_analysis import VSPAnalyzer, writeAnalysisResults, loadAnalysisResults, visualize_results
-from models import *
+from internal_dataclass import *
 
 
 def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetValues: PresetValues, baseAircraft: Aircraft):

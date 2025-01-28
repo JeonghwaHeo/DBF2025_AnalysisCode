@@ -1,13 +1,4 @@
-""" All the configs for the constraints of simulations etc. """
-
 from dataclasses import dataclass
-
-@dataclass
-class __PhysicalConstants__:
-    g: float = 9.81
-    rho: float = 1.20
-
-PhysicalConstants = __PhysicalConstants__()
 
 @dataclass
 class PresetValues:
@@ -34,8 +25,6 @@ class PropulsionSpecs:
     
 @dataclass
 class AircraftParamConstraints:
-    """Constraints for constructing the aircraft"""
-
     # total mass of the aircraft
     m_total_max: float
     m_total_min: float

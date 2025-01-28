@@ -19,8 +19,8 @@ import configparser
 import pandas as pd
 import io
 from matplotlib.ticker import MultipleLocator
-from models import Aircraft, AircraftAnalysisResults
-from config import PhysicalConstants, PresetValues
+from internal_dataclass import PhysicalConstants, Aircraft, AircraftAnalysisResults
+from setup_dataclass import PresetValues
 
 
 class VSPAnalyzer:
@@ -653,7 +653,7 @@ def visualize_results(results: AircraftAnalysisResults):
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import List, Optional, Dict
-from models import AircraftAnalysisResults
+from internal_dataclass import AircraftAnalysisResults
 
 def compare_aerodynamics(results_list: List[AircraftAnalysisResults],
                         labels: Optional[List[str]] = None,

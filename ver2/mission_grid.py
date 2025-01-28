@@ -1,11 +1,11 @@
 import numpy as np
 from itertools import product
 import time
-from config import *
+from setup_dataclass import *
 from dataclasses import replace
 from vsp_analysis import  loadAnalysisResults
 from mission_analysis import MissionAnalyzer, visualize_mission
-from models import *
+from internal_dataclass import *
 import os 
 import os.path
 import pandas as pd
@@ -63,12 +63,6 @@ def runMissionGridSearch(hashVal:str,
     print(f"\nMission 3 throttle climb list: {M3_throttle_climb_list}")
     print(f"Mission 3 throttle turn list: {M3_throttle_turn_list}")
     print(f"Mission 3 throttle level list: {M3_throttle_level_list}\n")
-
-    # best_score_2 = float('-inf')
-    # best_params_2 = None
-    
-    # best_score_3 = float('-inf')
-    # best_params_3 = None
 
     # Create iterator for all combinations
     throttle_combinations = product(M2_throttle_climb_list, M2_throttle_turn_list, M2_throttle_level_list, M3_throttle_climb_list, M3_throttle_turn_list, M3_throttle_level_list)

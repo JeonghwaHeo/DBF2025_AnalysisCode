@@ -5,8 +5,8 @@ import pandas as pd
 import math
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
-from config import PhysicalConstants, PresetValues, PropulsionSpecs
-from models import MissionParameters, AircraftAnalysisResults, PlaneState, PhaseType, MissionConfig, Aircraft
+from setup_dataclass import PresetValues, PropulsionSpecs
+from internal_dataclass import PhysicalConstants, MissionParameters, AircraftAnalysisResults, PlaneState, PhaseType, MissionConfig, Aircraft
 from propulsion import thrust_analysis, determine_max_thrust, thrust_reverse_solve, SoC2Vol
 from vsp_analysis import  loadAnalysisResults
 
