@@ -163,6 +163,8 @@ class MissionParameters:
 
 @dataclass
 class PlaneState:
+    mission: int=0
+    N_laps : int=0
     position: np.ndarray=field(default_factory= lambda: np.zeros(3))
     velocity: np.ndarray=field(default_factory= lambda: np.zeros(3))
     acceleration: np.ndarray=field(default_factory= lambda: np.zeros(3))
