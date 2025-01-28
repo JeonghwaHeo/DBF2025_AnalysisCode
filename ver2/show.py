@@ -44,7 +44,6 @@ if __name__ == "__main__":
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
             param2 = MissionParameters(
                 max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0],
-                throttle_takeoff = 0.9,              # Fixed
                 throttle_climb = resultID_df['mission2_throttle_climb'].iloc[0],
                 throttle_level = resultID_df['mission2_throttle_level'].iloc[0],
                 throttle_turn = resultID_df['mission2_throttle_turn'].iloc[0],                
@@ -91,8 +90,7 @@ if __name__ == "__main__":
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
 
             param3 = MissionParameters(
-                            max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0],
-                            throttle_takeoff = 0.9,              # Fixed
+                            max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0],          # Fixed
                             throttle_climb = resultID_df['mission3_throttle_climb'].iloc[0],
                             throttle_level = resultID_df['mission3_throttle_level'].iloc[0],
                             throttle_turn = resultID_df['mission3_throttle_turn'].iloc[0],                

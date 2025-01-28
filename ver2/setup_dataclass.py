@@ -4,11 +4,18 @@ from dataclasses import dataclass
 class PresetValues:
     m_x1: float
     x1_flight_time: float
+    
+    throttle_takeoff : float
+    max_climb_angle : float
+    max_load : float
+    
+    h_flap_transition : float
+    
     number_of_motor : int
-
     max_battery_capacity: float
     min_battery_voltage: float
     propulsion_efficiency: float
+    
     score_weight_ratio: float=0.5 
 
 @dataclass

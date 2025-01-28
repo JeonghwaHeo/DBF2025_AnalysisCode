@@ -158,7 +158,6 @@ class MissionParameters:
     h_flap_transition: float
 
     # Thrust and Throttle 
-    throttle_takeoff: float
     throttle_climb: float
     throttle_turn: float
     throttle_level: float

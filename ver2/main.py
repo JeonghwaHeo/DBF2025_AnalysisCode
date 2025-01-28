@@ -18,6 +18,12 @@ def main():
     presetValues = PresetValues(
         m_x1 = 0.25,                        # kg
         x1_flight_time = 30,                # sec
+        
+        throttle_takeoff = 0.9,             # 0~1
+        max_climb_angle = 40,               # deg
+        max_load = 30,                      # kg
+        h_flap_transition = 5,              # m
+        
         number_of_motor = 2,                 
         max_battery_capacity = 2250,        # mAh (per one battery)
         min_battery_voltage = 21.8,         # V 

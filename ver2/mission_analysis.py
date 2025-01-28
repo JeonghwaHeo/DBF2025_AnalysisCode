@@ -341,7 +341,7 @@ class MissionAnalyzer():
             
             self.state.time += self.dt
             
-            self.state.throttle = self.missionParam.throttle_takeoff
+            self.state.throttle = self.presetValues.throttle_takeoff
             _, _, self.state.Amps, self.state.motor_input_power, thrust_per_motor = thrust_analysis(
                             self.state.throttle,
                             fast_norm(self.state.velocity),
@@ -380,9 +380,9 @@ class MissionAnalyzer():
         while 0.9 * self.v_takeoff <= fast_norm(self.state.velocity) <= self.v_takeoff:
             self.state.time += self.dt
 
-            self.state.throttle = self.missionParam.throttle_takeoff
+            self.state.throttle = self.presetValues.throttle_takeoff
             _, _, self.state.Amps, self.state.motor_input_power, thrust_per_motor = thrust_analysis(
-                            self.missionParam.throttle_takeoff,
+                            self.presetValues.throttle_takeoff,
                             fast_norm(self.state.velocity),
                             self.state.battery_voltage,
                             self.propulsionSpecs,
@@ -1137,7 +1137,6 @@ if __name__=="__main__":
     
     param = MissionParameters(
         max_battery_capacity = 2250,
-        throttle_takeoff = 0.9,              # Fixed
         throttle_climb = 0.9,
         throttle_level = 0.5,
         throttle_turn = 0.5,                
