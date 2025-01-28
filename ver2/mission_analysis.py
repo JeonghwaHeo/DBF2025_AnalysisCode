@@ -241,8 +241,9 @@ class MissionAnalyzer():
         result = self.run_mission(mission2)  
         
         first_state = self.stateLog[0]
-        first_state.mission = 2      
-        self.state.N_laps = 3
+        first_state.mission = 2 
+        last_state = self.stateLog[-1]
+        last_state.N_laps = 3     
         if(result == -1): return 0
         
         return self.analResult.m_fuel, self.state.time
@@ -1032,7 +1033,9 @@ def visualize_mission(stateLog):
     ax_angles.set_xlabel('Time (s)')
     ax_angles.set_ylabel('Angle (degrees)') 
     ax_angles.plot(stateLog['time'], stateLog['climb_pitch_angle'], label='Climb Pitch Angle', color='red')
-    ax_angles.grid(True) 
+    ax_angles.set_yticks(np.arange(0, stateLog['bank_angle'].max()+6, 5),minor=True)
+    ax_angles.grid(True, which='major', linestyle='-', linewidth=1) 
+    ax_angles.grid(True, which='minor', linestyle=':', linewidth=0.5)
     ax_angles.set_title('Bank, Pitch Angles')
   
 
