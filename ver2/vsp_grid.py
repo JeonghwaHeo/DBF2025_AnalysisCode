@@ -60,17 +60,18 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,presetV
 
                 vspAnalyzer.setup_vsp_model(aircraft)
                 analResults = vspAnalyzer.calculateCoefficients(
-                alpha_start = -3, alpha_end = 13, alpha_step = 1,
-                CD_fuse = np.full(int(round((13 - (-3)) / 1)) + 1, 0.03),
+                        alpha_start = -3, alpha_end = 13, alpha_step = 1,
+                        CD_fuse = np.full(int(round((13 - (-3)) / 1)) + 1, 0.03),
 
-                AOA_stall = 13,
-                AOA_takeoff_max = 10,
-                AOA_climb_max = 8,
-                AOA_turn_max = 8,
+                        AOA_stall = 13,
+                        AOA_takeoff_max = 10,
+                        AOA_climb_max = 8,
+                        AOA_turn_max = 8,
 
-                m_total = m_total,
+                        m_total = m_total,
 
-                clearModel=False)
+                        clearModel=False
+                        )
 
                 # selected_outputs = ["hash", "span", "AR", "taper", "twist", "alpha_list", "CL", "CD_total"]
                 writeAnalysisResults(analResults)
