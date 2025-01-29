@@ -609,7 +609,7 @@ def visualize_results(results: AircraftAnalysisResults):
     
     ax1 = fig.add_subplot(grid[0, 1])
     ax1.plot(results.alpha_list, results.CL, 'b-', label='Flap OFF')
-    ax1.scatter([0, results.AOA_stall], [results.CL_flap_zero, results.CL_flap_max], 
+    ax1.scatter([0, results.AOA_takeoff_max], [results.CL_flap_zero, results.CL_flap_max], 
                 c='r', marker='o', label='Flap ON')
     ax1.set_xlabel('Angle of Attack (degrees)')
     ax1.set_ylabel('Lift Coefficient (CL)')
@@ -625,7 +625,7 @@ def visualize_results(results: AircraftAnalysisResults):
     ax2.plot(results.alpha_list, results.CD_total, 'b-', label='CD Total')
     ax2.plot(results.alpha_list, results.CD_wing, 'r-', label='CD Wing')
     ax2.plot(results.alpha_list, results.CD_fuse, 'g-', label='CD Fuselage')
-    ax2.scatter([0, results.AOA_stall], [results.CD_flap_zero, results.CD_flap_max],
+    ax2.scatter([0, results.AOA_takeoff_max], [results.CD_flap_zero, results.CD_flap_max],
                 c='r', marker='o', label='Flap ON')
     ax2.set_xlabel('Angle of Attack (degrees)')
     ax2.set_ylabel('Drag Coefficient (CD)')

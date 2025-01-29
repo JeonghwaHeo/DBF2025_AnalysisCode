@@ -45,11 +45,6 @@ class AerodynamicSetup:
     
 @dataclass
 class AircraftParamConstraints:
-    # total mass of the aircraft
-    # m_total_max: float
-    # m_total_min: float
-    # m_total_interval: float
-    
     # wing parameter ranges
     span_max: float
     span_min: float

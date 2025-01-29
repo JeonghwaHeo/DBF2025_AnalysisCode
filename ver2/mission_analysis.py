@@ -988,7 +988,7 @@ def visualize_mission(stateLog):
     ax_side.set_ylabel('Altitude (m)')
     ax_side.set_title('Side View')
     ax_side.grid(True)
-    ax_side.set_aspect(2)
+    ax_side.set_aspect(1)
 
 
     # Graph3 : Top-down view colored by phase

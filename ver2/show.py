@@ -43,8 +43,9 @@ if __name__ == "__main__":
             hashVal = resultID_df['hash']  
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
             param2 = MissionParameters(
+                m_takeoff= resultID_df['MTOW'].iloc[0],
                 max_speed= resultID_df['M2_max_speed'].iloc[0],                   
-                max_load_factor = 4.0,  
+                max_load_factor = resultID_df['max_load'].iloc[0]/resultID_df['MTOW'].iloc[0],  
                                           
                 throttle_climb = resultID_df['mission2_throttle_climb'].iloc[0],
                 throttle_level = resultID_df['mission2_throttle_level'].iloc[0],
@@ -93,8 +94,9 @@ if __name__ == "__main__":
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
 
             param3 = MissionParameters(
+                m_takeoff= resultID_df['m_empty'].iloc[0]/1000,
                 max_speed= resultID_df['M3_max_speed'].iloc[0],                   
-                max_load_factor = 4.0,  
+                max_load_factor = resultID_df['max_load'].iloc[0] * 1000 /resultID_df['m_empty'].iloc[0],  
                                           
                 throttle_climb = resultID_df['mission3_throttle_climb'].iloc[0],
                 throttle_level = resultID_df['mission3_throttle_level'].iloc[0],
