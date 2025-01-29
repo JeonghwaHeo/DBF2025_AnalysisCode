@@ -43,13 +43,7 @@ def main():
     )
     
     aircraftParamConstraints = AircraftParamConstraints (
-        #Constraints for constructing the aircraft
-
-        # m_total_min = 8500.0,                # g
-        # m_total_max = 8500.0,
-        # m_total_interval = 500.0,
-        
-        # wing parameter ranges
+  
         span_min = 1800.0,                   # mm
         span_max = 1800.0,                   
         span_interval = 100.0,

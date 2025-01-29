@@ -99,12 +99,12 @@ def runMissionGridSearch(hashVal:str,
         # Create mission 2 parameters for this combination
         mission2Params = MissionParameters(
             m_takeoff = MTOW,
-            max_speed= M2_max_speed,                       # Fixed
-            max_load_factor = 4.0,               # Fixed
+            max_speed= M2_max_speed,                      
+            max_load_factor = presetValues.max_load / MTOW,          
                   
             throttle_climb = M2_throttle_climb,
             throttle_level = M2_throttle_level,
-            throttle_turn = M2_throttle_turn,    # Fixed
+            throttle_turn = M2_throttle_turn,   
 
             propeller_data_path=propulsionSpecs.M2_propeller_data_path,
         )
@@ -112,26 +112,22 @@ def runMissionGridSearch(hashVal:str,
         # Create mission 3 parameters for this combination
         mission3Params = MissionParameters(
             m_takeoff = analysisResults.m_empty/1000,
-            max_speed= M3_max_speed,                       # Fixed
-            max_load_factor = 4.0,               # Fixed
+            max_speed= M3_max_speed,                      
+            max_load_factor = presetValues.max_load * 1000 / analysisResults.m_empty,            
                   
             throttle_climb = M3_throttle_climb,
             throttle_level = M3_throttle_level,
-            throttle_turn = M3_throttle_turn,    # Fixed
+            throttle_turn = M3_throttle_turn,   
 
             propeller_data_path=propulsionSpecs.M3_propeller_data_path
         )
 
         try:
-            # Create mission analyzer and run mission 2
+
             mission2Analyzer = MissionAnalyzer(analysisResults, mission2Params, presetValues, propulsionSpecs)
             fuel_weight, flight_time = mission2Analyzer.run_mission2()
-            obj2 = fuel_weight * 2.204 / flight_time # 2.204는 파운드 변환
+            obj2 = fuel_weight * 2.204 / flight_time 
 
-            # # Create mission analyzer and run mission 3           
-            # analysisResults_for_mission3 = replace(analysisResults,
-            #                                     m_total=analysisResults.m_total - analysisResults.m_fuel,
-            #                                     m_fuel=0.0)
             mission3Analyzer = MissionAnalyzer(analysisResults, mission3Params, presetValues, propulsionSpecs)
             N_laps = mission3Analyzer.run_mission3()
             obj3 = N_laps + 2.5 / (presetValues.m_x1 /1000 * 2.204 )
