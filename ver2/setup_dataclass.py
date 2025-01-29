@@ -12,7 +12,6 @@ class PresetValues:
     h_flap_transition : float
     
     number_of_motor : int
-    max_battery_capacity: float
     min_battery_voltage: float
     propulsion_efficiency: float
     

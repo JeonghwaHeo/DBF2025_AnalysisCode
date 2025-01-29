@@ -1138,7 +1138,6 @@ if __name__=="__main__":
     param = MissionParameters(
         max_speed= 40,                       # Fixed
         max_load_factor = 4.0,               # Fixed
-        max_battery_capacity = 2250,
         throttle_climb = 0.9,
         throttle_level = 0.5,
         throttle_turn = 0.5,               
@@ -1150,7 +1149,6 @@ if __name__=="__main__":
         m_x1 = 0.25,                        # kg
         x1_flight_time = 30,                # sec
         number_of_motor = 2,                 
-        max_battery_capacity = 2250,        # mAh (per one battery)
         min_battery_voltage = 21.8,         # V 
         propulsion_efficiency = 0.1326,     # Efficiency of the propulsion system
         score_weight_ratio = 0.5            # mission2/3 score weight ratio            

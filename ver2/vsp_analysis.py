@@ -105,7 +105,6 @@ class VSPAnalyzer:
                 Lw=results_no_flap['Lw'],
                 Lh=results_no_flap['Lh'],
                 CL=results_no_flap['CL'],
-                # CL_max=CL_max,
                 CD_wing=results_no_flap['CD'],
                 CD_fuse=CD_fuse,
                 CD_total=results_no_flap['CD'] + CD_fuse,

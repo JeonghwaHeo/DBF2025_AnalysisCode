@@ -159,7 +159,6 @@ class MissionParameters:
     
     # Battery 
     propeller_data_path : str
-    max_battery_capacity: float
 
 
 @dataclass

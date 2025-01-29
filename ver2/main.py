@@ -25,7 +25,6 @@ def main():
         h_flap_transition = 5,              # m
         
         number_of_motor = 2,                 
-        max_battery_capacity = 2250,        # mAh (per one battery)
         min_battery_voltage = 21.8,         # V 
         propulsion_efficiency = 0.1326,     # Efficiency of the propulsion system
         score_weight_ratio = 0.5            # mission2/3 score weight ratio

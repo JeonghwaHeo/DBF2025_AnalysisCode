@@ -101,7 +101,6 @@ if __name__ == "__main__":
             PresetValues(
                     m_x1 = 0.2,                       # kg
                     x1_flight_time = 30,              # sec
-                    max_battery_capacity = 2250,      # mAh (per one battery)
                     Thrust_max = 6.6,                 # kg (two motors)
                     min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
                     propulsion_efficiency = 0.8,      # Efficiency of the propulsion system

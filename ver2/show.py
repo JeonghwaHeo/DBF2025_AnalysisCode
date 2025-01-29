@@ -50,8 +50,7 @@ if __name__ == "__main__":
                 throttle_level = resultID_df['mission2_throttle_level'].iloc[0],
                 throttle_turn = resultID_df['mission2_throttle_turn'].iloc[0],
                 
-                propeller_data_path = resultID_df['M2_propeller_data_path'].iloc[0], 
-                max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0]                            
+                propeller_data_path = resultID_df['M2_propeller_data_path'].iloc[0]                          
 
             )
             
@@ -65,7 +64,6 @@ if __name__ == "__main__":
                 h_flap_transition = resultID_df['h_flap_transition'].iloc[0],
                 
                 number_of_motor= resultID_df['number_of_motor'].iloc[0],
-                max_battery_capacity= resultID_df['max_battery_capacity'].iloc[0],
                 min_battery_voltage= resultID_df['min_battery_voltage'].iloc[0],
                 propulsion_efficiency= resultID_df['propulsion_efficiency'].iloc[0],
                 score_weight_ratio= resultID_df['score_weight_ratio'].iloc[0]               
@@ -103,8 +101,7 @@ if __name__ == "__main__":
                 throttle_level = resultID_df['mission3_throttle_level'].iloc[0],
                 throttle_turn = resultID_df['mission3_throttle_turn'].iloc[0],
                 
-                propeller_data_path = resultID_df['M3_propeller_data_path'].iloc[0], 
-                max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0]                            
+                propeller_data_path = resultID_df['M3_propeller_data_path'].iloc[0],                           
 
             )
             
@@ -118,7 +115,6 @@ if __name__ == "__main__":
                 h_flap_transition = resultID_df['h_flap_transition'].iloc[0],
                 
                 number_of_motor= resultID_df['number_of_motor'].iloc[0],
-                max_battery_capacity= resultID_df['max_battery_capacity'].iloc[0],
                 min_battery_voltage= resultID_df['min_battery_voltage'].iloc[0],
                 propulsion_efficiency= resultID_df['propulsion_efficiency'].iloc[0],
                 score_weight_ratio= resultID_df['score_weight_ratio'].iloc[0]    
