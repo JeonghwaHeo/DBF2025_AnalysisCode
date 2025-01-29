@@ -2,8 +2,8 @@ import argparse
 from vsp_analysis import loadAnalysisResults, visualize_results
 import pandas as pd
 from mission_analysis import MissionAnalyzer, visualize_mission
-from models import MissionParameters
-from config import PresetValues, PropulsionSpecs
+from internal_dataclass import MissionParameters
+from setup_dataclass import PresetValues, PropulsionSpecs
 import numpy as np
 
 def get_result_by_id(resultID:str, csvPath: str="data/total_results.csv")->pd.DataFrame:
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     show_subparsers = show_parser.add_subparsers(dest="type", required=True)
     
     show_aircraft_parser = show_subparsers.add_parser("aircraft", help="Show aircraft analysis results.")
-    show_aircraft_parser.add_argument("hashVal", type=int, help="Enter the aircraft hash which you want to check.")
+    show_aircraft_parser.add_argument("hashVal", type=str, help="Enter the aircraft hash which you want to check.")
     
     show_mission_parser = show_subparsers.add_parser("mission2", help="Show aircraft analysis results.")
     show_mission_parser.add_argument("resultID", type=str, help="Enter the resultID which you want to check.")
@@ -33,7 +33,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.main_command == "show":
         if args.type == "aircraft":
-            aircraft_result = loadAnalysisResults(args.hashVal)
+            hashVal = "'" + args.hashVal +"'"
+            aircraft_result = loadAnalysisResults(hashVal)
             visualize_results(aircraft_result)
             
         elif args.type == "mission2":
@@ -43,14 +44,11 @@ if __name__ == "__main__":
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
             param2 = MissionParameters(
                 max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0],
-                throttle_takeoff = 0.9,              # Fixed
                 throttle_climb = resultID_df['mission2_throttle_climb'].iloc[0],
                 throttle_level = resultID_df['mission2_throttle_level'].iloc[0],
                 throttle_turn = resultID_df['mission2_throttle_turn'].iloc[0],                
-                max_climb_angle = 40,                # Fixed
                 max_speed= 40,                       # Fixed
                 max_load_factor = 4.0,               # Fixed
-                h_flap_transition = 5                # Fixed
             )
             
             presetValues = PresetValues(
@@ -67,7 +65,8 @@ if __name__ == "__main__":
             )
               
             propulsionSpecs = PropulsionSpecs(
-                propeller_data_path = resultID_df['propeller_data_path'].iloc[0],
+                M2_propeller_data_path = resultID_df['M2_propeller_data_path'].iloc[0],
+                M3_propeller_data_path = resultID_df['M3_propeller_data_path'].iloc[0],
                 battery_data_path = resultID_df['battery_data_path'].iloc[0],
                 Kv = resultID_df['Kv'].iloc[0],
                 R = resultID_df['R'].iloc[0],
@@ -90,15 +89,12 @@ if __name__ == "__main__":
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
 
             param3 = MissionParameters(
-                            max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0],
-                            throttle_takeoff = 0.9,              # Fixed
+                            max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0],          # Fixed
                             throttle_climb = resultID_df['mission3_throttle_climb'].iloc[0],
                             throttle_level = resultID_df['mission3_throttle_level'].iloc[0],
                             throttle_turn = resultID_df['mission3_throttle_turn'].iloc[0],                
-                            max_climb_angle = 40,                # Fixed
                             max_speed= 40,                       # Fixed
                             max_load_factor = 4.0,               # Fixed
-                            h_flap_transition = 5                # Fixed
             )
             
             presetValues = PresetValues(
@@ -116,7 +112,8 @@ if __name__ == "__main__":
             )
              
             propulsionSpecs = PropulsionSpecs(
-                propeller_data_path = resultID_df['propeller_data_path'].iloc[0],
+                M2_propeller_data_path = resultID_df['M2_propeller_data_path'].iloc[0],
+                M3_propeller_data_path = resultID_df['M3_propeller_data_path'].iloc[0],
                 battery_data_path = resultID_df['battery_data_path'].iloc[0],
                 Kv = resultID_df['Kv'].iloc[0],
                 R = resultID_df['R'].iloc[0],

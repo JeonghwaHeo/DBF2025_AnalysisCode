@@ -5,7 +5,14 @@ from dataclasses import dataclass, field
 import hashlib
 import json
 from enum import Enum
-from config import PhysicalConstants, PresetValues
+from setup_dataclass import PresetValues
+
+@dataclass
+class __PhysicalConstants__:
+    g: float = 9.81
+    rho: float = 1.20
+
+PhysicalConstants = __PhysicalConstants__()
 
 @dataclass
 class Aircraft:
@@ -84,7 +91,6 @@ class Aircraft:
             # Create a hash using SHA-256
             hash_obj = hashlib.sha256(json_str.encode())
             
-            # Convert the first 8 bytes of the hash to an integer
             return int.from_bytes(hash_obj.digest()[:8], byteorder='big')
 
 
@@ -143,21 +149,16 @@ class MissionParameters:
     """Additional Parameters for running the mission(s)"""
 
     # m_total: float
-
-    max_climb_angle: float
     max_speed: float
     max_load_factor: float
     
-    # 
-    h_flap_transition: float
-
     # Thrust and Throttle 
-    throttle_takeoff: float
     throttle_climb: float
-    throttle_turn: float
     throttle_level: float
-
+    throttle_turn: float
+    
     # Battery 
+    propeller_data_path : str
     max_battery_capacity: float
 
 

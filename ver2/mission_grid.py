@@ -1,11 +1,11 @@
 import numpy as np
 from itertools import product
 import time
-from config import *
+from setup_dataclass import *
 from dataclasses import replace
 from vsp_analysis import  loadAnalysisResults
 from mission_analysis import MissionAnalyzer, visualize_mission
-from models import *
+from internal_dataclass import *
 import os 
 import os.path
 import pandas as pd
@@ -13,7 +13,7 @@ import time
 from dataclasses import asdict
 import csv
 
-def runMissionGridSearch(hashVal:int, 
+def runMissionGridSearch(hashVal:str, 
                           presetValues:PresetValues,
                           missionParamConstraints:MissionParamConstraints, 
                           propulsionSpecs:PropulsionSpecs,
@@ -64,12 +64,6 @@ def runMissionGridSearch(hashVal:int,
     print(f"Mission 3 throttle turn list: {M3_throttle_turn_list}")
     print(f"Mission 3 throttle level list: {M3_throttle_level_list}\n")
 
-    # best_score_2 = float('-inf')
-    # best_params_2 = None
-    
-    # best_score_3 = float('-inf')
-    # best_params_3 = None
-
     # Create iterator for all combinations
     throttle_combinations = product(M2_throttle_climb_list, M2_throttle_turn_list, M2_throttle_level_list, M3_throttle_climb_list, M3_throttle_turn_list, M3_throttle_level_list)
 
@@ -83,28 +77,28 @@ def runMissionGridSearch(hashVal:int,
 
         # Create mission 2 parameters for this combination
         mission2Params = MissionParameters(
-            max_battery_capacity = presetValues.max_battery_capacity,
-            throttle_takeoff = 0.9,              # Fixed
-            throttle_climb = M2_throttle_climb,
-            throttle_level = M2_throttle_level,
-            throttle_turn = M2_throttle_turn,                
-            max_climb_angle = 40,                # Fixed
             max_speed= 40,                       # Fixed
             max_load_factor = 4.0,               # Fixed
-            h_flap_transition = 5                # Fixed
+                  
+            throttle_climb = M2_throttle_climb,
+            throttle_level = M2_throttle_level,
+            throttle_turn = M2_throttle_turn,    # Fixed
+
+            propeller_data_path=propulsionSpecs.M2_propeller_data_path,
+            max_battery_capacity = presetValues.max_battery_capacity 
         )
 
         # Create mission 3 parameters for this combination
         mission3Params = MissionParameters(
-            max_battery_capacity = presetValues.max_battery_capacity,
-            throttle_takeoff = 0.9,              # Fixed
-            throttle_climb = M3_throttle_climb,
-            throttle_level = M3_throttle_level,
-            throttle_turn = M3_throttle_turn,                
-            max_climb_angle = 40,                # Fixed
             max_speed= 40,                       # Fixed
             max_load_factor = 4.0,               # Fixed
-            h_flap_transition = 5                # Fixed
+                  
+            throttle_climb = M3_throttle_climb,
+            throttle_level = M3_throttle_level,
+            throttle_turn = M3_throttle_turn,    # Fixed
+
+            propeller_data_path=propulsionSpecs.M3_propeller_data_path,
+            max_battery_capacity = presetValues.max_battery_capacity 
         )
 
         try:
@@ -149,9 +143,9 @@ def runMissionGridSearch(hashVal:int,
    
     print("\nDone Mission Analysis ^_^")
 
-def writeMissionAnalysisResults(hashVal, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
+def writeMissionAnalysisResults(hashVal:str, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
     existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
-    base_row = existing_df[existing_df['hash'] == int(hashVal)]
+    base_row = existing_df[existing_df['hash'] == hashVal]
     base_row_dict = base_row.to_dict(orient="records")[0]
     preset_dict = vars(presetValues)
     propulsion_dict = vars(propulsionSpecs)

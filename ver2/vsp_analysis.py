@@ -19,8 +19,8 @@ import configparser
 import pandas as pd
 import io
 from matplotlib.ticker import MultipleLocator
-from models import Aircraft, AircraftAnalysisResults
-from config import PhysicalConstants, PresetValues
+from internal_dataclass import PhysicalConstants, Aircraft, AircraftAnalysisResults
+from setup_dataclass import PresetValues
 
 
 class VSPAnalyzer:
@@ -533,10 +533,10 @@ def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "dat
 
     if not os.path.isfile(csvPath):
         df = pd.json_normalize(asdict(anaResults))
-        df['hash'] = hash(anaResults.aircraft)
+        df['hash'] = "'" + str(hash(anaResults.aircraft)) + "'"
     else:
         new_df = pd.json_normalize(asdict(anaResults))
-        new_df['hash'] = hash(anaResults.aircraft)
+        new_df['hash'] = "'" + str(hash(anaResults.aircraft)) + "'"
         df = pd.read_csv(csvPath, sep='|', encoding='utf-8')
         df= pd.concat([df,new_df]).drop_duplicates(["hash"],keep='last')
 
@@ -555,7 +555,7 @@ def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "dat
     # Save the updated DataFrame back to CSV
     df_copy.to_csv(csvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
 
-def loadAnalysisResults(hashValue:int, csvPath:str = "data/test.csv")-> AircraftAnalysisResults:
+def loadAnalysisResults(hashValue:str, csvPath:str = "data/test.csv")-> AircraftAnalysisResults:
     df = pd.read_csv(csvPath, sep='|', encoding='utf-8')
     df = df.loc[df['hash']==hashValue]
    
@@ -646,34 +646,14 @@ def visualize_results(results: AircraftAnalysisResults):
     ax2.yaxis.set_major_locator(MultipleLocator(0.01))
     ax2.yaxis.set_minor_locator(MultipleLocator(0.005))
     ax2.legend()    
-    # ax_table.axis('off')
-    # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
-    
-    # # Plot CL
-    # ax1.plot(results.alpha_list, results.CL, 'b-', label='No Flaps')
-    # ax1.scatter([0, results.AOA_stall], [results.CL_flap_zero, results.CL_flap_max], 
-    #             c='r', marker='o', label='With Flaps')
-    # ax1.set_xlabel('Angle of Attack (degrees)')
-    # ax1.set_ylabel('Lift Coefficient (CL)')
-    # ax1.grid(True)
-    # ax1.legend()
-    
-    # # Plot CD
-    # ax2.plot(results.alpha_list, results.CD_total, 'b-', label='No Flaps')
-    # ax2.scatter([0, results.AOA_stall], [results.CD_flap_zero, results.CD_flap_max],
-    #             c='r', marker='o', label='With Flaps')
-    # ax2.set_xlabel('Angle of Attack (degrees)')
-    # ax2.set_ylabel('Drag Coefficient (CD)')
-    # ax2.grid(True)
-    # ax2.legend()
-    
+ 
     plt.tight_layout()
     plt.show()
 
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import List, Optional, Dict
-from models import AircraftAnalysisResults
+from internal_dataclass import AircraftAnalysisResults
 
 def compare_aerodynamics(results_list: List[AircraftAnalysisResults],
                         labels: Optional[List[str]] = None,
