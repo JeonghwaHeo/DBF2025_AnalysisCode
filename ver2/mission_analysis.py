@@ -5,6 +5,7 @@ import pandas as pd
 import math
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
+from scipy.interpolate import interp1d
 from setup_dataclass import PresetValues, PropulsionSpecs
 from internal_dataclass import PhysicalConstants, MissionParameters, AircraftAnalysisResults, PlaneState, PhaseType, MissionConfig, Aircraft
 from propulsion import thrust_analysis, determine_max_thrust, thrust_reverse_solve, SoC2Vol
@@ -163,15 +164,13 @@ class MissionAnalyzer():
         self.v_takeoff = (math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_flap_max)))
 
         # Create focused alpha range from -10 to 10 degrees
-        alpha_extended = np.linspace(-10, 10, 2000)  # 0.01 degree resolution
+        alpha_extended = np.linspace(-5, 15, 2000)  # 0.01 degree resolution
     
+        CL_interp1d = interp1d(self.analResult.alpha_list, self.analResult.CL, kind="linear", fill_value="extrapolate")
+        CD_interp1d = interp1d(self.analResult.alpha_list, self.analResult.CD_total, kind="quadratic", fill_value="extrapolate")
         # Create lookup tables
-        CL_table = np.interp(alpha_extended, 
-                            self.analResult.alpha_list,
-                            self.analResult.CL)
-        CD_table = np.interp(alpha_extended, 
-                            self.analResult.alpha_list,
-                            self.analResult.CD_total)
+        CL_table = CL_interp1d(alpha_extended)
+        CD_table = CD_interp1d(alpha_extended)
         
         # Create lambda functions for faster lookup
         self.CL_func = lambda alpha: np.interp(alpha, alpha_extended, CL_table)
@@ -1150,7 +1149,6 @@ if __name__=="__main__":
         x1_flight_time = 30,                # sec
         number_of_motor = 2,                 
         min_battery_voltage = 21.8,         # V 
-        propulsion_efficiency = 0.1326,     # Efficiency of the propulsion system
         score_weight_ratio = 0.5            # mission2/3 score weight ratio            
     )
         

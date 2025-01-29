@@ -52,6 +52,7 @@ class VSPAnalyzer:
     def calculateCoefficients(self, fileName:str = "Mothership.vsp3", 
                               alpha_start: float=0, alpha_end: float=1, alpha_step:float=0.5, 
                               CD_fuse: np.ndarray=np.zeros(4),
+                              fuselage_cross_section_area: float=20000,
                               AOA_stall:float=13, 
                               AOA_takeoff_max:float=10,
                               AOA_climb_max:float=8,
@@ -89,7 +90,11 @@ class VSPAnalyzer:
         CL_flap_zero = results_flap_max['CL'][0]
         CD_flap_zero = results_flap_max['CD'][0]
     
+        CD_fuse = CD_fuse * (fuselage_cross_section_area / results_no_flap['Sref']) 
+        zero_index = int((0-alpha_start)/alpha_step)
+        
         print("Finished Analysis for this configuration.")
+        
         return AircraftAnalysisResults(
                 aircraft=self.aircraft,
                 alpha_list=results_no_flap['alpha_list'],
@@ -115,7 +120,7 @@ class VSPAnalyzer:
                 CL_flap_max=CL_flap_max,
                 CL_flap_zero=CL_flap_zero,
                 CD_flap_max=CD_flap_max + CD_fuse[-1],
-                CD_flap_zero=CD_flap_zero + CD_fuse[0]
+                CD_flap_zero=CD_flap_zero + CD_fuse[zero_index]
         )
 
     def _calculate_coeffs_helper(self, fileName, alpha_start, alpha_end, alpha_step,
@@ -126,9 +131,6 @@ class VSPAnalyzer:
         
         point_number = round(int((alpha_end - alpha_start) / alpha_step) + 1)
         
-        # if(CD_fuse.size != point_number):
-        #     raise ValueError(f"CD_fuse size({CD_fuse.size}) doesn't match point_number({point_number})")
-
         if(clearModel):
             vsp.ClearVSPModel()
         vsp.VSPRenew()

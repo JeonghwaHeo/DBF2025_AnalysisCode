@@ -26,7 +26,6 @@ def main():
         
         number_of_motor = 2,                 
         min_battery_voltage = 21.8,         # V 
-        propulsion_efficiency = 0.1326,     # Efficiency of the propulsion system
         score_weight_ratio = 0.5            # mission2/3 score weight ratio
         )
     
@@ -72,6 +71,13 @@ def main():
         wing_loading_max = 15
         )
     
+    aerodynamicSetup = AerodynamicSetup(
+        alpha_start = -3,
+        alpha_end = 10,
+        alpha_step = 1,
+        fuselage_cross_section_area = 19427,
+        fuselage_Cd_datapath = "data/fuselageDragCSV/fuselageDragCoefficients.csv" 
+    )
     baseAircraft = Aircraft(
         m_total = 8500, 
         m_fuselage = 3000,
@@ -102,7 +108,7 @@ def main():
         vertical_ThickChord = 9  
         )
 
-    runVSPGridAnalysis(aircraftParamConstraints,presetValues,baseAircraft)
+    runVSPGridAnalysis(aircraftParamConstraints,aerodynamicSetup, presetValues,baseAircraft)
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
@@ -124,7 +130,7 @@ def main():
             M2_throttle_turn_min = 0.5,
             M2_throttle_turn_max = 0.5,
             M2_throttle_level_min = 0.5,
-            M2_throttle_level_max = 0.5,
+            M2_throttle_level_max = 0.55,
             M2_throttle_analysis_interval = 0.05,
 
             #Constraints for calculating mission3  

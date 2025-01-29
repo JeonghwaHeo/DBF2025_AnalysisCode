@@ -13,7 +13,6 @@ class PresetValues:
     
     number_of_motor : int
     min_battery_voltage: float
-    propulsion_efficiency: float
     
     score_weight_ratio: float=0.5 
 
@@ -29,6 +28,16 @@ class PropulsionSpecs:
     battery_Wh : float
     max_current : float
     max_power : float
+    
+@dataclass
+class AerodynamicSetup:
+    
+    alpha_start : float
+    alpha_end : float
+    alpha_step : float
+    fuselage_cross_section_area : float
+    fuselage_Cd_datapath : str
+    
     
 @dataclass
 class AircraftParamConstraints:

@@ -234,7 +234,6 @@ if __name__=="__main__":
             number_of_motor= 1,
             min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
             Thrust_max = 6.0,
-            propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
             score_weight_ratio = 0.5            # mission2/3 score weight ratio
             )
     a=loadAnalysisResults(6941088787683630519)
