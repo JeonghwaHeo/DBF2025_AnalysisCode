@@ -58,6 +58,13 @@ class AircraftParamConstraints:
 
 @dataclass
 class MissionParamConstraints:
+
+    M2_max_speed_min : float
+    M2_max_speed_max : float
+    M3_max_speed_min : float
+    M3_max_speed_max : float
+    max_speed_analysis_interval : float
+
     #Constraints for calculating mission2
     M2_throttle_climb_min : float
     M2_throttle_climb_max : float

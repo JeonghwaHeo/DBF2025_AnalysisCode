@@ -582,7 +582,7 @@ class MissionAnalyzer():
             alpha_w_deg = self.calculate_level_alpha(self.state.velocity)
                 
             # Speed limiting while maintaining direction
-            if speed > self.missionParam.max_speed:  # Original speed limit
+            if speed >= self.missionParam.max_speed:  # Original speed limit
                 cruise_flag = 1
 
             if cruise_flag == 1:

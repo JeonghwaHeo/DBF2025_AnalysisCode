@@ -112,6 +112,13 @@ def main():
         print(f"\nAnalyzing for hash{hashVal}")
 
         missionParamConstraints = MissionParamConstraints (
+            
+            M2_max_speed_min = 35,
+            M2_max_speed_max = 35,
+            M3_max_speed_min = 20,
+            M3_max_speed_max = 20,
+            max_speed_analysis_interval = 5,
+            
             #Constraints for calculating mission2
             M2_throttle_climb_min = 0.9,
             M2_throttle_climb_max = 0.9,

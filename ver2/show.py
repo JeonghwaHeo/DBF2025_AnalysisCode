@@ -43,25 +43,32 @@ if __name__ == "__main__":
             hashVal = resultID_df['hash']  
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
             param2 = MissionParameters(
-                max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0],
+                max_speed= resultID_df['M2_max_speed'].iloc[0],                   
+                max_load_factor = 4.0,  
+                                          
                 throttle_climb = resultID_df['mission2_throttle_climb'].iloc[0],
                 throttle_level = resultID_df['mission2_throttle_level'].iloc[0],
-                throttle_turn = resultID_df['mission2_throttle_turn'].iloc[0],                
-                max_speed= 40,                       # Fixed
-                max_load_factor = 4.0,               # Fixed
+                throttle_turn = resultID_df['mission2_throttle_turn'].iloc[0],
+                
+                propeller_data_path = resultID_df['M2_propeller_data_path'].iloc[0], 
+                max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0]                            
+
             )
             
             presetValues = PresetValues(
                 m_x1= resultID_df['m_x1'].iloc[0],
                 x1_flight_time= resultID_df['x1_flight_time'].iloc[0],
+                
+                throttle_takeoff = resultID_df['throttle_takeoff'].iloc[0],
+                max_climb_angle = resultID_df['max_climb_angle'].iloc[0],
+                max_load = resultID_df['max_load'].iloc[0],
+                h_flap_transition = resultID_df['h_flap_transition'].iloc[0],
+                
                 number_of_motor= resultID_df['number_of_motor'].iloc[0],
                 max_battery_capacity= resultID_df['max_battery_capacity'].iloc[0],
                 min_battery_voltage= resultID_df['min_battery_voltage'].iloc[0],
-
-                Thrust_max= resultID_df['Thrust_max'].iloc[0],
                 propulsion_efficiency= resultID_df['propulsion_efficiency'].iloc[0],
                 score_weight_ratio= resultID_df['score_weight_ratio'].iloc[0]               
-                
             )
               
             propulsionSpecs = PropulsionSpecs(
@@ -89,25 +96,32 @@ if __name__ == "__main__":
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
 
             param3 = MissionParameters(
-                            max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0],          # Fixed
-                            throttle_climb = resultID_df['mission3_throttle_climb'].iloc[0],
-                            throttle_level = resultID_df['mission3_throttle_level'].iloc[0],
-                            throttle_turn = resultID_df['mission3_throttle_turn'].iloc[0],                
-                            max_speed= 40,                       # Fixed
-                            max_load_factor = 4.0,               # Fixed
+                max_speed= resultID_df['M3_max_speed'].iloc[0],                   
+                max_load_factor = 4.0,  
+                                          
+                throttle_climb = resultID_df['mission3_throttle_climb'].iloc[0],
+                throttle_level = resultID_df['mission3_throttle_level'].iloc[0],
+                throttle_turn = resultID_df['mission3_throttle_turn'].iloc[0],
+                
+                propeller_data_path = resultID_df['M3_propeller_data_path'].iloc[0], 
+                max_battery_capacity = resultID_df['max_battery_capacity'].iloc[0]                            
+
             )
             
             presetValues = PresetValues(
-                            m_x1= resultID_df['m_x1'].iloc[0],
-                            x1_flight_time= resultID_df['x1_flight_time'].iloc[0],
-                            number_of_motor=resultID_df['number_of_motor'].iloc[0],
-
-                            max_battery_capacity= resultID_df['max_battery_capacity'].iloc[0],
-                            min_battery_voltage= resultID_df['min_battery_voltage'].iloc[0],
-
-                            Thrust_max= resultID_df['Thrust_max'].iloc[0],
-                            propulsion_efficiency= resultID_df['propulsion_efficiency'].iloc[0],
-                            score_weight_ratio= resultID_df['score_weight_ratio'].iloc[0]               
+                m_x1= resultID_df['m_x1'].iloc[0],
+                x1_flight_time= resultID_df['x1_flight_time'].iloc[0],
+                
+                throttle_takeoff = resultID_df['throttle_takeoff'].iloc[0],
+                max_climb_angle = resultID_df['max_climb_angle'].iloc[0],
+                max_load = resultID_df['max_load'].iloc[0],
+                h_flap_transition = resultID_df['h_flap_transition'].iloc[0],
+                
+                number_of_motor= resultID_df['number_of_motor'].iloc[0],
+                max_battery_capacity= resultID_df['max_battery_capacity'].iloc[0],
+                min_battery_voltage= resultID_df['min_battery_voltage'].iloc[0],
+                propulsion_efficiency= resultID_df['propulsion_efficiency'].iloc[0],
+                score_weight_ratio= resultID_df['score_weight_ratio'].iloc[0]    
                 
             )
              
