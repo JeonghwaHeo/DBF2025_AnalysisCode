@@ -32,27 +32,27 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
                 aircraftParamConstraint.twist_max + aircraftParamConstraint.twist_interval/2, 
                 aircraftParamConstraint.twist_interval
                 )
-        total_mass_list = np.arange(
-                aircraftParamConstraint.m_total_min, 
-                aircraftParamConstraint.m_total_max + aircraftParamConstraint.m_total_interval/2, 
-                aircraftParamConstraint.m_total_interval
-                )
         
-        filtered_combinations = []
-        for span, AR, taper, twist, m_total in product(span_list, AR_list, taper_list, twist_list, total_mass_list):
-                wing_area = (span*0.001)**2 / AR # wing area
-                wing_loading = (m_total*0.001) / wing_area # wing loading
-                if aircraftParamConstraint.wing_loading_min <= wing_loading <= aircraftParamConstraint.wing_loading_max:
-                        filtered_combinations.append((span, AR, taper, twist, m_total))
-
-        print(f"Total number of combinations (before applying constraints): {len(span_list) * len(AR_list) * len(taper_list) * len(twist_list) * len(total_mass_list)}")
-        print(f"Valid number of combinations (after applying constraints): {len(filtered_combinations)}")
+        vsp_grid_combinations = product(span_list,AR_list,taper_list,twist_list)
+        # total_mass_list = np.arange(
+        #         aircraftParamConstraint.m_total_min, 
+        #         aircraftParamConstraint.m_total_max + aircraftParamConstraint.m_total_interval/2, 
+        #         aircraftParamConstraint.m_total_interval
+        #         )
+        
+        # filtered_combinations = []
+        # for span, AR, taper, twist in product(span_list, AR_list, taper_list, twist_list):
+        #         wing_area = (span*0.001)**2 / AR # wing area
+        #         wing_loading = (m_total*0.001) / wing_area # wing loading
+        #         if aircraftParamConstraint.wing_loading_min <= wing_loading <= aircraftParamConstraint.wing_loading_max:
+        #                 filtered_combinations.append((span, AR, taper, twist, m_total))
+        total = len(span_list) * len(AR_list) * len(taper_list) * len(twist_list)
+        print(f"Total number of combinations: {total}")
         
         print(f"\nspan list: {span_list}")
         print(f"AR list: {AR_list}")
         print(f"taper list: {taper_list}")
         print(f"twist list: {twist_list}")
-        print(f"total mass list: {total_mass_list}")
         
         alpha_start = aerodynamicSetup.alpha_start
         alpha_end = aerodynamicSetup.alpha_end
@@ -62,22 +62,20 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
         
         vspAnalyzer = VSPAnalyzer(presetValues)
 
-        for i, (span, AR, taper, twist, m_total) in enumerate(filtered_combinations):
-                print(f"\n[{time.strftime('%Y-%m-%d %X')}] VSP Grid Progress: {i+1}/{len(filtered_combinations)} configurations")
-                aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist, m_total = m_total)   
+        for i, (span, AR, taper, twist) in enumerate(vsp_grid_combinations):
+                print(f"\n[{time.strftime('%Y-%m-%d %X')}] VSP Grid Progress: {i+1}/{total} configurations")
+                aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist)   
 
                 vspAnalyzer.setup_vsp_model(aircraft)
                 analResults = vspAnalyzer.calculateCoefficients(
                         alpha_start = alpha_start, alpha_end = alpha_end, alpha_step = alpha_step,
                         CD_fuse = CD_fuse, fuselage_cross_section_area = fuselage_cross_section_area, 
 
-                        AOA_stall = 13,
-                        AOA_takeoff_max = 10,
-                        AOA_climb_max = 8,
-                        AOA_turn_max = 8,
-
-                        m_total = m_total,
-
+                        AOA_stall = aerodynamicSetup.AOA_stall,
+                        AOA_takeoff_max = aerodynamicSetup.AOA_takeoff_max,
+                        AOA_climb_max = aerodynamicSetup.AOA_climb_max,
+                        AOA_turn_max = aerodynamicSetup.AOA_turn_max,
+                        
                         clearModel=False
                         )
 
@@ -98,10 +96,6 @@ def get_fuselageCD_list(alpha_start,alpha_end,alpha_step,csvPath):
 if __name__ == "__main__":
     runVSPGridAnalysis(
             AircraftParamConstraints (
-                #Constraints for constructing the aircraf
-                m_total_max = 8600,
-                m_total_min = 8500,
-                m_total_interval = 100,
                 # wing parameter ranges
                 span_max = 1800.0,                     # mm
                 span_min = 1800.0,
@@ -124,7 +118,7 @@ if __name__ == "__main__":
                     score_weight_ratio = 1            # mission2/3 score weight ratio
                     ), 
             Aircraft(
-               m_total = 8500, m_fuselage = 5000,
+               m_fuselage = 5000,
 
                wing_density = 0.0000852, spar_density = 1.0,
 

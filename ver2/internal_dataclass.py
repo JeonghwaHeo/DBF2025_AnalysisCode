@@ -19,7 +19,7 @@ class Aircraft:
     """Aircraft Geometry configuration"""
     
     # Total mass of the aircraft
-    m_total: float
+    # m_total: float
     m_fuselage: float ## Just copy from preset value? 애매하다
 
     # Mass properties of the aircraft
@@ -59,7 +59,6 @@ class Aircraft:
             
             # Create a dictionary of all fields with formatted values
             hash_dict = {
-                "m_total": format_number(self.m_total),
                 "m_fuselage": format_number(self.m_fuselage),
                 "wing_density": format_number(self.wing_density),
                 "spar_density": format_number(self.spar_density),
@@ -100,11 +99,11 @@ class AircraftAnalysisResults:
     aircraft: Aircraft
 
     # Mass properties
-    m_total : float
+    m_empty : float
     m_boom: float
     m_wing: float
     #m_empty: float
-    m_fuel: float # Must be gt 0, 
+    # m_fuel: float # Must be gt 0, 
     
     Lw: float
     Lh: float
@@ -148,7 +147,7 @@ class AircraftAnalysisResults:
 class MissionParameters:
     """Additional Parameters for running the mission(s)"""
 
-    # m_total: float
+    m_takeoff : float
     max_speed: float
     max_load_factor: float
     

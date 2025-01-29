@@ -37,14 +37,18 @@ class AerodynamicSetup:
     alpha_step : float
     fuselage_cross_section_area : float
     fuselage_Cd_datapath : str
+    AOA_stall : str
+    AOA_takeoff_max : str
+    AOA_climb_max : str
+    AOA_turn_max : str    
     
     
 @dataclass
 class AircraftParamConstraints:
     # total mass of the aircraft
-    m_total_max: float
-    m_total_min: float
-    m_total_interval: float
+    # m_total_max: float
+    # m_total_min: float
+    # m_total_interval: float
     
     # wing parameter ranges
     span_max: float
@@ -66,6 +70,10 @@ class AircraftParamConstraints:
 
 @dataclass
 class MissionParamConstraints:
+
+    MTOW_min : float
+    MTOW_max : float
+    MTOW_analysis_interval: float
 
     M2_max_speed_min : float
     M2_max_speed_max : float

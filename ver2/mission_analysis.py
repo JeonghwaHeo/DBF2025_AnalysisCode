@@ -30,6 +30,7 @@ class MissionAnalyzer():
         self.presetValues = presetValues
         self.propulsionSpecs = propulsionSpecs
         self.dt = dt
+        self.m_fuel = max(self.missionParam.m_takeoff - self.analResult.m_empty,0) 
 
         self.convert_propellerCSV_to_ndarray(self.missionParam.propeller_data_path)
         self.convert_batteryCSV_to_ndarray(self.propulsionSpecs.battery_data_path)
@@ -40,7 +41,6 @@ class MissionAnalyzer():
         # Create new aircraft instance with converted units
         new_aircraft = Aircraft(
             # Mass conversions (g to kg)
-            m_total=results.aircraft.m_total / 1000,
             m_fuselage=results.aircraft.m_fuselage / 1000,
             
             # Density conversions (g/mm³ to kg/m³)
@@ -81,8 +81,7 @@ class MissionAnalyzer():
             alpha_list=results.alpha_list,
             
             # Mass conversions (g to kg)
-            m_total = results.m_total / 1000,
-            m_fuel=results.m_fuel / 1000,
+            m_empty=results.m_empty / 1000,
             m_boom=results.m_boom / 1000,
             m_wing=results.m_wing / 1000,
             
@@ -159,7 +158,7 @@ class MissionAnalyzer():
     
     def setAuxVals(self) -> None:
         
-        self.weight = self.aircraft.m_total * g
+        self.weight = self.missionParam.m_takeoff * g
         
         self.v_takeoff = (math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_flap_max)))
 
@@ -197,16 +196,16 @@ class MissionAnalyzer():
                     raise ValueError("Didn't provide a correct PhaseType!")
             self.state.phase += 1
             #print("Changed Phase")
-            if(not self._mission_viable()):
-                return -1
+            # if(not self._mission_viable()):
+            #     return -1
         return 0
 
-    ## TODO Maybe implement this?
-    def _mission_viable(self):
-        if(self.aircraft.m_total < 0):
-            return False
+    # ## TODO Maybe implement this?
+    # def _mission_viable(self):
+    #     if(self.aircraft.m_total < 0):
+    #         return False
 
-        return True
+    #     return True
 
     def run_mission2(self) -> float:
 
@@ -243,7 +242,7 @@ class MissionAnalyzer():
         last_state.N_laps = 3     
         if(result == -1): return 0
         
-        return self.analResult.m_fuel, self.state.time
+        return self.m_fuel, self.state.time
 
     def run_mission3(self) -> float:
         
@@ -355,7 +354,7 @@ class MissionAnalyzer():
             
             self.state.acceleration = calculate_acceleration_groundroll(
                     self.state.velocity,
-                    self.aircraft.m_total,
+                    self.missionParam.m_takeoff,
                     self.weight,
                     self.analResult.Sref,
                     self.analResult.CD_flap_zero, self.analResult.CL_flap_zero,
@@ -393,7 +392,7 @@ class MissionAnalyzer():
             
             self.state.acceleration = calculate_acceleration_groundrotation(
                     self.state.velocity,
-                    self.aircraft.m_total,
+                    self.missionParam.m_takeoff,
                     self.weight,
                     self.analResult.Sref,
                     self.analResult.CD_flap_max, self.analResult.CL_flap_max,
@@ -514,7 +513,7 @@ class MissionAnalyzer():
             
             self.state.acceleration = RK4_step(self.state.velocity,self.dt,
                          lambda v: calculate_acceleration_climb(v, 
-                                                                self.aircraft.m_total,
+                                                                self.missionParam.m_takeoff,
                                                                 self.weight,
                                                                 self.analResult.Sref,
                                                                 self.CL_func,
@@ -609,7 +608,7 @@ class MissionAnalyzer():
                 self.updateBatteryState(self.state.battery_SoC)
     
                 self.state.acceleration = RK4_step(self.state.velocity,self.dt,
-                             lambda v: calculate_acceleration_level(v,self.aircraft.m_total, 
+                             lambda v: calculate_acceleration_level(v,self.missionParam.m_takeoff, 
                                                                     self.analResult.Sref,
                                                                     self.CD_func, alpha_w_deg,
                                                                     T_cruise))
@@ -631,7 +630,7 @@ class MissionAnalyzer():
                 self.updateBatteryState(self.state.battery_SoC)
 
                 self.state.acceleration =  RK4_step(self.state.velocity,self.dt,
-                             lambda v: calculate_acceleration_level(v,self.aircraft.m_total, 
+                             lambda v: calculate_acceleration_level(v,self.missionParam.m_takeoff, 
                                                                     self.analResult.Sref,
                                                                     self.CD_func, alpha_w_deg,
                                                                     T_climb))
@@ -704,8 +703,8 @@ class MissionAnalyzer():
                 L = dynamic_pressure * CL
                 phi_rad = math.acos(weight/L)
                 
-                a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
-                R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
+                a_centripetal = (L * math.sin(phi_rad)) / self.missionParam.m_takeoff
+                R = (self.missionParam.m_takeoff * speed**2)/(L * math.sin(phi_rad))
                 omega = speed / R
 
                 self.state.loadfactor = 1 / math.cos(phi_rad)
@@ -725,7 +724,7 @@ class MissionAnalyzer():
                 _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
                 
                 T_turn = self.state.thrust * g # total N              
-                a_tangential = (T_turn - D) / self.aircraft.m_total
+                a_tangential = (T_turn - D) / self.missionParam.m_takeoff
                 
                 speed += a_tangential * self.dt
                 self.updateBatteryState(self.state.battery_SoC)
@@ -741,8 +740,8 @@ class MissionAnalyzer():
                 L = dynamic_pressure * CL
                 phi_rad = math.acos(weight/L)
 
-                a_centripetal = (L * math.sin(phi_rad)) / self.aircraft.m_total
-                R = (self.aircraft.m_total * speed**2)/(L * math.sin(phi_rad))
+                a_centripetal = (L * math.sin(phi_rad)) / self.missionParam.m_takeoff
+                R = (self.missionParam.m_takeoff * speed**2)/(L * math.sin(phi_rad))
                 omega = speed / R
 
                 self.state.loadfactor = 1 / math.cos(phi_rad)
@@ -763,7 +762,7 @@ class MissionAnalyzer():
                 thrust_per_motor = self.state.thrust / self.presetValues.number_of_motor
                 _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
                 
-                a_tangential = (T - D) / self.aircraft.m_total
+                a_tangential = (T - D) / self.missionParam.m_takeoff
                 speed += a_tangential * self.dt
 
                 self.updateBatteryState(self.state.battery_SoC)
@@ -854,7 +853,7 @@ def fast_norm(v):
     """Faster alternative to np.linalg.norm for 3D vectors"""
     return math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
 
-def calculate_acceleration_groundroll(v, m_total, Weight,
+def calculate_acceleration_groundroll(v, m, Weight,
                                       Sref,
                                       CD_zero_flap,CL_zero_flap,
                                       T_takeoff)->np.ndarray:
@@ -862,10 +861,10 @@ def calculate_acceleration_groundroll(v, m_total, Weight,
     speed = fast_norm(v)
     D = 0.5 * rho * speed**2 * Sref * CD_zero_flap
     L = 0.5 * rho * speed**2 * Sref * CL_zero_flap
-    a_x = (T_takeoff - D - 0.03*(Weight-L)) / m_total              # calculate x direction acceleration 
+    a_x = (T_takeoff - D - 0.03*(Weight-L)) / m              # calculate x direction acceleration 
     return np.array([a_x, 0, 0])
 
-def calculate_acceleration_groundrotation(v, m_total, Weight,
+def calculate_acceleration_groundrotation(v, m, Weight,
                                           Sref,
                                           CD_max_flap,CL_max_flap,
                                           T_takeoff)->np.ndarray:
@@ -873,18 +872,18 @@ def calculate_acceleration_groundrotation(v, m_total, Weight,
     speed = fast_norm(v)
     D = 0.5 * rho * speed**2 * Sref * CD_max_flap
     L = 0.5 * rho * speed**2 * Sref * CL_max_flap
-    a_x = (T_takeoff - D - 0.03*(Weight-L)) / m_total            # calculate x direction acceleration 
+    a_x = (T_takeoff - D - 0.03*(Weight-L)) / m            # calculate x direction acceleration 
     return np.array([a_x, 0, 0])
 
-def calculate_acceleration_level(v, m_total, Sref, CD_func, alpha_deg, T):
+def calculate_acceleration_level(v, m, Sref, CD_func, alpha_deg, T):
     # Function that calculates the acceleration during level flight
     speed = fast_norm(v)
     CD = float(CD_func(alpha_deg))
     D = 0.5 * rho * speed**2 * Sref * CD
-    a_x = (T * math.cos(math.radians(alpha_deg)) - D) / m_total
+    a_x = (T * math.cos(math.radians(alpha_deg)) - D) / m
     return np.array([a_x, 0, 0])
 
-def calculate_acceleration_climb(v, m_total, Weight, 
+def calculate_acceleration_climb(v, m, Weight, 
                                  Sref, 
                                  CL_func, CD_func, 
                                  CL_max_flap, CD_max_flap, 
@@ -909,8 +908,8 @@ def calculate_acceleration_climb(v, m_total, Weight,
     D = 0.5 * rho * speed**2 * Sref * CD
     L = 0.5 * rho * speed**2 * Sref * CL
 
-    a_x = (T_climb * math.cos(theta_rad) - L * math.sin(gamma_rad) - D * math.cos(gamma_rad) )/ m_total
-    a_z = (T_climb * math.sin(theta_rad) + L * math.cos(gamma_rad) - D * math.sin(gamma_rad) - Weight )/ m_total
+    a_x = (T_climb * math.cos(theta_rad) - L * math.sin(gamma_rad) - D * math.cos(gamma_rad) )/ m
+    a_z = (T_climb * math.sin(theta_rad) + L * math.cos(gamma_rad) - D * math.sin(gamma_rad) - Weight )/ m
     
     return np.array([a_x,0,a_z])
 
