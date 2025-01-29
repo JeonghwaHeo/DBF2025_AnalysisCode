@@ -149,20 +149,16 @@ class MissionParameters:
     """Additional Parameters for running the mission(s)"""
 
     # m_total: float
-
-    max_climb_angle: float
     max_speed: float
     max_load_factor: float
     
-    # 
-    h_flap_transition: float
-
     # Thrust and Throttle 
     throttle_climb: float
-    throttle_turn: float
     throttle_level: float
-
+    throttle_turn: float
+    
     # Battery 
+    propeller_data_path : str
     max_battery_capacity: float
 
 

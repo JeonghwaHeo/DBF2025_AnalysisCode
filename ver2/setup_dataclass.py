@@ -20,7 +20,8 @@ class PresetValues:
 
 @dataclass
 class PropulsionSpecs:
-    propeller_data_path: str
+    M2_propeller_data_path: str
+    M3_propeller_data_path : str
     battery_data_path : str
     Kv : float
     R : float

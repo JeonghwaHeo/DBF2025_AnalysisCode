@@ -30,7 +30,7 @@ class MissionAnalyzer():
         self.propulsionSpecs = propulsionSpecs
         self.dt = dt
 
-        self.convert_propellerCSV_to_ndarray(self.propulsionSpecs.propeller_data_path)
+        self.convert_propellerCSV_to_ndarray(self.missionParam.propeller_data_path)
         self.convert_batteryCSV_to_ndarray(self.propulsionSpecs.battery_data_path)
         self.clearState()
         self.setAuxVals()
@@ -317,7 +317,7 @@ class MissionAnalyzer():
         return L, L/self.weight 
 
     def isBelowFlapTransition(self):
-        return self.state.position[2] < self.missionParam.h_flap_transition  
+        return self.state.position[2] < self.presetValues.h_flap_transition  
     
     def updateBatteryState(self,SoC):
         capacity = self.propulsionSpecs.battery_Wh * SoC / 100
@@ -439,18 +439,18 @@ class MissionAnalyzer():
 
             if direction == 'right':
                 # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -5 degree)
-                if(self.state.position[2] < self.missionParam.h_flap_transition and 
+                if(self.state.position[2] < self.presetValues.h_flap_transition and 
                    self.state.position[0] < x_max_distance):
                     alpha_w_deg = self.analResult.AOA_takeoff_max
-                elif(self.missionParam.h_flap_transition <= self.state.position[2] < h_target and 
+                elif(self.presetValues.h_flap_transition <= self.state.position[2] < h_target and 
                      self.state.position[0] < x_max_distance):
                     load_factor = self.calculate_Lift_and_Loadfactor(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
             
                     if (load_factor < self.missionParam.max_load_factor and 
-                        gamma_rad < math.radians(self.missionParam.max_climb_angle)):
+                        gamma_rad < math.radians(self.presetValues.max_climb_angle)):
                         alpha_w_deg = self.analResult.AOA_climb_max
                     elif (load_factor >= self.missionParam.max_load_factor and 
-                          gamma_rad < math.radians(self.missionParam.max_climb_angle)):
+                          gamma_rad < math.radians(self.presetValues.max_climb_angle)):
                         alpha_w_deg = float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/
                                                           (rho * fast_norm(self.state.velocity)**2 * self.analResult.Sref)))
                     else:
@@ -458,7 +458,7 @@ class MissionAnalyzer():
                         alpha_w_deg = max(alpha_w_deg, -5)
                 else:
                     break_flag = True
-                    if gamma_rad > math.radians(self.missionParam.max_climb_angle):
+                    if gamma_rad > math.radians(self.presetValues.max_climb_angle):
                         alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)
                     else:
@@ -467,18 +467,18 @@ class MissionAnalyzer():
             
             elif direction == 'left':
                 # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -5 degree)
-                if(self.state.position[2] < self.missionParam.h_flap_transition and 
+                if(self.state.position[2] < self.presetValues.h_flap_transition and 
                    self.state.position[0] > x_max_distance):
                     alpha_w_deg = self.analResult.AOA_takeoff_max
-                elif(self.missionParam.h_flap_transition <= self.state.position[2] < h_target and 
+                elif(self.presetValues.h_flap_transition <= self.state.position[2] < h_target and 
                      self.state.position[0] > x_max_distance):
                     load_factor = self.calculate_Lift_and_Loadfactor(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
             
                     if (load_factor < self.missionParam.max_load_factor and 
-                        gamma_rad < math.radians(self.missionParam.max_climb_angle)):
+                        gamma_rad < math.radians(self.presetValues.max_climb_angle)):
                         alpha_w_deg = self.analResult.AOA_climb_max
                     elif (load_factor >= self.missionParam.max_load_factor and 
-                          gamma_rad < math.radians(self.missionParam.max_climb_angle)):
+                          gamma_rad < math.radians(self.presetValues.max_climb_angle)):
                         alpha_w_deg = float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/
                                                           (rho * fast_norm(self.state.velocity)**2 * self.analResult.Sref)))
                     else:
@@ -486,7 +486,7 @@ class MissionAnalyzer():
                         alpha_w_deg = max(alpha_w_deg, -5)
                 else:
                     break_flag = True
-                    if gamma_rad > math.radians(self.missionParam.max_climb_angle):
+                    if gamma_rad > math.radians(self.presetValues.max_climb_angle):
                         alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)
                     else:
@@ -1136,14 +1136,14 @@ if __name__=="__main__":
     a=loadAnalysisResults(1963897528543531429)
     
     param = MissionParameters(
+        max_speed= 40,                       # Fixed
+        max_load_factor = 4.0,               # Fixed
         max_battery_capacity = 2250,
         throttle_climb = 0.9,
         throttle_level = 0.5,
-        throttle_turn = 0.5,                
-        max_climb_angle = 40,                # Fixed
-        max_speed= 40,                       # Fixed
-        max_load_factor = 4.0,               # Fixed
-        h_flap_transition = 5                # Fixed
+        throttle_turn = 0.5,               
+        propeller_data_path = "data/propDataCSV/PER3_8x6E.csv", 
+
     )
     
     presetValues = PresetValues(
@@ -1157,7 +1157,8 @@ if __name__=="__main__":
     )
         
     propulsionSpecs = PropulsionSpecs(
-        propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
+        M2_propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
+        M3_propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
         battery_data_path = "data/batteryDataCSV/Maxamps_2250mAh_6S.CSV",
         Kv = 109.91,
         R = 0.062,

@@ -77,26 +77,28 @@ def runMissionGridSearch(hashVal:str,
 
         # Create mission 2 parameters for this combination
         mission2Params = MissionParameters(
-            max_battery_capacity = presetValues.max_battery_capacity,       
-            throttle_climb = M2_throttle_climb,
-            throttle_level = M2_throttle_level,
-            throttle_turn = M2_throttle_turn,                
-            max_climb_angle = presetValues.max_climb_angle,                # Fixed
             max_speed= 40,                       # Fixed
             max_load_factor = 4.0,               # Fixed
-            h_flap_transition = 5                # Fixed
+                  
+            throttle_climb = M2_throttle_climb,
+            throttle_level = M2_throttle_level,
+            throttle_turn = M2_throttle_turn,    # Fixed
+
+            propeller_data_path=propulsionSpecs.M2_propeller_data_path,
+            max_battery_capacity = presetValues.max_battery_capacity 
         )
 
         # Create mission 3 parameters for this combination
         mission3Params = MissionParameters(
-            max_battery_capacity = presetValues.max_battery_capacity,
-            throttle_climb = M3_throttle_climb,
-            throttle_level = M3_throttle_level,
-            throttle_turn = M3_throttle_turn,                
-            max_climb_angle = presetValues.max_climb_angle,                # Fixed
             max_speed= 40,                       # Fixed
             max_load_factor = 4.0,               # Fixed
-            h_flap_transition = 5                # Fixed
+                  
+            throttle_climb = M3_throttle_climb,
+            throttle_level = M3_throttle_level,
+            throttle_turn = M3_throttle_turn,    # Fixed
+
+            propeller_data_path=propulsionSpecs.M3_propeller_data_path,
+            max_battery_capacity = presetValues.max_battery_capacity 
         )
 
         try:

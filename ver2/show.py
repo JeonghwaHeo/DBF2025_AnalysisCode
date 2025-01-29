@@ -47,10 +47,8 @@ if __name__ == "__main__":
                 throttle_climb = resultID_df['mission2_throttle_climb'].iloc[0],
                 throttle_level = resultID_df['mission2_throttle_level'].iloc[0],
                 throttle_turn = resultID_df['mission2_throttle_turn'].iloc[0],                
-                max_climb_angle = 40,                # Fixed
                 max_speed= 40,                       # Fixed
                 max_load_factor = 4.0,               # Fixed
-                h_flap_transition = 5                # Fixed
             )
             
             presetValues = PresetValues(
@@ -67,7 +65,8 @@ if __name__ == "__main__":
             )
               
             propulsionSpecs = PropulsionSpecs(
-                propeller_data_path = resultID_df['propeller_data_path'].iloc[0],
+                M2_propeller_data_path = resultID_df['M2_propeller_data_path'].iloc[0],
+                M3_propeller_data_path = resultID_df['M3_propeller_data_path'].iloc[0],
                 battery_data_path = resultID_df['battery_data_path'].iloc[0],
                 Kv = resultID_df['Kv'].iloc[0],
                 R = resultID_df['R'].iloc[0],
@@ -94,10 +93,8 @@ if __name__ == "__main__":
                             throttle_climb = resultID_df['mission3_throttle_climb'].iloc[0],
                             throttle_level = resultID_df['mission3_throttle_level'].iloc[0],
                             throttle_turn = resultID_df['mission3_throttle_turn'].iloc[0],                
-                            max_climb_angle = 40,                # Fixed
                             max_speed= 40,                       # Fixed
                             max_load_factor = 4.0,               # Fixed
-                            h_flap_transition = 5                # Fixed
             )
             
             presetValues = PresetValues(
@@ -115,7 +112,8 @@ if __name__ == "__main__":
             )
              
             propulsionSpecs = PropulsionSpecs(
-                propeller_data_path = resultID_df['propeller_data_path'].iloc[0],
+                M2_propeller_data_path = resultID_df['M2_propeller_data_path'].iloc[0],
+                M3_propeller_data_path = resultID_df['M3_propeller_data_path'].iloc[0],
                 battery_data_path = resultID_df['battery_data_path'].iloc[0],
                 Kv = resultID_df['Kv'].iloc[0],
                 R = resultID_df['R'].iloc[0],

@@ -20,7 +20,7 @@ def main():
         x1_flight_time = 30,                # sec
         
         throttle_takeoff = 0.9,             # 0~1
-        max_climb_angle = 40,               # deg
+        max_climb_angle=40,                 #deg
         max_load = 30,                      # kg
         h_flap_transition = 5,              # m
         
@@ -32,7 +32,8 @@ def main():
         )
     
     propulsionSpecs = PropulsionSpecs(
-        propeller_data_path = "data/propDataCSV/PER3_8x6E.csv",
+        M2_propeller_data_path = "data/propDataCSV/PER3_8x6E.csv",
+        M3_propeller_data_path = "data/propDataCSV/PER3_8x6E.csv",
         battery_data_path = "data/batteryDataCSV/Maxamps_2250mAh_6S.csv",
         Kv = 109.91,
         R = 0.062,
