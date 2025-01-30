@@ -597,7 +597,7 @@ class MissionAnalyzer():
             alpha_w_deg = self.calculate_level_alpha(self.state.velocity)
                 
             # Speed limiting while maintaining direction
-            if speed >= self.missionParam.max_speed:  # Original speed limit
+            if speed >= self.missionParam.max_speed - 0.005:  # Original speed limit
                 cruise_flag = 1
 
             if cruise_flag == 1:
@@ -713,7 +713,7 @@ class MissionAnalyzer():
             if abs(turned_angle_rad) < abs(target_angle_rad):
                 self.state.time += self.dt
 
-                if speed < max_speed:
+                if speed < max_speed - 0.005: # numerical error
                         # Pre-calculate shared terms
                         dynamic_pressure = dynamic_pressure_base * speed * speed
                         
