@@ -16,7 +16,7 @@ rho = 1.20
 # Values from sizing tool
 # m_total = 8.5           # total takeoff weight(kg)
 m_x1 = 0.2                # X-1 test vehicle weight(kg)
-x1_flight_time = 30       # total flight time of the X-1 test vehicle from launch to landing (s)
+x1_time_margin = 30       # total flight time of the X-1 test vehicle from launch to landing (s)
 
 # Values from aerodynamic analysis block
 alpha_result = [-3.5, -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
@@ -627,7 +627,7 @@ def truncate_data(time_limit, lap_start_index):
 def run_mission3():
     phase_index.append(0)
 
-    time_limit = 300 - x1_flight_time  # 270 seconds
+    time_limit = 300 - x1_time_margin  # 270 seconds
     N_laps = 0
 
     ### First Lap ###
@@ -708,7 +708,7 @@ def run_mission3():
                 truncate_data(time_limit, lap_start_index)
                 print(f"\nNumber of laps : {N_laps}, Time taken : {max(time_list)}")
                 # Calulate Objective2 (N_laps + bonus / glider weight)
-                obj3 = N_laps + 2.5 / m_x1
+                obj3 = N_laps - 1 + 2.5 / m_x1
                 print(f"Objective3 : {obj3}")
 
                 return  # Exit the simulation

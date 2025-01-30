@@ -57,7 +57,7 @@ if __name__ == "__main__":
             
             presetValues = PresetValues(
                 m_x1= resultID_df['m_x1'].iloc[0],
-                x1_flight_time= resultID_df['x1_flight_time'].iloc[0],
+                x1_time_margin= resultID_df['x1_time_margin'].iloc[0],
                 
                 throttle_takeoff = resultID_df['throttle_takeoff'].iloc[0],
                 max_climb_angle = resultID_df['max_climb_angle'].iloc[0],
@@ -109,7 +109,7 @@ if __name__ == "__main__":
             
             presetValues = PresetValues(
                 m_x1= resultID_df['m_x1'].iloc[0],
-                x1_flight_time= resultID_df['x1_flight_time'].iloc[0],
+                x1_time_margin= resultID_df['x1_time_margin'].iloc[0],
                 
                 throttle_takeoff = resultID_df['throttle_takeoff'].iloc[0],
                 max_climb_angle = resultID_df['max_climb_angle'].iloc[0],

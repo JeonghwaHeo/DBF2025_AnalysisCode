@@ -59,7 +59,8 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
                 analResults = vspAnalyzer.calculateCoefficients(
                         alpha_start = alpha_start, alpha_end = alpha_end, alpha_step = alpha_step,
                         CD_fuse = CD_fuse, fuselage_cross_section_area = fuselage_cross_section_area, 
-
+                        wing_area_blocked_by_fuselage = baseAircraft.wing_area_blocked_by_fuselage,
+                        
                         AOA_stall = aerodynamicSetup.AOA_stall,
                         AOA_takeoff_max = aerodynamicSetup.AOA_takeoff_max,
                         AOA_climb_max = aerodynamicSetup.AOA_climb_max,
@@ -101,7 +102,7 @@ if __name__ == "__main__":
                 ),
             PresetValues(
                     m_x1 = 0.2,                       # kg
-                    x1_flight_time = 30,              # sec
+                    x1_time_margin = 30,              # sec
                     Thrust_max = 6.6,                 # kg (two motors)
                     min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
                     score_weight_ratio = 1            # mission2/3 score weight ratio

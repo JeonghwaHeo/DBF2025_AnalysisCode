@@ -5,7 +5,7 @@ rho
 # PresetValues
 m_fuselage 코드상 m_empty 라 돼있음??
 m_x1
-x1_flight_time
+x1_time_margin
 max_battery_capacity
 T_max_kg -> Thrust_max
 score_weight_ratio

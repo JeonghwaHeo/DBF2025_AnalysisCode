@@ -17,7 +17,7 @@ def main():
 
     presetValues = PresetValues(
         m_x1 = 200,                         # g
-        x1_flight_time = 30,                # sec
+        x1_time_margin = 10,                # sec
         
         throttle_takeoff = 0.9,             # 0~1
         max_climb_angle=40,                 #deg
@@ -78,7 +78,7 @@ def main():
     )
     baseAircraft = Aircraft(
         m_fuselage = 3000,
-
+        wing_area_blocked_by_fuselage = 72640,
         wing_density = 0.0000852,
 
         mainwing_span = 1800,        
@@ -87,7 +87,7 @@ def main():
         mainwing_twist = 0.0,        
         mainwing_sweepback = 0,   
         mainwing_dihedral = 5.0,     
-        mainwing_incidence = 2.0,    
+        mainwing_incidence = 0.0,    
 
         flap_start = [0.05, 0.4],            
         flap_end = [0.25, 0.6],              
@@ -102,7 +102,12 @@ def main():
 
         vertical_volume_ratio = 0.053,
         vertical_taper = 0.6,        
-        vertical_ThickChord = 9  
+        vertical_ThickChord = 9,  
+        
+        mainwing_airfoil_datapath = "data/airfoilDAT/s9027.dat",
+        horizontal_airfoil_datapath= "data/airfoilDAT/naca0008.dat",
+        vertical_airfoil_datapath= "data/airfoilDAT/naca0009.dat"
+        
         )
 
     runVSPGridAnalysis(aircraftParamConstraints,aerodynamicSetup, presetValues,baseAircraft)

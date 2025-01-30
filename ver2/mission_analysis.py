@@ -42,7 +42,7 @@ class MissionAnalyzer():
         new_aircraft = Aircraft(
             # Mass conversions (g to kg)
             m_fuselage=results.aircraft.m_fuselage / 1000,
-            
+            wing_area_blocked_by_fuselage= results.aircraft.wing_area_blocked_by_fuselage / 1e6, 
             # Density conversions (g/mm³ to kg/m³)
             wing_density=results.aircraft.wing_density * 1e9,
             
@@ -71,7 +71,11 @@ class MissionAnalyzer():
             horizontal_ThickChord=results.aircraft.horizontal_ThickChord,
             vertical_volume_ratio=results.aircraft.vertical_volume_ratio,
             vertical_taper=results.aircraft.vertical_taper,
-            vertical_ThickChord=results.aircraft.vertical_ThickChord
+            vertical_ThickChord=results.aircraft.vertical_ThickChord,
+            mainwing_airfoil_datapath=results.aircraft.mainwing_airfoil_datapath,
+            horizontal_airfoil_datapath=results.aircraft.horizontal_airfoil_datapath,
+            vertical_airfoil_datapath=results.aircraft.vertical_airfoil_datapath
+            
         )
         
         # Create new analysis results with converted units
@@ -266,7 +270,7 @@ class MissionAnalyzer():
 
         # Store starting index for each lap to handle truncation if needed
         self.state.N_laps = 1
-        time_limit = 300 - self.presetValues.x1_flight_time  # 270 seconds
+        time_limit = 300 - self.presetValues.x1_time_margin  
 
         # Define lap2 phases
         lap2 = [
@@ -1144,7 +1148,7 @@ if __name__=="__main__":
     
     presetValues = PresetValues(
         m_x1 = 0.25,                        # kg
-        x1_flight_time = 30,                # sec
+        x1_time_margin = 30,                # sec
         number_of_motor = 2,                 
         min_battery_voltage = 21.8,         # V 
         score_weight_ratio = 0.5            # mission2/3 score weight ratio            

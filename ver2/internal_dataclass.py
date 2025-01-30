@@ -20,7 +20,7 @@ class Aircraft:
     
     # Total mass of the aircraft
     m_fuselage: float ## Just copy from preset value? 애매하다
-
+    wing_area_blocked_by_fuselage : float
     # Mass properties of the aircraft
     wing_density: float
 
@@ -48,6 +48,10 @@ class Aircraft:
     vertical_volume_ratio: float
     vertical_taper: float
     vertical_ThickChord: float
+    
+    mainwing_airfoil_datapath : str
+    horizontal_airfoil_datapath : str
+    vertical_airfoil_datapath : str
 
     def __hash__(self) -> int:
             # Convert all the numerical values to strings with fixed precision
@@ -58,6 +62,7 @@ class Aircraft:
             # Create a dictionary of all fields with formatted values
             hash_dict = {
                 "m_fuselage": format_number(self.m_fuselage),
+                "wing_area_blocked_by_fuselage" : format_number(self.wing_area_blocked_by_fuselage), 
                 "wing_density": format_number(self.wing_density),
                 "mainwing_span": format_number(self.mainwing_span),
                 "mainwing_AR": format_number(self.mainwing_AR),
@@ -79,6 +84,9 @@ class Aircraft:
                 "vertical_volume_ratio": format_number(self.vertical_volume_ratio),
                 "vertical_taper": format_number(self.vertical_taper),
                 "vertical_ThickChord": format_number(self.vertical_ThickChord),
+                "mainwing_airfoil_datapath": self.mainwing_airfoil_datapath,
+                "horizontal_airfoil_datapath": self.horizontal_airfoil_datapath,
+                "vertical_airfoil_datapath": self.vertical_airfoil_datapath
             }
             
             # Convert dictionary to a sorted JSON string to ensure consistent ordering

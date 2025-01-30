@@ -53,6 +53,7 @@ class VSPAnalyzer:
                               alpha_start: float=0, alpha_end: float=1, alpha_step:float=0.5, 
                               CD_fuse: np.ndarray=np.zeros(4),
                               fuselage_cross_section_area: float=20000,
+                              wing_area_blocked_by_fuselage : float=72640,
                               AOA_stall:float=13, 
                               AOA_takeoff_max:float=10,
                               AOA_climb_max:float=8,
@@ -66,7 +67,7 @@ class VSPAnalyzer:
         print("Starting Analysis")
         # Calculate coefficients with flaps at zero
         results_no_flap = self._calculate_coeffs_helper(fileName, alpha_start, alpha_end, alpha_step,
-                                                        Re, Mach, boom_density_2018, boom_density_1614,
+                                                        Re, Mach, wing_area_blocked_by_fuselage,boom_density_2018, boom_density_1614,
                                                         boom_density_86, boom_density_big, clearModel, 0.0)
         
         # Find index closest to AOA_stall and zero
@@ -74,7 +75,7 @@ class VSPAnalyzer:
 
         # Calculate coefficients with flaps at max angle
         results_flap_max = self._calculate_coeffs_helper(fileName, 0, AOA_takeoff_max, AOA_takeoff_max,
-                                                        Re, Mach, boom_density_2018, boom_density_1614,
+                                                        Re, Mach, wing_area_blocked_by_fuselage, boom_density_2018, boom_density_1614,
                                                         boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
                                                         do_mass_analysis=False)
 
@@ -117,7 +118,7 @@ class VSPAnalyzer:
         )
 
     def _calculate_coeffs_helper(self, fileName, alpha_start, alpha_end, alpha_step,
-                                Re, Mach, boom_density_2018, boom_density_1614,
+                                Re, Mach, wing_area_blocked_by_fuselage, boom_density_2018, boom_density_1614,
                                 boom_density_86, boom_density_big, clearModel, flap_angle, 
                                 do_mass_analysis=True, do_geom_analysis=True):
         """Helper method to calculate coefficients for a given flap angle"""
@@ -235,6 +236,8 @@ class VSPAnalyzer:
         # Extract coefficient data
         sweepResults = vsp.GetStringResults(sweep_results_id, "ResultsVec")
         
+        effective_wing_area_factor = (Sref - wing_area_blocked_by_fuselage) / Sref
+        
         alpha_list = np.zeros(point_number)
         CL_list = np.zeros(point_number)
         CDwing_list =np.zeros(point_number)
@@ -246,10 +249,12 @@ class VSPAnalyzer:
 
             CDwing_list[i] = vsp.GetDoubleResults(sweepResults[i], "CDtot")[-1]
 
-        CL_list = [cl * tail_effect for cl in CL_list]
+        CL_list = [cl * tail_effect * effective_wing_area_factor for cl in CL_list]
         CL_list = np.array(CL_list)
+        CDwing_list = [cd * effective_wing_area_factor for cd in CDwing_list] 
+        CDwing_list = np.array(CDwing_list)
 
-        aircraft=self.aircraft
+        # aircraft=self.aircraft
         
 
         
@@ -271,9 +276,6 @@ class VSPAnalyzer:
 
     def createMainWing(self, aircraft: Aircraft) -> str:
 
-        s9027_path  = "data/airfoilDAT/s9027.dat"
-
-        
         """ Create Main Wing, Included Parameters are FIXED """
         # Main Wing ID
         wing_id = vsp.AddGeom("WING", "")
@@ -303,8 +305,8 @@ class VSPAnalyzer:
         vsp.ChangeXSecShape(vsp.GetXSecSurf(wing_id,0),1,vsp.XS_FILE_AIRFOIL)
         xsec_0 = vsp.GetXSec(vsp.GetXSecSurf(wing_id,0),0)
         xsec_1 = vsp.GetXSec(vsp.GetXSecSurf(wing_id,0),1)
-        vsp.ReadFileAirfoil(xsec_0,s9027_path)
-        vsp.ReadFileAirfoil(xsec_1,s9027_path)
+        vsp.ReadFileAirfoil(xsec_0,aircraft.mainwing_airfoil_datapath)
+        vsp.ReadFileAirfoil(xsec_1,aircraft.mainwing_airfoil_datapath)
         vsp.Update()
 
         return wing_id
@@ -363,9 +365,6 @@ class VSPAnalyzer:
     def createHorizontalTailWing(self, aircraft:Aircraft,airfoilName:str="naca0008.dat") -> str:
         """ Create Horizontal Tail, Included Parameters are FIXED """
 
-        # Airfoil path
-        naca0008_path = "data/airfoilDAT/naca0008.dat"
-
         # Horizontal Tail ID
         tailwing_id = vsp.AddGeom("WING", "")
         vsp.SetGeomName(tailwing_id,"Tail Wing")
@@ -375,8 +374,8 @@ class VSPAnalyzer:
         vsp.ChangeXSecShape(vsp.GetXSecSurf(tailwing_id,0),1,vsp.XS_FILE_AIRFOIL)
         xsec_h_0 = vsp.GetXSec(vsp.GetXSecSurf(tailwing_id,0),0)
         xsec_h_1 = vsp.GetXSec(vsp.GetXSecSurf(tailwing_id,0),1)
-        vsp.ReadFileAirfoil(xsec_h_0,naca0008_path)
-        vsp.ReadFileAirfoil(xsec_h_1,naca0008_path)
+        vsp.ReadFileAirfoil(xsec_h_0,aircraft.horizontal_airfoil_datapath)
+        vsp.ReadFileAirfoil(xsec_h_1,aircraft.horizontal_airfoil_datapath)
         vsp.Update()
         
         # Fixed Parameters
@@ -421,8 +420,6 @@ class VSPAnalyzer:
 
     def createVerticalTailWings(self,aircraft:Aircraft,airfoilName:str="naca0009.dat") -> List[str]:
 
-        naca0009_path = "data/airfoilDAT/naca0009.dat"
-
         """ Create Vertical Wing (Right), Included Parameters are FIXED """
         # Vertical Wing (Right) ID
         verwing_right_id = vsp.AddGeom("WING", "")
@@ -433,8 +430,8 @@ class VSPAnalyzer:
         vsp.ChangeXSecShape(vsp.GetXSecSurf(verwing_right_id,0),1,vsp.XS_FILE_AIRFOIL)
         xsec_vr_0 = vsp.GetXSec(vsp.GetXSecSurf(verwing_right_id,0),0)
         xsec_vr_1 = vsp.GetXSec(vsp.GetXSecSurf(verwing_right_id,0),1)
-        vsp.ReadFileAirfoil(xsec_vr_0,naca0009_path)
-        vsp.ReadFileAirfoil(xsec_vr_1,naca0009_path)
+        vsp.ReadFileAirfoil(xsec_vr_0,aircraft.vertical_airfoil_datapath)
+        vsp.ReadFileAirfoil(xsec_vr_1,aircraft.vertical_airfoil_datapath)
         vsp.Update()
         
         # Fixed Parameters
@@ -486,8 +483,8 @@ class VSPAnalyzer:
         vsp.ChangeXSecShape(vsp.GetXSecSurf(verwing_left_id,0),1,vsp.XS_FILE_AIRFOIL)
         xsec_vl_0 = vsp.GetXSec(vsp.GetXSecSurf(verwing_left_id,0),0)
         xsec_vl_1 = vsp.GetXSec(vsp.GetXSecSurf(verwing_left_id,0),1)
-        vsp.ReadFileAirfoil(xsec_vl_0,naca0009_path)
-        vsp.ReadFileAirfoil(xsec_vl_1,naca0009_path)
+        vsp.ReadFileAirfoil(xsec_vl_0,aircraft.vertical_airfoil_datapath)
+        vsp.ReadFileAirfoil(xsec_vl_1,aircraft.vertical_airfoil_datapath)
         vsp.Update()
         
         # Vertical Tail settings

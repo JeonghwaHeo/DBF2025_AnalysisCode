@@ -130,7 +130,7 @@ def runMissionGridSearch(hashVal:str,
 
             mission3Analyzer = MissionAnalyzer(analysisResults, mission3Params, presetValues, propulsionSpecs)
             N_laps = mission3Analyzer.run_mission3()
-            obj3 = N_laps + 2.5 / (presetValues.m_x1 /1000 * 2.204 )
+            obj3 = N_laps - 1 + 2.5 / (presetValues.m_x1 /1000 * 2.204 )
 
             results = {
                 'timestamp': time.strftime("%Y-%m-%d %X"),
@@ -238,7 +238,7 @@ def ResultAnalysis(presetValues:PresetValues,
 if __name__=="__main__":
     presetValues = PresetValues(
             m_x1 = 0.2,                       # kg
-            x1_flight_time = 30,              # sec
+            x1_time_margin = 30,              # sec
             number_of_motor= 1,
             min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
             Thrust_max = 6.0,

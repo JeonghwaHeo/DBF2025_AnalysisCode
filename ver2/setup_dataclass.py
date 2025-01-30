@@ -3,7 +3,7 @@ from dataclasses import dataclass
 @dataclass
 class PresetValues:
     m_x1: float
-    x1_flight_time: float
+    x1_time_margin: float
     
     throttle_takeoff : float
     max_climb_angle : float
