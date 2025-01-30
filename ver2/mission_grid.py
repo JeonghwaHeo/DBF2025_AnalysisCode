@@ -28,6 +28,14 @@ def runMissionGridSearch(hashVal:str,
             missionParamConstraints.MTOW_analysis_interval        
     )
     
+    MTOW_min_condition = max(missionParamConstraints.wing_loading_min * analysisResults.Sref * 1e-6,
+                             analysisResults.m_empty/1000)
+    MTOW_max_condition = missionParamConstraints.wing_loading_max * analysisResults.Sref * 1e-6
+    
+    MTOW_list = MTOW_list[(MTOW_list >= MTOW_min_condition) & (MTOW_list <= MTOW_max_condition)]
+    
+    if len(MTOW_list) == 0: return
+    
     M2_max_speed_list = np.arange(
             missionParamConstraints.M2_max_speed_min, 
             missionParamConstraints.M2_max_speed_max + missionParamConstraints.max_speed_analysis_interval/2, 
@@ -121,13 +129,15 @@ def runMissionGridSearch(hashVal:str,
         )
 
         try:
-
             mission2Analyzer = MissionAnalyzer(analysisResults, mission2Params, presetValues, propulsionSpecs)
             fuel_weight, flight_time = mission2Analyzer.run_mission2()
+            if(fuel_weight == -1 and flight_time == -1):continue
+            
             obj2 = fuel_weight * 2.204 / flight_time 
 
             mission3Analyzer = MissionAnalyzer(analysisResults, mission3Params, presetValues, propulsionSpecs)
             N_laps = mission3Analyzer.run_mission3()
+            if(N_laps==-1):continue
             obj3 = N_laps - 1 + 2.5 / (presetValues.m_x1 /1000 * 2.204 )
 
             results = {

@@ -4,13 +4,23 @@ from mission_grid import runMissionGridSearch, ResultAnalysis
 from vsp_analysis import removeAnalysisResults
 from internal_dataclass import *
 from setup_dataclass import *
+import argparse
 
 def main():
-
+    
+    # Define parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--server_id", type=int, default=1, help="current server ID")
+    parser.add_argument("--total_server", type=int, default=1, help="total server number")
+    args = parser.parse_args()
+    print(f"server ID : {args.server_id} , total server number : {args.total_server}\n")
+    
+    # Clear the path
     removeAnalysisResults(csvPath = "data/aircraft.csv")
     removeAnalysisResults(csvPath = "data/total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
 
+    ## preset
     presetValues = PresetValues(
         m_x1 = 200,                         # g
         x1_time_margin = 10,                # sec
@@ -40,25 +50,21 @@ def main():
     
     aircraftParamConstraints = AircraftParamConstraints (
   
-        span_min = 1700.0,                   # mm
+        span_min = 1800.0,                   # mm
         span_max = 1800.0,                   
         span_interval = 100.0,
     
         AR_min = 5.45,                  
         AR_max = 5.45,
-        AR_interval = 0.5,
+        AR_interval = 0.05,
         
         taper_min = 0.65,
         taper_max = 0.65,                      
         taper_interval = 0.1,
         
-        twist_min = 0.0,                     # degree
-        twist_max = 0.0,                     
+        twist_min = 1.0,                     # degree
+        twist_max = 1.0,                     
         twist_interval = 1.0,
-
-        # wing loading limit
-        wing_loading_min = 5,
-        wing_loading_max = 15
         )
     
     aerodynamicSetup = AerodynamicSetup(
@@ -106,7 +112,7 @@ def main():
         
         )
 
-    runVSPGridAnalysis(aircraftParamConstraints,aerodynamicSetup, presetValues,baseAircraft)
+    runVSPGridAnalysis(aircraftParamConstraints,aerodynamicSetup, presetValues,baseAircraft,args.server_id, args.total_server)
 
     results = pd.read_csv("data/aircraft.csv", sep='|', encoding='utf-8')
     print(results.head()) 
@@ -122,7 +128,7 @@ def main():
             
             M2_max_speed_min = 35,
             M2_max_speed_max = 35,
-            M3_max_speed_min = 25,
+            M3_max_speed_min = 20,
             M3_max_speed_max = 25,
             max_speed_analysis_interval = 5,
             
@@ -142,7 +148,10 @@ def main():
             M3_turn_thrust_ratio_max = 0.6,
             M3_level_thrust_ratio_min = 0.6,
             M3_level_thrust_ratio_max = 0.6,
-            M3_thrust_analysis_interval = 0.05
+            M3_thrust_analysis_interval = 0.05,
+            
+            wing_loading_min = 5,
+            wing_loading_max = 15
             )
         
         runMissionGridSearch(hashVal,presetValues,missionParamConstraints,propulsionSpecs)

@@ -9,8 +9,8 @@ from vsp_analysis import VSPAnalyzer, writeAnalysisResults
 from internal_dataclass import *
 
 
-def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodynamicSetup: AerodynamicSetup, presetValues: PresetValues, baseAircraft: Aircraft):
-
+def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodynamicSetup: AerodynamicSetup, presetValues: PresetValues, baseAircraft: Aircraft, server_id : int=1, total_server : int=1):
+        
         ## Variable lists using for optimization
         span_list = np.arange(
                 aircraftParamConstraint.span_min, 
@@ -33,16 +33,13 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
                 aircraftParamConstraint.twist_interval
                 )
         
-        vsp_grid_combinations = product(span_list,AR_list,taper_list,twist_list)
+        total_grid_combinations = list(product(span_list,AR_list,taper_list,twist_list))
+        grid_chunks = list(split_into_chunks(total_grid_combinations,total_server))
+        vsp_grid_combinations = grid_chunks[server_id-1]
 
-        total = len(span_list) * len(AR_list) * len(taper_list) * len(twist_list)
+        total = len(vsp_grid_combinations)
         print(f"Total number of combinations: {total}")
-        
-        print(f"\nspan list: {span_list}")
-        print(f"AR list: {AR_list}")
-        print(f"taper list: {taper_list}")
-        print(f"twist list: {twist_list}")
-        
+         
         alpha_start = aerodynamicSetup.alpha_start
         alpha_end = aerodynamicSetup.alpha_end
         alpha_step = aerodynamicSetup.alpha_step
@@ -53,6 +50,7 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
 
         for i, (span, AR, taper, twist) in enumerate(vsp_grid_combinations):
                 print(f"\n[{time.strftime('%Y-%m-%d %X')}] VSP Grid Progress: {i+1}/{total} configurations")
+                print(f"\n[{span:.2f}, {AR:.2f}, {taper:.2f}, {twist:.1f}]")
                 aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist)   
 
                 vspAnalyzer.setup_vsp_model(aircraft)
@@ -82,6 +80,9 @@ def get_fuselageCD_list(alpha_start,alpha_end,alpha_step,csvPath):
         CD_fuse = Cd_fuse_func(alpha)
         return CD_fuse
         
+def split_into_chunks(lst, n):
+    k, m = divmod(len(lst), n)
+    return (lst[i*k + min(i, m) : (i+1)*k + min(i+1, m)] for i in range(n))
 
 if __name__ == "__main__":
     runVSPGridAnalysis(

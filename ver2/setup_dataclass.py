@@ -59,9 +59,6 @@ class AircraftParamConstraints:
     twist_min: float
     twist_interval: float
 
-    # wing loading limit
-    wing_loading_max: float
-    wing_loading_min: float
 
 @dataclass
 class MissionParamConstraints:
@@ -93,3 +90,6 @@ class MissionParamConstraints:
     M3_level_thrust_ratio_min : float
     M3_level_thrust_ratio_max : float
     M3_thrust_analysis_interval : float
+    
+    wing_loading_min : float
+    wing_loading_max : float
