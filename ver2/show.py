@@ -67,6 +67,7 @@ if __name__ == "__main__":
                 number_of_motor= resultID_df['number_of_motor'].iloc[0],
                 min_battery_voltage= resultID_df['min_battery_voltage'].iloc[0],
                 score_weight_ratio= resultID_df['score_weight_ratio'].iloc[0]               
+
             )
               
             propulsionSpecs = PropulsionSpecs(
@@ -118,7 +119,7 @@ if __name__ == "__main__":
                 number_of_motor= resultID_df['number_of_motor'].iloc[0],
                 min_battery_voltage= resultID_df['min_battery_voltage'].iloc[0],
                 score_weight_ratio= resultID_df['score_weight_ratio'].iloc[0]    
-                
+
             )
              
             propulsionSpecs = PropulsionSpecs(
