@@ -2,7 +2,6 @@ import numpy as np
 from itertools import product
 import time
 from setup_dataclass import *
-from dataclasses import replace
 from vsp_analysis import  loadAnalysisResults
 from mission_analysis import MissionAnalyzer, visualize_mission
 from internal_dataclass import *
@@ -10,14 +9,13 @@ import os
 import os.path
 import pandas as pd
 import time
-from dataclasses import asdict
 import csv
 
 def runMissionGridSearch(hashVal:str, 
                           presetValues:PresetValues,
                           missionParamConstraints:MissionParamConstraints, 
                           propulsionSpecs:PropulsionSpecs,
-                          csvPath:str = "data/test.csv"
+                          csvPath:str = "data/aircraft.csv"
                           ) :
 
 
@@ -163,7 +161,7 @@ def runMissionGridSearch(hashVal:str,
    
     print("\nDone Mission Analysis ^_^")
 
-def writeMissionAnalysisResults(hashVal:str, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/test.csv", writecsvPath:str = "data/total_results.csv"):
+def writeMissionAnalysisResults(hashVal:str, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/aircraft.csv", writecsvPath:str = "data/total_results.csv"):
     existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
     base_row = existing_df[existing_df['hash'] == hashVal]
     base_row_dict = base_row.to_dict(orient="records")[0]

@@ -1,17 +1,13 @@
-import cProfile
-import pstats
 import pandas as pd
-from pstats import SortKey
 from vsp_grid import runVSPGridAnalysis
 from mission_grid import runMissionGridSearch, ResultAnalysis
-from vsp_analysis import  loadAnalysisResults, visualize_results, resetAnalysisResults, removeAnalysisResults
-from mission_analysis import MissionAnalyzer, visualize_mission
+from vsp_analysis import removeAnalysisResults
 from internal_dataclass import *
 from setup_dataclass import *
 
 def main():
 
-    removeAnalysisResults(csvPath = "data/test.csv")
+    removeAnalysisResults(csvPath = "data/aircraft.csv")
     removeAnalysisResults(csvPath = "data/total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
 
@@ -44,7 +40,7 @@ def main():
     
     aircraftParamConstraints = AircraftParamConstraints (
   
-        span_min = 1800.0,                   # mm
+        span_min = 1700.0,                   # mm
         span_max = 1800.0,                   
         span_interval = 100.0,
     
@@ -112,7 +108,7 @@ def main():
 
     runVSPGridAnalysis(aircraftParamConstraints,aerodynamicSetup, presetValues,baseAircraft)
 
-    results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
+    results = pd.read_csv("data/aircraft.csv", sep='|', encoding='utf-8')
     print(results.head()) 
 
     for hashVal in results["hash"]:

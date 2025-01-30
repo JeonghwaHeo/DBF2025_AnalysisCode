@@ -1,23 +1,15 @@
 import openvsp as vsp
-import contextlib
 import csv
 import numpy as np
-import numpy.strings
 import json
 from typing import List
-from dataclasses import asdict, make_dataclass
+from dataclasses import asdict
 import ast
-import typing
 import os 
 import os.path
 import math
 import matplotlib.pyplot as plt
-from scipy.integrate import odeint
-from scipy.optimize import minimize
-from scipy.interpolate import interp1d
-import configparser
 import pandas as pd
-import io
 from matplotlib.ticker import MultipleLocator
 from internal_dataclass import PhysicalConstants, Aircraft, AircraftAnalysisResults
 from setup_dataclass import PresetValues
@@ -58,7 +50,7 @@ class VSPAnalyzer:
                               AOA_takeoff_max:float=10,
                               AOA_climb_max:float=8,
                               AOA_turn_max:float=8,
-                              Re:float=850000, Mach:float=0,
+                              Re:float=700000, Mach:float=0,
                               boom_density_2018:float = 0.098, 
                               boom_density_1614:float = 0.087,
                               boom_density_86:float = 0.036,
@@ -218,8 +210,11 @@ class VSPAnalyzer:
         vsp.SetIntAnalysisInput(sweep_analysis, "AlphaNpts", [point_number])
         
         # Number of CPUs
-        vsp.SetIntAnalysisInput(sweep_analysis, "NCPU", [6])
-
+        vsp.SetIntAnalysisInput(sweep_analysis, "NCPU", [4])
+        vsp.SetIntAnalysisInput(sweep_analysis,"FixedWakeFlag",[1])
+        vsp.SetIntAnalysisInput(sweep_analysis,"NumWakeNodes",[64])
+        
+        
         # Redirect log to null
         vsp.SetStringAnalysisInput( "VSPAEROSweep", "RedirectFile", "" )
 
@@ -508,17 +503,17 @@ class VSPAnalyzer:
         return [verwing_right_id,verwing_left_id]
 
 
-def resetAnalysisResults(csvPath:str = "data/test.csv"):
+def resetAnalysisResults(csvPath:str = "data/aircraft.csv"):
     df = pd.read_csv(csvPath, sep='|', encoding='utf-8')
     df_columns_only = pd.DataFrame(columns=df.columns)
     df_columns_only.to_csv(csvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
 
-def removeAnalysisResults(csvPath:str = "data/test.csv"):
+def removeAnalysisResults(csvPath:str = "data/aircraft.csv"):
     if os.path.exists(csvPath):
         os.remove(csvPath)
         print(f"{csvPath} file has been deleted.")
 
-def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "data/test.csv"):
+def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "data/aircraft.csv"):
 
     if not os.path.isfile(csvPath):
         df = pd.json_normalize(asdict(anaResults))
@@ -544,7 +539,7 @@ def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "dat
     # Save the updated DataFrame back to CSV
     df_copy.to_csv(csvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
 
-def loadAnalysisResults(hashValue:str, csvPath:str = "data/test.csv")-> AircraftAnalysisResults:
+def loadAnalysisResults(hashValue:str, csvPath:str = "data/aircraft.csv")-> AircraftAnalysisResults:
     df = pd.read_csv(csvPath, sep='|', encoding='utf-8')
     df = df.loc[df['hash']==hashValue]
    
