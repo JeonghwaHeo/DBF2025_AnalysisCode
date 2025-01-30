@@ -11,12 +11,12 @@ from setup_dataclass import *
 
 def main():
 
-    # removeAnalysisResults(csvPath = "data/test.csv")
+    removeAnalysisResults(csvPath = "data/test.csv")
     removeAnalysisResults(csvPath = "data/total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
 
     presetValues = PresetValues(
-        m_x1 = 200,                        # g
+        m_x1 = 200,                         # g
         x1_flight_time = 30,                # sec
         
         throttle_takeoff = 0.9,             # 0~1
@@ -26,7 +26,7 @@ def main():
         
         number_of_motor = 2,                 
         min_battery_voltage = 21.8,         # V 
-        score_weight_ratio = 0.5            # mission2/3 score weight ratio
+        score_weight_ratio = 0.5            # mission2/3 score weight ratio (0~1)
         )
     
     propulsionSpecs = PropulsionSpecs(
@@ -49,11 +49,11 @@ def main():
         span_interval = 100.0,
     
         AR_min = 5.45,                  
-        AR_max = 5.50,
+        AR_max = 5.45,
         AR_interval = 0.5,
         
-        taper_min = 0.45,
-        taper_max = 0.55,                      
+        taper_min = 0.65,
+        taper_max = 0.65,                      
         taper_interval = 0.1,
         
         twist_min = 0.0,                     # degree
@@ -77,10 +77,9 @@ def main():
         AOA_turn_max = 8  
     )
     baseAircraft = Aircraft(
-        # m_total = 8500, 
         m_fuselage = 3000,
 
-        wing_density = 0.0000852, spar_density = 1.0,
+        wing_density = 0.0000852,
 
         mainwing_span = 1800,        
         mainwing_AR = 5.45,           
@@ -92,7 +91,7 @@ def main():
 
         flap_start = [0.05, 0.4],            
         flap_end = [0.25, 0.6],              
-        flap_angle = [20.0, 15.0],           
+        flap_angle = [20.0, 20.0],           
         flap_c_ratio = [0.35, 0.35],         
 
         horizontal_volume_ratio = 0.7,
@@ -106,7 +105,7 @@ def main():
         vertical_ThickChord = 9  
         )
 
-    # runVSPGridAnalysis(aircraftParamConstraints,aerodynamicSetup, presetValues,baseAircraft)
+    runVSPGridAnalysis(aircraftParamConstraints,aerodynamicSetup, presetValues,baseAircraft)
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
@@ -122,27 +121,27 @@ def main():
             
             M2_max_speed_min = 35,
             M2_max_speed_max = 35,
-            M3_max_speed_min = 20,
+            M3_max_speed_min = 25,
             M3_max_speed_max = 25,
             max_speed_analysis_interval = 5,
             
             #Constraints for calculating mission2
-            M2_throttle_climb_min = 0.9,
-            M2_throttle_climb_max = 0.9,
-            M2_throttle_turn_min = 0.5,
-            M2_throttle_turn_max = 0.5,
-            M2_throttle_level_min = 0.5,
-            M2_throttle_level_max = 0.55,
-            M2_throttle_analysis_interval = 0.05,
+            M2_climb_thrust_ratio_min = 0.9,
+            M2_climb_thrust_ratio_max = 0.9,
+            M2_turn_thrust_ratio_min = 0.5,
+            M2_turn_thrust_ratio_max = 0.5,
+            M2_level_thrust_ratio_min = 0.5,
+            M2_level_thrust_ratio_max = 0.5,
+            M2_thrust_analysis_interval = 0.05,
 
             #Constraints for calculating mission3  
-            M3_throttle_climb_min = 0.9,
-            M3_throttle_climb_max = 0.9,
-            M3_throttle_turn_min = 0.6,
-            M3_throttle_turn_max = 0.6,
-            M3_throttle_level_min = 0.6,
-            M3_throttle_level_max = 0.6,
-            M3_throttle_analysis_interval = 0.05
+            M3_climb_thrust_ratio_min = 0.9,
+            M3_climb_thrust_ratio_max = 0.9,
+            M3_turn_thrust_ratio_min = 0.6,
+            M3_turn_thrust_ratio_max = 0.6,
+            M3_level_thrust_ratio_min = 0.6,
+            M3_level_thrust_ratio_max = 0.6,
+            M3_thrust_analysis_interval = 0.05
             )
         
         runMissionGridSearch(hashVal,presetValues,missionParamConstraints,propulsionSpecs)

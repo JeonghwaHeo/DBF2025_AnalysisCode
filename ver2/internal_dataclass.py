@@ -19,12 +19,10 @@ class Aircraft:
     """Aircraft Geometry configuration"""
     
     # Total mass of the aircraft
-    # m_total: float
     m_fuselage: float ## Just copy from preset value? 애매하다
 
     # Mass properties of the aircraft
     wing_density: float
-    spar_density: float
 
     # Main Wing properties
     mainwing_span: float
@@ -61,7 +59,6 @@ class Aircraft:
             hash_dict = {
                 "m_fuselage": format_number(self.m_fuselage),
                 "wing_density": format_number(self.wing_density),
-                "spar_density": format_number(self.spar_density),
                 "mainwing_span": format_number(self.mainwing_span),
                 "mainwing_AR": format_number(self.mainwing_AR),
                 "mainwing_taper": format_number(self.mainwing_taper),
@@ -102,9 +99,7 @@ class AircraftAnalysisResults:
     m_empty : float
     m_boom: float
     m_wing: float
-    #m_empty: float
-    # m_fuel: float # Must be gt 0, 
-    
+ 
     Lw: float
     Lh: float
 
@@ -152,9 +147,9 @@ class MissionParameters:
     max_load_factor: float
     
     # Thrust and Throttle 
-    throttle_climb: float
-    throttle_level: float
-    throttle_turn: float
+    climb_thrust_ratio: float
+    level_thrust_ratio: float
+    turn_thrust_ratio: float
     
     # Battery 
     propeller_data_path : str

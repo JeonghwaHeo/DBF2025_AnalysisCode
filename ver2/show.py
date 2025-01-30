@@ -47,9 +47,9 @@ if __name__ == "__main__":
                 max_speed= resultID_df['M2_max_speed'].iloc[0],                   
                 max_load_factor = resultID_df['max_load'].iloc[0]/resultID_df['MTOW'].iloc[0],  
                                           
-                throttle_climb = resultID_df['mission2_throttle_climb'].iloc[0],
-                throttle_level = resultID_df['mission2_throttle_level'].iloc[0],
-                throttle_turn = resultID_df['mission2_throttle_turn'].iloc[0],
+                climb_thrust_ratio = resultID_df['mission2_climb_thrust_ratio'].iloc[0],
+                level_thrust_ratio = resultID_df['mission2_level_thrust_ratio'].iloc[0],
+                turn_thrust_ratio = resultID_df['mission2_turn_thrust_ratio'].iloc[0],
                 
                 propeller_data_path = resultID_df['M2_propeller_data_path'].iloc[0]                          
 
@@ -99,9 +99,9 @@ if __name__ == "__main__":
                 max_speed= resultID_df['M3_max_speed'].iloc[0],                   
                 max_load_factor = resultID_df['max_load'].iloc[0] * 1000 /resultID_df['m_empty'].iloc[0],  
                                           
-                throttle_climb = resultID_df['mission3_throttle_climb'].iloc[0],
-                throttle_level = resultID_df['mission3_throttle_level'].iloc[0],
-                throttle_turn = resultID_df['mission3_throttle_turn'].iloc[0],
+                climb_thrust_ratio = resultID_df['mission3_climb_thrust_ratio'].iloc[0],
+                level_thrust_ratio = resultID_df['mission3_level_thrust_ratio'].iloc[0],
+                turn_thrust_ratio = resultID_df['mission3_turn_thrust_ratio'].iloc[0],
                 
                 propeller_data_path = resultID_df['M3_propeller_data_path'].iloc[0],                           
 

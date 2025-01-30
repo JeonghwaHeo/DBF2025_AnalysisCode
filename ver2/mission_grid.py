@@ -36,27 +36,27 @@ def runMissionGridSearch(hashVal:str,
             missionParamConstraints.max_speed_analysis_interval
         )
     
-    M2_throttle_climb_list = np.arange(
-            missionParamConstraints.M2_throttle_climb_min, 
-            missionParamConstraints.M2_throttle_climb_max + missionParamConstraints.M2_throttle_analysis_interval/2, 
-            missionParamConstraints.M2_throttle_analysis_interval
+    M2_climb_thrust_ratio_list = np.arange(
+            missionParamConstraints.M2_climb_thrust_ratio_min, 
+            missionParamConstraints.M2_climb_thrust_ratio_max + missionParamConstraints.M2_thrust_analysis_interval/2, 
+            missionParamConstraints.M2_thrust_analysis_interval
         )
-    M2_throttle_turn_list = np.arange(
-            missionParamConstraints.M2_throttle_turn_min, 
-            missionParamConstraints.M2_throttle_turn_max + missionParamConstraints.M2_throttle_analysis_interval/2, 
-            missionParamConstraints.M2_throttle_analysis_interval
+    M2_turn_thrust_ratio_list = np.arange(
+            missionParamConstraints.M2_turn_thrust_ratio_min, 
+            missionParamConstraints.M2_turn_thrust_ratio_max + missionParamConstraints.M2_thrust_analysis_interval/2, 
+            missionParamConstraints.M2_thrust_analysis_interval
         )
-    M2_throttle_level_list = np.arange(
-            missionParamConstraints.M2_throttle_level_min, 
-            missionParamConstraints.M2_throttle_level_max + missionParamConstraints.M2_throttle_analysis_interval/2, 
-            missionParamConstraints.M2_throttle_analysis_interval
+    M2_level_thrust_ratio_list = np.arange(
+            missionParamConstraints.M2_level_thrust_ratio_min, 
+            missionParamConstraints.M2_level_thrust_ratio_max + missionParamConstraints.M2_thrust_analysis_interval/2, 
+            missionParamConstraints.M2_thrust_analysis_interval
         )
     
     print(f"\nMTOW list: {MTOW_list}")
     print(f"\nMission 2 max speed list: {M2_max_speed_list}")
-    print(f"Mission 2 throttle climb list: {M2_throttle_climb_list}")
-    print(f"Mission 2 throttle turn list: {M2_throttle_turn_list}")
-    print(f"Mission 2 throttle level list: {M2_throttle_level_list}\n")
+    print(f"Mission 2 throttle climb list: {M2_climb_thrust_ratio_list}")
+    print(f"Mission 2 throttle turn list: {M2_turn_thrust_ratio_list}")
+    print(f"Mission 2 throttle level list: {M2_level_thrust_ratio_list}\n")
 
     M3_max_speed_list = np.arange(
             missionParamConstraints.M3_max_speed_min, 
@@ -64,36 +64,36 @@ def runMissionGridSearch(hashVal:str,
             missionParamConstraints.max_speed_analysis_interval
         )
     
-    M3_throttle_climb_list = np.arange(
-            missionParamConstraints.M3_throttle_climb_min, 
-            missionParamConstraints.M3_throttle_climb_max + missionParamConstraints.M3_throttle_analysis_interval/2, 
-            missionParamConstraints.M3_throttle_analysis_interval
+    M3_climb_thrust_ratio_list = np.arange(
+            missionParamConstraints.M3_climb_thrust_ratio_min, 
+            missionParamConstraints.M3_climb_thrust_ratio_max + missionParamConstraints.M3_thrust_analysis_interval/2, 
+            missionParamConstraints.M3_thrust_analysis_interval
         )
-    M3_throttle_turn_list = np.arange(
-            missionParamConstraints.M3_throttle_turn_min, 
-            missionParamConstraints.M3_throttle_turn_max + missionParamConstraints.M3_throttle_analysis_interval/2, 
-            missionParamConstraints.M3_throttle_analysis_interval
+    M3_turn_thrust_ratio_list = np.arange(
+            missionParamConstraints.M3_turn_thrust_ratio_min, 
+            missionParamConstraints.M3_turn_thrust_ratio_max + missionParamConstraints.M3_thrust_analysis_interval/2, 
+            missionParamConstraints.M3_thrust_analysis_interval
         )
-    M3_throttle_level_list = np.arange(
-            missionParamConstraints.M3_throttle_level_min, 
-            missionParamConstraints.M3_throttle_level_max + missionParamConstraints.M3_throttle_analysis_interval/2, 
-            missionParamConstraints.M3_throttle_analysis_interval
+    M3_level_thrust_ratio_list = np.arange(
+            missionParamConstraints.M3_level_thrust_ratio_min, 
+            missionParamConstraints.M3_level_thrust_ratio_max + missionParamConstraints.M3_thrust_analysis_interval/2, 
+            missionParamConstraints.M3_thrust_analysis_interval
         )
 
     print(f"\nMission 3 max speed list: {M3_max_speed_list}")
-    print(f"Mission 3 throttle climb list: {M3_throttle_climb_list}")
-    print(f"Mission 3 throttle turn list: {M3_throttle_turn_list}")
-    print(f"Mission 3 throttle level list: {M3_throttle_level_list}\n")
+    print(f"Mission 3 throttle climb list: {M3_climb_thrust_ratio_list}")
+    print(f"Mission 3 throttle turn list: {M3_turn_thrust_ratio_list}")
+    print(f"Mission 3 throttle level list: {M3_level_thrust_ratio_list}\n")
 
     # Create iterator for all combinations
-    combinations = product(MTOW_list, M2_max_speed_list, M2_throttle_climb_list, M2_throttle_turn_list, M2_throttle_level_list, M3_max_speed_list, M3_throttle_climb_list, M3_throttle_turn_list, M3_throttle_level_list)
+    combinations = product(MTOW_list, M2_max_speed_list, M2_climb_thrust_ratio_list, M2_turn_thrust_ratio_list, M2_level_thrust_ratio_list, M3_max_speed_list, M3_climb_thrust_ratio_list, M3_turn_thrust_ratio_list, M3_level_thrust_ratio_list)
 
     # Print total combinations
-    total = len(MTOW_list) * len(M2_max_speed_list) * len(M2_throttle_climb_list) * len(M2_throttle_turn_list) * len(M2_throttle_level_list) * len(M3_max_speed_list) * len(M3_throttle_climb_list) * len(M3_throttle_turn_list) * len(M3_throttle_level_list)
+    total = len(MTOW_list) * len(M2_max_speed_list) * len(M2_climb_thrust_ratio_list) * len(M2_turn_thrust_ratio_list) * len(M2_level_thrust_ratio_list) * len(M3_max_speed_list) * len(M3_climb_thrust_ratio_list) * len(M3_turn_thrust_ratio_list) * len(M3_level_thrust_ratio_list)
     print(f"Testing {total} combinations...")
 
     # Test each combination
-    for i, (MTOW, M2_max_speed, M2_throttle_climb, M2_throttle_turn, M2_throttle_level,M3_max_speed, M3_throttle_climb, M3_throttle_turn, M3_throttle_level) in enumerate(combinations):
+    for i, (MTOW, M2_max_speed, M2_climb_thrust_ratio, M2_turn_thrust_ratio, M2_level_thrust_ratio,M3_max_speed, M3_climb_thrust_ratio, M3_turn_thrust_ratio, M3_level_thrust_ratio) in enumerate(combinations):
         print(f"[{time.strftime('%Y-%m-%d %X')}] Mission Grid Progress: {i+1}/{total} configurations")
 
         # Create mission 2 parameters for this combination
@@ -102,9 +102,9 @@ def runMissionGridSearch(hashVal:str,
             max_speed= M2_max_speed,                      
             max_load_factor = presetValues.max_load / MTOW,          
                   
-            throttle_climb = M2_throttle_climb,
-            throttle_level = M2_throttle_level,
-            throttle_turn = M2_throttle_turn,   
+            climb_thrust_ratio = M2_climb_thrust_ratio,
+            level_thrust_ratio = M2_level_thrust_ratio,
+            turn_thrust_ratio = M2_turn_thrust_ratio,   
 
             propeller_data_path=propulsionSpecs.M2_propeller_data_path,
         )
@@ -115,9 +115,9 @@ def runMissionGridSearch(hashVal:str,
             max_speed= M3_max_speed,                      
             max_load_factor = presetValues.max_load * 1000 / analysisResults.m_empty,            
                   
-            throttle_climb = M3_throttle_climb,
-            throttle_level = M3_throttle_level,
-            throttle_turn = M3_throttle_turn,   
+            climb_thrust_ratio = M3_climb_thrust_ratio,
+            level_thrust_ratio = M3_level_thrust_ratio,
+            turn_thrust_ratio = M3_turn_thrust_ratio,   
 
             propeller_data_path=propulsionSpecs.M3_propeller_data_path
         )
@@ -143,12 +143,12 @@ def runMissionGridSearch(hashVal:str,
                 'MTOW' : MTOW,
                 'M2_max_speed' : M2_max_speed,
                 'M3_max_speed' : M3_max_speed,
-                'mission2_throttle_climb': M2_throttle_climb,
-                'mission2_throttle_turn': M2_throttle_turn,
-                'mission2_throttle_level': M2_throttle_level,
-                'mission3_throttle_climb': M3_throttle_climb,
-                'mission3_throttle_turn': M3_throttle_turn, 
-                'mission3_throttle_level': M3_throttle_level
+                'mission2_climb_thrust_ratio': M2_climb_thrust_ratio,
+                'mission2_turn_thrust_ratio': M2_turn_thrust_ratio,
+                'mission2_level_thrust_ratio': M2_level_thrust_ratio,
+                'mission3_climb_thrust_ratio': M3_climb_thrust_ratio,
+                'mission3_turn_thrust_ratio': M3_turn_thrust_ratio, 
+                'mission3_level_thrust_ratio': M3_level_thrust_ratio
             }
     
             results = pd.DataFrame([results])
@@ -156,8 +156,8 @@ def runMissionGridSearch(hashVal:str,
             writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs)
 
         except Exception as e:
-            print(f"Failed with throttles M2 : Climb({M2_throttle_climb:.2f}) Trun({M2_throttle_turn:.2f}) Level ({M2_throttle_level:.2f})")
-            print(f"Failed with throttles M3 : Climb({M3_throttle_climb:.2f}) Trun({M3_throttle_turn:.2f}) Level ({M3_throttle_level:.2f})")
+            print(f"Failed with throttles M2 : Climb({M2_climb_thrust_ratio:.2f}) Trun({M2_turn_thrust_ratio:.2f}) Level ({M2_level_thrust_ratio:.2f})")
+            print(f"Failed with throttles M3 : Climb({M3_climb_thrust_ratio:.2f}) Trun({M3_turn_thrust_ratio:.2f}) Level ({M3_level_thrust_ratio:.2f})")
             print(f"Error : {str(e)}")
             continue
    
@@ -213,12 +213,12 @@ def ResultAnalysis(presetValues:PresetValues,
                             'twist',
                             'M2_max_speed',
                             'M3_max_speed',
-                            'mission2_throttle_climb',
-                            'mission2_throttle_turn',
-                            'mission2_throttle_level',
-                            'mission3_throttle_climb',
-                            'mission3_throttle_turn',
-                            'mission3_throttle_level',
+                            'mission2_climb_thrust_ratio',
+                            'mission2_turn_thrust_ratio',
+                            'mission2_level_thrust_ratio',
+                            'mission3_climb_thrust_ratio',
+                            'mission3_turn_thrust_ratio',
+                            'mission3_level_thrust_ratio',
                             'flight_time',
                             'N_laps',
                             'score2',
@@ -247,12 +247,12 @@ if __name__=="__main__":
     a=loadAnalysisResults(6941088787683630519)
     score, param = runMissionGridSearch(6941088787683630519,
                           MissionParamConstraints (
-                              throttle_climb_min = 0.9,
-                              throttle_climb_max = 0.9,
-                              throttle_turn_min = 0.5,
-                              throttle_turn_max = 0.5,
-                              throttle_level_min = 0.5,
-                              throttle_level_max = 0.5,
+                              climb_thrust_ratio_min = 0.9,
+                              climb_thrust_ratio_max = 0.9,
+                              turn_thrust_ratio_min = 0.5,
+                              turn_thrust_ratio_max = 0.5,
+                              level_thrust_ratio_min = 0.5,
+                              level_thrust_ratio_max = 0.5,
                               throttle_analysis_interval = 0.05,
                               ),
                           presetValues

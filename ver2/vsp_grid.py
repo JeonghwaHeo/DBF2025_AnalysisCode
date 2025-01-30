@@ -34,18 +34,7 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
                 )
         
         vsp_grid_combinations = product(span_list,AR_list,taper_list,twist_list)
-        # total_mass_list = np.arange(
-        #         aircraftParamConstraint.m_total_min, 
-        #         aircraftParamConstraint.m_total_max + aircraftParamConstraint.m_total_interval/2, 
-        #         aircraftParamConstraint.m_total_interval
-        #         )
-        
-        # filtered_combinations = []
-        # for span, AR, taper, twist in product(span_list, AR_list, taper_list, twist_list):
-        #         wing_area = (span*0.001)**2 / AR # wing area
-        #         wing_loading = (m_total*0.001) / wing_area # wing loading
-        #         if aircraftParamConstraint.wing_loading_min <= wing_loading <= aircraftParamConstraint.wing_loading_max:
-        #                 filtered_combinations.append((span, AR, taper, twist, m_total))
+
         total = len(span_list) * len(AR_list) * len(taper_list) * len(twist_list)
         print(f"Total number of combinations: {total}")
         
@@ -120,7 +109,7 @@ if __name__ == "__main__":
             Aircraft(
                m_fuselage = 5000,
 
-               wing_density = 0.0000852, spar_density = 1.0,
+               wing_density = 0.0000852,
 
                mainwing_span = 1800,        
                mainwing_AR = 5.45,           

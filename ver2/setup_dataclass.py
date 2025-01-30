@@ -77,19 +77,19 @@ class MissionParamConstraints:
     max_speed_analysis_interval : float
 
     #Constraints for calculating mission2
-    M2_throttle_climb_min : float
-    M2_throttle_climb_max : float
-    M2_throttle_turn_min : float
-    M2_throttle_turn_max : float
-    M2_throttle_level_min : float
-    M2_throttle_level_max : float
-    M2_throttle_analysis_interval : float
+    M2_climb_thrust_ratio_min : float
+    M2_climb_thrust_ratio_max : float
+    M2_turn_thrust_ratio_min : float
+    M2_turn_thrust_ratio_max : float
+    M2_level_thrust_ratio_min : float
+    M2_level_thrust_ratio_max : float
+    M2_thrust_analysis_interval : float
     
     #Constraints for calculating mission3  
-    M3_throttle_climb_min : float
-    M3_throttle_climb_max : float
-    M3_throttle_turn_min : float
-    M3_throttle_turn_max : float
-    M3_throttle_level_min : float
-    M3_throttle_level_max : float
-    M3_throttle_analysis_interval : float
+    M3_climb_thrust_ratio_min : float
+    M3_climb_thrust_ratio_max : float
+    M3_turn_thrust_ratio_min : float
+    M3_turn_thrust_ratio_max : float
+    M3_level_thrust_ratio_min : float
+    M3_level_thrust_ratio_max : float
+    M3_thrust_analysis_interval : float

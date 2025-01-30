@@ -34,12 +34,12 @@ twist_interval: float
 # Mission Parameter Constraints
 
 throttle_analysis_interval
-throttle_climb_max
-throttle_climb_min
-throttle_level_max
-throttle_level_min
-throttle_turn_max
-throttle_turn_min
+climb_thrust_ratio_max
+climb_thrust_ratio_min
+level_thrust_ratio_max
+level_thrust_ratio_min
+turn_thrust_ratio_max
+turn_thrust_ratio_min
 
 # Aircraft
 
@@ -105,9 +105,9 @@ m_fuel
 h_flap_transition
 max_load_factor
 max_speed
-throttle_climb
-throttle_level
-throttle_turn
+climb_thrust_ratio
+level_thrust_ratio
+turn_thrust_ratio
 
 
 # etc.

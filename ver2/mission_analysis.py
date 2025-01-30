@@ -45,7 +45,6 @@ class MissionAnalyzer():
             
             # Density conversions (g/mm³ to kg/m³)
             wing_density=results.aircraft.wing_density * 1e9,
-            spar_density=results.aircraft.spar_density * 1e9,
             
             # Length conversions (mm to m)
             mainwing_span=results.aircraft.mainwing_span / 1000,
@@ -505,7 +504,7 @@ class MissionAnalyzer():
                                                self.propeller_array,
                                                0#graphFlag
             ) #kg
-            thrust_per_motor = T_climb_max_per_motor * self.missionParam.throttle_climb #kg
+            thrust_per_motor = T_climb_max_per_motor * self.missionParam.climb_thrust_ratio #kg
             
             _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
             
@@ -538,7 +537,7 @@ class MissionAnalyzer():
             
             self.state.loadfactor = loadfactor
 
-            self.state.throttle = self.missionParam.throttle_climb
+            self.state.throttle = self.missionParam.climb_thrust_ratio
              
             self.state.AOA = alpha_w_deg
             self.state.climb_pitch_angle =alpha_w_deg + math.degrees(gamma_rad)
@@ -622,7 +621,7 @@ class MissionAnalyzer():
                                                 self.propeller_array,
                                                 0#graphFlag
                 ) #kg
-                thrust_per_motor = T_level_max_per_motor * self.missionParam.throttle_level #kg
+                thrust_per_motor = T_level_max_per_motor * self.missionParam.level_thrust_ratio #kg
                 self.state.thrust = self.presetValues.number_of_motor * thrust_per_motor #kg
                 _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
                 
@@ -719,7 +718,7 @@ class MissionAnalyzer():
                                                 self.propeller_array,
                                                 0#graphFlag
                 ) #kg
-                thrust_per_motor = T_turn_max_per_motor * self.missionParam.throttle_turn #kg
+                thrust_per_motor = T_turn_max_per_motor * self.missionParam.turn_thrust_ratio #kg
                 self.state.thrust = self.presetValues.number_of_motor * thrust_per_motor #kg
                 _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
                 
@@ -1136,9 +1135,9 @@ if __name__=="__main__":
     param = MissionParameters(
         max_speed= 40,                       # Fixed
         max_load_factor = 4.0,               # Fixed
-        throttle_climb = 0.9,
-        throttle_level = 0.5,
-        throttle_turn = 0.5,               
+        climb_thrust_ratio = 0.9,
+        level_thrust_ratio = 0.5,
+        turn_thrust_ratio = 0.5,               
         propeller_data_path = "data/propDataCSV/PER3_8x6E.csv", 
 
     )
