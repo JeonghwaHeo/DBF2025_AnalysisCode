@@ -12,9 +12,7 @@ class PresetValues:
     h_flap_transition : float
     
     number_of_motor : int
-    max_battery_capacity: float
     min_battery_voltage: float
-    propulsion_efficiency: float
     
     score_weight_ratio: float=0.5 
 
@@ -32,12 +30,21 @@ class PropulsionSpecs:
     max_power : float
     
 @dataclass
-class AircraftParamConstraints:
-    # total mass of the aircraft
-    m_total_max: float
-    m_total_min: float
-    m_total_interval: float
+class AerodynamicSetup:
     
+    alpha_start : float
+    alpha_end : float
+    alpha_step : float
+    fuselage_cross_section_area : float
+    fuselage_Cd_datapath : str
+    AOA_stall : str
+    AOA_takeoff_max : str
+    AOA_climb_max : str
+    AOA_turn_max : str    
+    
+    
+@dataclass
+class AircraftParamConstraints:
     # wing parameter ranges
     span_max: float
     span_min: float
@@ -58,6 +65,17 @@ class AircraftParamConstraints:
 
 @dataclass
 class MissionParamConstraints:
+
+    MTOW_min : float
+    MTOW_max : float
+    MTOW_analysis_interval: float
+
+    M2_max_speed_min : float
+    M2_max_speed_max : float
+    M3_max_speed_min : float
+    M3_max_speed_max : float
+    max_speed_analysis_interval : float
+
     #Constraints for calculating mission2
     M2_throttle_climb_min : float
     M2_throttle_climb_max : float

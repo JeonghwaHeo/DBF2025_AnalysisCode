@@ -23,7 +23,19 @@ def runMissionGridSearch(hashVal:str,
 
     analysisResults = loadAnalysisResults(hashVal, csvPath)
     ## Variable lists using for optimization
-   
+    
+    MTOW_list = np.arange(
+            missionParamConstraints.MTOW_min, 
+            missionParamConstraints.MTOW_max + missionParamConstraints.MTOW_analysis_interval/2, 
+            missionParamConstraints.MTOW_analysis_interval        
+    )
+    
+    M2_max_speed_list = np.arange(
+            missionParamConstraints.M2_max_speed_min, 
+            missionParamConstraints.M2_max_speed_max + missionParamConstraints.max_speed_analysis_interval/2, 
+            missionParamConstraints.max_speed_analysis_interval
+        )
+    
     M2_throttle_climb_list = np.arange(
             missionParamConstraints.M2_throttle_climb_min, 
             missionParamConstraints.M2_throttle_climb_max + missionParamConstraints.M2_throttle_analysis_interval/2, 
@@ -40,10 +52,18 @@ def runMissionGridSearch(hashVal:str,
             missionParamConstraints.M2_throttle_analysis_interval
         )
     
-    print(f"\nMission 2 throttle climb list: {M2_throttle_climb_list}")
+    print(f"\nMTOW list: {MTOW_list}")
+    print(f"\nMission 2 max speed list: {M2_max_speed_list}")
+    print(f"Mission 2 throttle climb list: {M2_throttle_climb_list}")
     print(f"Mission 2 throttle turn list: {M2_throttle_turn_list}")
     print(f"Mission 2 throttle level list: {M2_throttle_level_list}\n")
 
+    M3_max_speed_list = np.arange(
+            missionParamConstraints.M3_max_speed_min, 
+            missionParamConstraints.M3_max_speed_max + missionParamConstraints.max_speed_analysis_interval/2, 
+            missionParamConstraints.max_speed_analysis_interval
+        )
+    
     M3_throttle_climb_list = np.arange(
             missionParamConstraints.M3_throttle_climb_min, 
             missionParamConstraints.M3_throttle_climb_max + missionParamConstraints.M3_throttle_analysis_interval/2, 
@@ -60,60 +80,57 @@ def runMissionGridSearch(hashVal:str,
             missionParamConstraints.M3_throttle_analysis_interval
         )
 
-    print(f"\nMission 3 throttle climb list: {M3_throttle_climb_list}")
+    print(f"\nMission 3 max speed list: {M3_max_speed_list}")
+    print(f"Mission 3 throttle climb list: {M3_throttle_climb_list}")
     print(f"Mission 3 throttle turn list: {M3_throttle_turn_list}")
     print(f"Mission 3 throttle level list: {M3_throttle_level_list}\n")
 
     # Create iterator for all combinations
-    throttle_combinations = product(M2_throttle_climb_list, M2_throttle_turn_list, M2_throttle_level_list, M3_throttle_climb_list, M3_throttle_turn_list, M3_throttle_level_list)
+    combinations = product(MTOW_list, M2_max_speed_list, M2_throttle_climb_list, M2_throttle_turn_list, M2_throttle_level_list, M3_max_speed_list, M3_throttle_climb_list, M3_throttle_turn_list, M3_throttle_level_list)
 
     # Print total combinations
-    total = len(M2_throttle_climb_list) * len(M2_throttle_turn_list) * len(M2_throttle_level_list) * len(M3_throttle_climb_list) * len(M3_throttle_turn_list) * len(M3_throttle_level_list)
+    total = len(MTOW_list) * len(M2_max_speed_list) * len(M2_throttle_climb_list) * len(M2_throttle_turn_list) * len(M2_throttle_level_list) * len(M3_max_speed_list) * len(M3_throttle_climb_list) * len(M3_throttle_turn_list) * len(M3_throttle_level_list)
     print(f"Testing {total} combinations...")
 
     # Test each combination
-    for i, (M2_throttle_climb, M2_throttle_turn, M2_throttle_level, M3_throttle_climb, M3_throttle_turn, M3_throttle_level) in enumerate(throttle_combinations):
+    for i, (MTOW, M2_max_speed, M2_throttle_climb, M2_throttle_turn, M2_throttle_level,M3_max_speed, M3_throttle_climb, M3_throttle_turn, M3_throttle_level) in enumerate(combinations):
         print(f"[{time.strftime('%Y-%m-%d %X')}] Mission Grid Progress: {i+1}/{total} configurations")
 
         # Create mission 2 parameters for this combination
         mission2Params = MissionParameters(
-            max_speed= 40,                       # Fixed
-            max_load_factor = 4.0,               # Fixed
+            m_takeoff = MTOW,
+            max_speed= M2_max_speed,                      
+            max_load_factor = presetValues.max_load / MTOW,          
                   
             throttle_climb = M2_throttle_climb,
             throttle_level = M2_throttle_level,
-            throttle_turn = M2_throttle_turn,    # Fixed
+            throttle_turn = M2_throttle_turn,   
 
             propeller_data_path=propulsionSpecs.M2_propeller_data_path,
-            max_battery_capacity = presetValues.max_battery_capacity 
         )
 
         # Create mission 3 parameters for this combination
         mission3Params = MissionParameters(
-            max_speed= 40,                       # Fixed
-            max_load_factor = 4.0,               # Fixed
+            m_takeoff = analysisResults.m_empty/1000,
+            max_speed= M3_max_speed,                      
+            max_load_factor = presetValues.max_load * 1000 / analysisResults.m_empty,            
                   
             throttle_climb = M3_throttle_climb,
             throttle_level = M3_throttle_level,
-            throttle_turn = M3_throttle_turn,    # Fixed
+            throttle_turn = M3_throttle_turn,   
 
-            propeller_data_path=propulsionSpecs.M3_propeller_data_path,
-            max_battery_capacity = presetValues.max_battery_capacity 
+            propeller_data_path=propulsionSpecs.M3_propeller_data_path
         )
 
         try:
-            # Create mission analyzer and run mission 2
+
             mission2Analyzer = MissionAnalyzer(analysisResults, mission2Params, presetValues, propulsionSpecs)
             fuel_weight, flight_time = mission2Analyzer.run_mission2()
-            obj2 = fuel_weight * 2.204 / flight_time # 2.204는 파운드 변환
+            obj2 = fuel_weight * 2.204 / flight_time 
 
-            # Create mission analyzer and run mission 3           
-            analysisResults_for_mission3 = replace(analysisResults,
-                                                m_total=analysisResults.m_total - analysisResults.m_fuel,
-                                                m_fuel=0.0)
-            mission3Analyzer = MissionAnalyzer(analysisResults_for_mission3, mission3Params, presetValues, propulsionSpecs)
+            mission3Analyzer = MissionAnalyzer(analysisResults, mission3Params, presetValues, propulsionSpecs)
             N_laps = mission3Analyzer.run_mission3()
-            obj3 = N_laps + 2.5 / (presetValues.m_x1 * 2.204)
+            obj3 = N_laps + 2.5 / (presetValues.m_x1 /1000 * 2.204 )
 
             results = {
                 'timestamp': time.strftime("%Y-%m-%d %X"),
@@ -123,6 +140,9 @@ def runMissionGridSearch(hashVal:str,
                 'N_laps' : N_laps,
                 'objective_2': obj2,
                 'objective_3': obj3,
+                'MTOW' : MTOW,
+                'M2_max_speed' : M2_max_speed,
+                'M3_max_speed' : M3_max_speed,
                 'mission2_throttle_climb': M2_throttle_climb,
                 'mission2_throttle_turn': M2_throttle_turn,
                 'mission2_throttle_level': M2_throttle_level,
@@ -185,12 +205,14 @@ def ResultAnalysis(presetValues:PresetValues,
 
     organized_df = total_df[['resultID',
                             'hash',
-                            'm_total',
+                            'MTOW',
                             'fuel_weight',
                             'span',
                             'AR',
                             'taper',
                             'twist',
+                            'M2_max_speed',
+                            'M3_max_speed',
                             'mission2_throttle_climb',
                             'mission2_throttle_turn',
                             'mission2_throttle_level',
@@ -218,10 +240,8 @@ if __name__=="__main__":
             m_x1 = 0.2,                       # kg
             x1_flight_time = 30,              # sec
             number_of_motor= 1,
-            max_battery_capacity = 2250,      # mAh (per one battery)
             min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
             Thrust_max = 6.0,
-            propulsion_efficiency = 0.8,      # Efficiency of the propulsion system
             score_weight_ratio = 0.5            # mission2/3 score weight ratio
             )
     a=loadAnalysisResults(6941088787683630519)

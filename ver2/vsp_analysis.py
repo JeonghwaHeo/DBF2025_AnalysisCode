@@ -52,12 +52,12 @@ class VSPAnalyzer:
     def calculateCoefficients(self, fileName:str = "Mothership.vsp3", 
                               alpha_start: float=0, alpha_end: float=1, alpha_step:float=0.5, 
                               CD_fuse: np.ndarray=np.zeros(4),
+                              fuselage_cross_section_area: float=20000,
                               AOA_stall:float=13, 
                               AOA_takeoff_max:float=10,
                               AOA_climb_max:float=8,
                               AOA_turn_max:float=8,
                               Re:float=850000, Mach:float=0,
-                              m_total:float = 8500, 
                               boom_density_2018:float = 0.098, 
                               boom_density_1614:float = 0.087,
                               boom_density_86:float = 0.036,
@@ -71,17 +71,12 @@ class VSPAnalyzer:
         
         # Find index closest to AOA_stall and zero
         alpha_list = results_no_flap['alpha_list']
-        stall_idx = np.abs(alpha_list - AOA_stall).argmin()
-        zero_idx = np.abs(alpha_list - 0).argmin()
 
         # Calculate coefficients with flaps at max angle
-        results_flap_max = self._calculate_coeffs_helper(fileName, 0, AOA_stall, AOA_stall,
+        results_flap_max = self._calculate_coeffs_helper(fileName, 0, AOA_takeoff_max, AOA_takeoff_max,
                                                         Re, Mach, boom_density_2018, boom_density_1614,
                                                         boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
                                                         do_mass_analysis=False)
-
-        # Get CL_max from the zero flaps data
-        # CL_max = results_no_flap['CL'][stall_idx]
 
         # Get corresponding CL/CD values
         CL_flap_max = results_flap_max['CL'][1]
@@ -89,12 +84,15 @@ class VSPAnalyzer:
         CL_flap_zero = results_flap_max['CL'][0]
         CD_flap_zero = results_flap_max['CD'][0]
     
+        CD_fuse = CD_fuse * (fuselage_cross_section_area / results_no_flap['Sref']) 
+        zero_index = int((0-alpha_start)/alpha_step)
+        
         print("Finished Analysis for this configuration.")
+        
         return AircraftAnalysisResults(
                 aircraft=self.aircraft,
                 alpha_list=results_no_flap['alpha_list'],
-                m_total=m_total,
-                m_fuel=results_no_flap['m_fuel'],
+                m_empty=results_no_flap['m_empty'],
                 m_boom=results_no_flap['m_boom'],
                 m_wing=results_no_flap['m_wing'],
                 span=results_no_flap['span'],
@@ -105,7 +103,6 @@ class VSPAnalyzer:
                 Lw=results_no_flap['Lw'],
                 Lh=results_no_flap['Lh'],
                 CL=results_no_flap['CL'],
-                # CL_max=CL_max,
                 CD_wing=results_no_flap['CD'],
                 CD_fuse=CD_fuse,
                 CD_total=results_no_flap['CD'] + CD_fuse,
@@ -116,7 +113,7 @@ class VSPAnalyzer:
                 CL_flap_max=CL_flap_max,
                 CL_flap_zero=CL_flap_zero,
                 CD_flap_max=CD_flap_max + CD_fuse[-1],
-                CD_flap_zero=CD_flap_zero + CD_fuse[0]
+                CD_flap_zero=CD_flap_zero + CD_fuse[zero_index]
         )
 
     def _calculate_coeffs_helper(self, fileName, alpha_start, alpha_end, alpha_step,
@@ -127,9 +124,6 @@ class VSPAnalyzer:
         
         point_number = round(int((alpha_end - alpha_start) / alpha_step) + 1)
         
-        # if(CD_fuse.size != point_number):
-        #     raise ValueError(f"CD_fuse size({CD_fuse.size}) doesn't match point_number({point_number})")
-
         if(clearModel):
             vsp.ClearVSPModel()
         vsp.VSPRenew()
@@ -185,13 +179,11 @@ class VSPAnalyzer:
             lh = self.aircraft.horizontal_volume_ratio * chord_Mean / self.aircraft.horizontal_area_ratio
             horizontal_distance = chord_Mean/4 + lh - tail_c_root/4
 
-            m_wing = mass_data[0] + (span - 50.0) * (boom_density_1614 + boom_density_2018 + boom_density_86)
+            m_wing = mass_data[0] + span * (boom_density_1614 + boom_density_2018 + boom_density_86)
             
             m_boom = horizontal_distance * boom_density_big * 2
             
-            ## TODO if m_fuel < 0 exit early
-
-            m_fuel = self.aircraft.m_total - m_wing - m_boom - self.aircraft.m_fuselage - self.presets.m_x1
+            m_empty = m_wing + m_boom + self.aircraft.m_fuselage + self.presets.m_x1
             
             mass_center_x = 120 # Calculated by CG Calculater, static margin 10%
 
@@ -205,7 +197,7 @@ class VSPAnalyzer:
             print("> Finished Mass Analysis")
         else:
             print("> Skipping Mass Analysis")
-            m_fuel, m_boom, m_wing = 0, 0, 0
+            m_empty, m_boom, m_wing = 0, 0, 0
             Lw, Lh = 0, 0
             tail_effect = 1
 
@@ -263,7 +255,7 @@ class VSPAnalyzer:
         
         return {
             'alpha_list': alpha_list,
-            'm_fuel': m_fuel,
+            'm_empty': m_empty,
             'm_boom': m_boom,
             'm_wing': m_wing,
             'span': span,
@@ -580,13 +572,11 @@ def visualize_results(results: AircraftAnalysisResults):
     ax_table.axis('tight')
     ax_table.axis('off')
     table1_data=[
-        ["MTOW (g)",f"{results.m_total:.2f}"],
+        ["Empty Weight (g)",f"{results.m_empty:.2f}"],
         ["m_wing (g)",f"{results.m_wing:.2f}"],
         ["m_boom (g)",f"{results.m_boom:.2f}"],
         ["m_fuse (g)",f"{results.aircraft.m_fuselage:.2f}"],
-        ["m_fuel (g)",f"{results.m_fuel:.2f}"],
-        ["S (m^2)",f"{results.Sref/1000000:.4f}"],
-        ["Wing Loading (kg/m^2)",f"{float(results.m_total * 1000 / results.Sref):.2f}"]
+        ["S (m^2)",f"{results.Sref/1000000:.4f}"]
     ]
     table1 = ax_table.table(cellText=table1_data,cellLoc='center',loc='upper center')
     table1.auto_set_font_size(False)
@@ -619,7 +609,7 @@ def visualize_results(results: AircraftAnalysisResults):
     
     ax1 = fig.add_subplot(grid[0, 1])
     ax1.plot(results.alpha_list, results.CL, 'b-', label='Flap OFF')
-    ax1.scatter([0, results.AOA_stall], [results.CL_flap_zero, results.CL_flap_max], 
+    ax1.scatter([0, results.AOA_takeoff_max], [results.CL_flap_zero, results.CL_flap_max], 
                 c='r', marker='o', label='Flap ON')
     ax1.set_xlabel('Angle of Attack (degrees)')
     ax1.set_ylabel('Lift Coefficient (CL)')
@@ -635,7 +625,7 @@ def visualize_results(results: AircraftAnalysisResults):
     ax2.plot(results.alpha_list, results.CD_total, 'b-', label='CD Total')
     ax2.plot(results.alpha_list, results.CD_wing, 'r-', label='CD Wing')
     ax2.plot(results.alpha_list, results.CD_fuse, 'g-', label='CD Fuselage')
-    ax2.scatter([0, results.AOA_stall], [results.CD_flap_zero, results.CD_flap_max],
+    ax2.scatter([0, results.AOA_takeoff_max], [results.CD_flap_zero, results.CD_flap_max],
                 c='r', marker='o', label='Flap ON')
     ax2.set_xlabel('Angle of Attack (degrees)')
     ax2.set_ylabel('Drag Coefficient (CD)')
@@ -655,95 +645,95 @@ import numpy as np
 from typing import List, Optional, Dict
 from internal_dataclass import AircraftAnalysisResults
 
-def compare_aerodynamics(results_list: List[AircraftAnalysisResults],
-                        labels: Optional[List[str]] = None,
-                        plot_flaps: bool = True,
-                        figsize: tuple = (15, 10),
-                        style: str = 'default',
-                        save_path: Optional[str] = None) -> None:
-    """
-    Compare lift and drag coefficients of multiple aircraft configurations.
+# def compare_aerodynamics(results_list: List[AircraftAnalysisResults],
+#                         labels: Optional[List[str]] = None,
+#                         plot_flaps: bool = True,
+#                         figsize: tuple = (15, 10),
+#                         style: str = 'default',
+#                         save_path: Optional[str] = None) -> None:
+#     """
+#     Compare lift and drag coefficients of multiple aircraft configurations.
     
-    Args:
-        results_list: List of AircraftAnalysisResults objects to compare
-        labels: Optional list of labels for each configuration
-        plot_flaps: Whether to plot flap configurations
-        figsize: Size of the figure (width, height)
-        style: Matplotlib style to use
-        save_path: Optional path to save the figure
-    """
-    plt.style.use(style)
+#     Args:
+#         results_list: List of AircraftAnalysisResults objects to compare
+#         labels: Optional list of labels for each configuration
+#         plot_flaps: Whether to plot flap configurations
+#         figsize: Size of the figure (width, height)
+#         style: Matplotlib style to use
+#         save_path: Optional path to save the figure
+#     """
+#     plt.style.use(style)
     
-    # Create figure with subplots
-    fig = plt.figure(figsize=figsize)
-    gs = plt.GridSpec(2, 2, figure=fig)
-    ax_cl = fig.add_subplot(gs[0, 0])  # CL vs Alpha
-    ax_cd = fig.add_subplot(gs[0, 1])  # CD vs Alpha
-    ax_polar = fig.add_subplot(gs[1, :])  # Drag polar
+#     # Create figure with subplots
+#     fig = plt.figure(figsize=figsize)
+#     gs = plt.GridSpec(2, 2, figure=fig)
+#     ax_cl = fig.add_subplot(gs[0, 0])  # CL vs Alpha
+#     ax_cd = fig.add_subplot(gs[0, 1])  # CD vs Alpha
+#     ax_polar = fig.add_subplot(gs[1, :])  # Drag polar
     
-    # Generate default labels if none provided
-    if labels is None:
-        labels = [f"Configuration {i+1}" for i in range(len(results_list))]
+#     # Generate default labels if none provided
+#     if labels is None:
+#         labels = [f"Configuration {i+1}" for i in range(len(results_list))]
     
-    # Color map for different configurations
-    colors = plt.cm.viridis(np.linspace(0, 1, len(results_list)))
+#     # Color map for different configurations
+#     colors = plt.cm.viridis(np.linspace(0, 1, len(results_list)))
     
-    # Plot each configuration
-    for i, (results, label, color) in enumerate(zip(results_list, labels, colors)):
-        # Basic lift curve
-        ax_cl.plot(results.alpha_list, results.CL, 
-                  color=color, label=label, linewidth=2)
+#     # Plot each configuration
+#     for i, (results, label, color) in enumerate(zip(results_list, labels, colors)):
+#         # Basic lift curve
+#         ax_cl.plot(results.alpha_list, results.CL, 
+#                   color=color, label=label, linewidth=2)
         
-        # Basic drag curve
-        ax_cd.plot(results.alpha_list, results.CD_total, 
-                  color=color, label=label, linewidth=2)
+#         # Basic drag curve
+#         ax_cd.plot(results.alpha_list, results.CD_total, 
+#                   color=color, label=label, linewidth=2)
         
-        # Drag polar
-        ax_polar.plot(results.CD_total, results.CL, 
-                     color=color, label=label, linewidth=2)
+#         # Drag polar
+#         ax_polar.plot(results.CD_total, results.CL, 
+#                      color=color, label=label, linewidth=2)
         
-        # Add flap configurations if requested
-        if plot_flaps:
-            flap_alphas = [0, results.AOA_stall]
-            flap_cls = [results.CL_flap_zero, results.CL_flap_max]
-            flap_cds = [results.CD_flap_zero, results.CD_flap_max]
+#         # Add flap configurations if requested
+#         if plot_flaps:
+#             flap_alphas = [0, results.AOA_stall]
+#             flap_cls = [results.CL_flap_zero, results.CL_flap_max]
+#             flap_cds = [results.CD_flap_zero, results.CD_flap_max]
             
-            # Plot flap points
-            ax_cl.scatter(flap_alphas, flap_cls, color=color, marker='o', s=100)
-            ax_cd.scatter(flap_alphas, flap_cds, color=color, marker='o', s=100)
-            ax_polar.scatter(flap_cds, flap_cls, color=color, marker='o', s=100)
+#             # Plot flap points
+#             ax_cl.scatter(flap_alphas, flap_cls, color=color, marker='o', s=100)
+#             ax_cd.scatter(flap_alphas, flap_cds, color=color, marker='o', s=100)
+#             ax_polar.scatter(flap_cds, flap_cls, color=color, marker='o', s=100)
     
-    # Configure CL vs Alpha plot
-    ax_cl.set_xlabel('Angle of Attack (degrees)')
-    ax_cl.set_ylabel('Lift Coefficient (CL)')
-    ax_cl.set_title('Lift Curve')
-    ax_cl.grid(True, alpha=0.3)
-    ax_cl.legend()
+#     # Configure CL vs Alpha plot
+#     ax_cl.set_xlabel('Angle of Attack (degrees)')
+#     ax_cl.set_ylabel('Lift Coefficient (CL)')
+#     ax_cl.set_title('Lift Curve')
+#     ax_cl.grid(True, alpha=0.3)
+#     ax_cl.legend()
     
-    # Configure CD vs Alpha plot
-    ax_cd.set_xlabel('Angle of Attack (degrees)')
-    ax_cd.set_ylabel('Drag Coefficient (CD)')
-    ax_cd.set_title('Drag Curve')
-    ax_cd.grid(True, alpha=0.3)
-    ax_cd.legend()
+#     # Configure CD vs Alpha plot
+#     ax_cd.set_xlabel('Angle of Attack (degrees)')
+#     ax_cd.set_ylabel('Drag Coefficient (CD)')
+#     ax_cd.set_title('Drag Curve')
+#     ax_cd.grid(True, alpha=0.3)
+#     ax_cd.legend()
     
-    # Configure drag polar plot
-    ax_polar.set_xlabel('Drag Coefficient (CD)')
-    ax_polar.set_ylabel('Lift Coefficient (CL)')
-    ax_polar.set_title('Drag Polar')
-    ax_polar.grid(True, alpha=0.3)
-    ax_polar.legend()
+#     # Configure drag polar plot
+#     ax_polar.set_xlabel('Drag Coefficient (CD)')
+#     ax_polar.set_ylabel('Lift Coefficient (CL)')
+#     ax_polar.set_title('Drag Polar')
+#     ax_polar.grid(True, alpha=0.3)
+#     ax_polar.legend()
     
-    # Add annotation for flap points if plotted
-    if plot_flaps:
-        text = "○ Flap Configuration Points"
-        fig.text(0.02, 0.02, text, fontsize=10)
+#     # Add annotation for flap points if plotted
+#     if plot_flaps:
+#         text = "○ Flap Configuration Points"
+#         fig.text(0.02, 0.02, text, fontsize=10)
     
-    # Adjust layout
-    plt.tight_layout()
+#     # Adjust layout
+#     plt.tight_layout()
     
-    # Save if path provided
-    if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+#     # Save if path provided
+#     if save_path:
+#         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     
-    plt.show()
+#     plt.show()

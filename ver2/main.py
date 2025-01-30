@@ -11,12 +11,12 @@ from setup_dataclass import *
 
 def main():
 
-    removeAnalysisResults(csvPath = "data/test.csv")
+    # removeAnalysisResults(csvPath = "data/test.csv")
     removeAnalysisResults(csvPath = "data/total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
 
     presetValues = PresetValues(
-        m_x1 = 0.25,                        # kg
+        m_x1 = 200,                        # g
         x1_flight_time = 30,                # sec
         
         throttle_takeoff = 0.9,             # 0~1
@@ -25,9 +25,7 @@ def main():
         h_flap_transition = 5,              # m
         
         number_of_motor = 2,                 
-        max_battery_capacity = 2250,        # mAh (per one battery)
         min_battery_voltage = 21.8,         # V 
-        propulsion_efficiency = 0.1326,     # Efficiency of the propulsion system
         score_weight_ratio = 0.5            # mission2/3 score weight ratio
         )
     
@@ -45,19 +43,13 @@ def main():
     )
     
     aircraftParamConstraints = AircraftParamConstraints (
-        #Constraints for constructing the aircraft
-
-        m_total_min = 8500.0,                # g
-        m_total_max = 8500.0,
-        m_total_interval = 500.0,
-        
-        # wing parameter ranges
+  
         span_min = 1800.0,                   # mm
         span_max = 1800.0,                   
         span_interval = 100.0,
     
         AR_min = 5.45,                  
-        AR_max = 5.45,
+        AR_max = 5.50,
         AR_interval = 0.5,
         
         taper_min = 0.45,
@@ -73,8 +65,19 @@ def main():
         wing_loading_max = 15
         )
     
+    aerodynamicSetup = AerodynamicSetup(
+        alpha_start = -3,
+        alpha_end = 10,
+        alpha_step = 1,
+        fuselage_cross_section_area = 19427,
+        fuselage_Cd_datapath = "data/fuselageDragCSV/fuselageDragCoefficients.csv",
+        AOA_stall = 13,
+        AOA_takeoff_max = 10,
+        AOA_climb_max = 8,
+        AOA_turn_max = 8  
+    )
     baseAircraft = Aircraft(
-        m_total = 8500, 
+        # m_total = 8500, 
         m_fuselage = 3000,
 
         wing_density = 0.0000852, spar_density = 1.0,
@@ -103,7 +106,7 @@ def main():
         vertical_ThickChord = 9  
         )
 
-    runVSPGridAnalysis(aircraftParamConstraints,presetValues,baseAircraft)
+    # runVSPGridAnalysis(aircraftParamConstraints,aerodynamicSetup, presetValues,baseAircraft)
 
     results = pd.read_csv("data/test.csv", sep='|', encoding='utf-8')
     print(results.head()) 
@@ -112,13 +115,24 @@ def main():
         print(f"\nAnalyzing for hash{hashVal}")
 
         missionParamConstraints = MissionParamConstraints (
+            
+            MTOW_min = 8,
+            MTOW_max = 8,
+            MTOW_analysis_interval = 0.5,
+            
+            M2_max_speed_min = 35,
+            M2_max_speed_max = 35,
+            M3_max_speed_min = 20,
+            M3_max_speed_max = 25,
+            max_speed_analysis_interval = 5,
+            
             #Constraints for calculating mission2
             M2_throttle_climb_min = 0.9,
             M2_throttle_climb_max = 0.9,
             M2_throttle_turn_min = 0.5,
             M2_throttle_turn_max = 0.5,
             M2_throttle_level_min = 0.5,
-            M2_throttle_level_max = 0.5,
+            M2_throttle_level_max = 0.55,
             M2_throttle_analysis_interval = 0.05,
 
             #Constraints for calculating mission3  
