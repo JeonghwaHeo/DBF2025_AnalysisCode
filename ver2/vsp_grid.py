@@ -39,7 +39,7 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
         vsp_grid_combinations = grid_chunks[server_id-1]
 
         total = len(vsp_grid_combinations)
-        print(f"Total number of combinations: {total}")
+        print(f"\nTotal number of Aircraft combinations: {total}")
          
         alpha_start = aerodynamicSetup.alpha_start
         alpha_end = aerodynamicSetup.alpha_end
@@ -50,8 +50,7 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
         vspAnalyzer = VSPAnalyzer(presetValues)
 
         for i, (span, AR, taper, twist, airfoil_name) in enumerate(vsp_grid_combinations):
-                print(f"\n[{time.strftime('%Y-%m-%d %X')}] VSP Grid Progress: {i+1}/{total} configurations")
-                print(f"\n[{span:.2f}, {AR:.2f}, {taper:.2f}, {twist:.1f},{airfoil_name}]")
+                print(f"\n[{time.strftime('%Y-%m-%d %X')}] VSP Grid Progress: {i+1}/{total} configurations: [{span:.2f}, {AR:.2f}, {taper:.2f}, {twist:.1f}, {airfoil_name}]")
                 airfoil_datapath = "data/airfoilDAT/" + airfoil_name + ".dat"
                 aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist, mainwing_airfoil_datapath = airfoil_datapath)   
 

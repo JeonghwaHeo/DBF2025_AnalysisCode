@@ -27,14 +27,13 @@ def runMissionGridSearch(hashVal:str,
             missionParamConstraints.MTOW_max + missionParamConstraints.MTOW_analysis_interval/2, 
             missionParamConstraints.MTOW_analysis_interval        
     )
-    print(MTOW_list)
     MTOW_min_condition = max(missionParamConstraints.wing_loading_min * analysisResults.Sref * 1e-6,
                              analysisResults.m_empty/1000)
     MTOW_max_condition = missionParamConstraints.wing_loading_max * analysisResults.Sref * 1e-6
-    print(MTOW_list)
     MTOW_list = MTOW_list[(MTOW_list >= MTOW_min_condition) & (MTOW_list <= MTOW_max_condition)]
-    print(MTOW_list)
-    if len(MTOW_list) == 0: return
+    if len(MTOW_list) == 0: 
+        print(f"All MTOW options exceed wing loading limit")
+        return
 
     M2_max_speed_list = np.arange(
             missionParamConstraints.M2_max_speed_min, 
@@ -59,7 +58,7 @@ def runMissionGridSearch(hashVal:str,
         )
     
     print(f"\nMTOW list: {MTOW_list}")
-    print(f"\nMission 2 max speed list: {M2_max_speed_list}")
+    print(f"Mission 2 max speed list: {M2_max_speed_list}")
     print(f"Mission 2 throttle climb list: {M2_climb_thrust_ratio_list}")
     print(f"Mission 2 throttle turn list: {M2_turn_thrust_ratio_list}")
     print(f"Mission 2 throttle level list: {M2_level_thrust_ratio_list}\n")
@@ -99,11 +98,11 @@ def runMissionGridSearch(hashVal:str,
     M2_total = len(MTOW_list) * len(M2_max_speed_list) * len(M2_climb_thrust_ratio_list) * len(M2_turn_thrust_ratio_list) * len(M2_level_thrust_ratio_list)
     M3_total = len(M3_max_speed_list) * len(M3_climb_thrust_ratio_list) * len(M3_turn_thrust_ratio_list) * len(M3_level_thrust_ratio_list)
     
-    print(f"\nTesting {M2_total} combinations...")
+    print(f"\nTesting Mission2: {M2_total} combinations...\n")
 
     # Test each M2_combination
     for i, (MTOW, M2_max_speed, M2_climb_thrust_ratio, M2_turn_thrust_ratio, M2_level_thrust_ratio) in enumerate(M2_combinations):
-        print(f"\n[{time.strftime('%Y-%m-%d %X')}] Mission2 Grid Progress: {i+1}/{M2_total} configurations")
+        print(f"[{time.strftime('%Y-%m-%d %X')}] Mission2 Grid Progress: {i+1}/{M2_total} configurations")
 
         # Create mission 2 parameters for this combination
         mission2Params = MissionParameters(
@@ -152,11 +151,11 @@ def runMissionGridSearch(hashVal:str,
    
     print("\nDone Mission2 Analysis ^_^")
 
-    print(f"\nTesting {M3_total} combinations...")
+    print(f"\nTesting Mission3: {M3_total} combinations...\n")
 
     # Test each M3_combination
     for i, (M3_max_speed, M3_climb_thrust_ratio, M3_turn_thrust_ratio, M3_level_thrust_ratio) in enumerate(M3_combinations):
-        print(f"\n[{time.strftime('%Y-%m-%d %X')}] Mission3 Grid Progress: {i+1}/{M3_total} configurations")
+        print(f"[{time.strftime('%Y-%m-%d %X')}] Mission3 Grid Progress: {i+1}/{M3_total} configurations")
 
         # Create mission 3 parameters for this combination
         mission3Params = MissionParameters(
@@ -284,7 +283,7 @@ def ResultAnalysis(presetValues:PresetValues,
 
     max_SCORE = organized_df['SCORE'].max()
     max_SCORE_row = organized_df[organized_df['SCORE'] == max_SCORE]
-    print('max_SCORE info : \n', max_SCORE_row)
+    print('\nmax_SCORE info : \n', max_SCORE_row)
 
 if __name__=="__main__":
     presetValues = PresetValues(
