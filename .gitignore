@@ -1,9 +1,7 @@
-ver2/data/mission_results.csv
-ver2/data/mission_results.csv
 ver2/data/aircraft.csv
-ver2/data/total_results.csv
+ver2/data/M2_total_results.csv
+ver2/data/M3_total_results.csv
 ver2/data/organized_results.csv
-ver2/data/total_results.csv
-ver2/data/organized_results.csv
+ver2/data/mission_statelog.csv
 testfunctions.py
 .vscode/settings.json
