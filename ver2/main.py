@@ -54,16 +54,16 @@ def main():
         span_max = 1800.0,                   
         span_interval = 100.0,
     
-        AR_min = 5.45,                  
-        AR_max = 5.45,
+        AR_min = 5.25,                  
+        AR_max = 5.25,
         AR_interval = 0.05,
         
         taper_min = 0.65,
         taper_max = 0.65,                      
         taper_interval = 0.1,
         
-        twist_min = 1.0,                     # degree
-        twist_max = 1.0,                     
+        twist_min = 0.0,                     # degree
+        twist_max = 0.0,                     
         twist_interval = 1.0,
         )
     
@@ -106,7 +106,7 @@ def main():
         vertical_taper = 0.6,        
         vertical_ThickChord = 9,  
         
-        mainwing_airfoil_datapath = "data/airfoilDAT/s9027.dat",
+        mainwing_airfoil_datapath = "data/airfoilDAT/e64.dat",
         horizontal_airfoil_datapath= "data/airfoilDAT/naca0008.dat",
         vertical_airfoil_datapath= "data/airfoilDAT/naca0009.dat"
         
@@ -122,36 +122,36 @@ def main():
 
         missionParamConstraints = MissionParamConstraints (
             
-            MTOW_min = 8,
-            MTOW_max = 8,
+            MTOW_min = 10,
+            MTOW_max = 10,
             MTOW_analysis_interval = 0.5,
             
             M2_max_speed_min = 35,
             M2_max_speed_max = 35,
             M3_max_speed_min = 20,
-            M3_max_speed_max = 25,
-            max_speed_analysis_interval = 5,
+            M3_max_speed_max = 30,
+            max_speed_analysis_interval = 2,
             
             #Constraints for calculating mission2
             M2_climb_thrust_ratio_min = 0.9,
             M2_climb_thrust_ratio_max = 0.9,
-            M2_turn_thrust_ratio_min = 0.5,
-            M2_turn_thrust_ratio_max = 0.5,
-            M2_level_thrust_ratio_min = 0.5,
-            M2_level_thrust_ratio_max = 0.5,
+            M2_turn_thrust_ratio_min = 0.7,
+            M2_turn_thrust_ratio_max = 0.7,
+            M2_level_thrust_ratio_min = 0.7,
+            M2_level_thrust_ratio_max = 0.7,
             M2_thrust_analysis_interval = 0.05,
 
             #Constraints for calculating mission3  
             M3_climb_thrust_ratio_min = 0.9,
             M3_climb_thrust_ratio_max = 0.9,
-            M3_turn_thrust_ratio_min = 0.6,
+            M3_turn_thrust_ratio_min = 0.3,
             M3_turn_thrust_ratio_max = 0.6,
-            M3_level_thrust_ratio_min = 0.6,
+            M3_level_thrust_ratio_min = 0.3,
             M3_level_thrust_ratio_max = 0.6,
             M3_thrust_analysis_interval = 0.05,
             
             wing_loading_min = 5,
-            wing_loading_max = 15
+            wing_loading_max = 30
             )
         
         runMissionGridSearch(hashVal,presetValues,missionParamConstraints,propulsionSpecs)

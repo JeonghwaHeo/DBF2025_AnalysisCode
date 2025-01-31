@@ -1,7 +1,6 @@
 from typing import List
 import numpy as np
 import pandas as pd
-import math
 import time
 import concurrent.futures
 import matplotlib.pyplot as plt
@@ -164,7 +163,7 @@ class MissionAnalyzer():
         
         self.weight = self.missionParam.m_takeoff * g
         
-        self.v_takeoff = (math.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_flap_max)))
+        self.v_takeoff = (np.sqrt((2*self.weight) / (rho*self.analResult.Sref*self.analResult.CL_flap_max)))
 
         # Create focused alpha range from -10 to 10 degrees
         alpha_extended = np.linspace(-5, 15, 2000)  # 0.01 degree resolution
@@ -192,17 +191,22 @@ class MissionAnalyzer():
                 match phase.phaseType:
                     case PhaseType.TAKEOFF:
                         flag = self.takeoff_simulation()
+                        # print(f"takeoff = {flag}")
                     case PhaseType.CLIMB:
-                        flag = self.climb_simulation(phase.numargs[0],phase.numargs[1],phase.direction)   
+                        flag = self.climb_simulation(phase.numargs[0],phase.numargs[1],phase.direction) 
+                        # print(f"climb = {flag}")  
                     case PhaseType.LEVEL_FLIGHT:
                         flag = self.level_flight_simulation(phase.numargs[0],phase.direction)
+                        # print(f"level flight = {flag}")
                     case PhaseType.TURN:
                         flag = self.turn_simulation(phase.numargs[0],phase.direction)
+                        # print(f"turn = {flag}")
                     case _: 
                         raise ValueError("Didn't provide a correct PhaseType!")
                 self.state.phase += 1
                 
-                if flag==-1: return -1
+                if flag==-1: 
+                    return -1
                 
             except Exception as e:
                 return -1        
@@ -268,7 +272,8 @@ class MissionAnalyzer():
         result = self.run_mission(mission3)
         first_state = self.stateLog[0]
         first_state.mission = 3
-        if(result == -1): return -1
+        if(result == -1): 
+            return -1
 
         # Store starting index for each lap to handle truncation if needed
         self.state.N_laps = 1
@@ -295,7 +300,7 @@ class MissionAnalyzer():
             # Check if we've exceeded time limit or voltage limit
             if (self.state.time > time_limit or 
                 self.state.battery_voltage < self.presetValues.min_battery_voltage):
-                #print("Time ran out")
+                
                 # Truncate the results and finish
                 self.stateLog = self.stateLog[:lap_start_index]
                 self.state.N_laps -= 1
@@ -448,7 +453,7 @@ class MissionAnalyzer():
             self.state.time += self.dt
 
             # Calculate climb angle
-            gamma_rad = math.atan2(self.state.velocity[2], abs(self.state.velocity[0]))
+            gamma_rad = np.atan2(self.state.velocity[2], abs(self.state.velocity[0]))
 
             if direction == 'right':
                 # set AOA at climb (if altitude is below target altitude, set AOA to AOA_climb. if altitude exceed target altitude, decrease AOA gradually to -5 degree)
@@ -460,10 +465,10 @@ class MissionAnalyzer():
                     load_factor = self.calculate_Lift_and_Loadfactor(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
             
                     if (load_factor < self.missionParam.max_load_factor and 
-                        gamma_rad < math.radians(self.presetValues.max_climb_angle)):
+                        gamma_rad < np.radians(self.presetValues.max_climb_angle)):
                         alpha_w_deg = self.analResult.AOA_climb_max
                     elif (load_factor >= self.missionParam.max_load_factor and 
-                          gamma_rad < math.radians(self.presetValues.max_climb_angle)):
+                          gamma_rad < np.radians(self.presetValues.max_climb_angle)):
                         alpha_w_deg = float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/
                                                           (rho * fast_norm(self.state.velocity)**2 * self.analResult.Sref)))
                     else:
@@ -471,7 +476,7 @@ class MissionAnalyzer():
                         alpha_w_deg = max(alpha_w_deg, -5)
                 else:
                     break_flag = True
-                    if gamma_rad > math.radians(self.presetValues.max_climb_angle):
+                    if gamma_rad > np.radians(self.presetValues.max_climb_angle):
                         alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)
                     else:
@@ -488,10 +493,10 @@ class MissionAnalyzer():
                     load_factor = self.calculate_Lift_and_Loadfactor(float(self.CL_func(self.analResult.AOA_climb_max)))[1]
             
                     if (load_factor < self.missionParam.max_load_factor and 
-                        gamma_rad < math.radians(self.presetValues.max_climb_angle)):
+                        gamma_rad < np.radians(self.presetValues.max_climb_angle)):
                         alpha_w_deg = self.analResult.AOA_climb_max
                     elif (load_factor >= self.missionParam.max_load_factor and 
-                          gamma_rad < math.radians(self.presetValues.max_climb_angle)):
+                          gamma_rad < np.radians(self.presetValues.max_climb_angle)):
                         alpha_w_deg = float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/
                                                           (rho * fast_norm(self.state.velocity)**2 * self.analResult.Sref)))
                     else:
@@ -499,7 +504,7 @@ class MissionAnalyzer():
                         alpha_w_deg = max(alpha_w_deg, -5)
                 else:
                     break_flag = True
-                    if gamma_rad > math.radians(self.presetValues.max_climb_angle):
+                    if gamma_rad > np.radians(self.presetValues.max_climb_angle):
                         alpha_w_deg -= 1
                         alpha_w_deg = max(alpha_w_deg, -5)
                     else:
@@ -556,7 +561,7 @@ class MissionAnalyzer():
             self.state.throttle = self.missionParam.climb_thrust_ratio
              
             self.state.AOA = alpha_w_deg
-            self.state.climb_pitch_angle =alpha_w_deg + math.degrees(gamma_rad)
+            self.state.climb_pitch_angle =alpha_w_deg + np.degrees(gamma_rad)
             self.state.bank_angle = np.nan
 
 
@@ -689,17 +694,17 @@ class MissionAnalyzer():
             target_angle_degree (float): Required angle of coordinate level turn (degree)
             direction (string): The direction of movement. Must be either 'CW' or 'CCW'.
         """     
-    
+        
         speed = fast_norm(self.state.velocity) 
         self.dt = 0.1  
         step = 0
         max_steps = int(180/self.dt) 
         # Initialize turn tracking
-        target_angle_rad = math.radians(target_angle_deg)
+        target_angle_rad = np.radians(target_angle_deg)
         turned_angle_rad = 0
 
         # Get initial heading and setup turn center
-        initial_angle_rad = math.atan2(self.state.velocity[1], self.state.velocity[0])
+        initial_angle_rad = np.atan2(self.state.velocity[1], self.state.velocity[0])
         current_angle_rad = initial_angle_rad
 
         # Pre-calculate constants
@@ -709,7 +714,7 @@ class MissionAnalyzer():
         weight = self.weight
 
         for step in range(max_steps):
-          
+            # print(step)
             if abs(turned_angle_rad) < abs(target_angle_rad):
                 self.state.time += self.dt
 
@@ -722,13 +727,16 @@ class MissionAnalyzer():
 
                         alpha_turn = float(self.alpha_func(CL))
                         L = dynamic_pressure * CL
-                        phi_rad = math.acos(weight/L)
+                        if weight / L >=1: 
+                            print("too heavy")
+                            return -1
+                        phi_rad = np.acos(min(weight/L,0.99))
                         
-                        a_centripetal = (L * math.sin(phi_rad)) / self.missionParam.m_takeoff
-                        R = (self.missionParam.m_takeoff * speed**2)/(L * math.sin(phi_rad))
+                        a_centripetal = (L * np.sin(phi_rad)) / self.missionParam.m_takeoff
+                        R = (self.missionParam.m_takeoff * speed**2)/(L * np.sin(phi_rad))
                         omega = speed / R
 
-                        self.state.loadfactor = 1 / math.cos(phi_rad)
+                        self.state.loadfactor = 1 / np.cos(phi_rad)
 
                         CD = float(self.CD_func(alpha_turn))
                         D = CD * dynamic_pressure
@@ -759,13 +767,16 @@ class MissionAnalyzer():
                             
                         alpha_turn = float(self.alpha_func(CL))
                         L = dynamic_pressure * CL
-                        phi_rad = math.acos(weight/L)
+                        if weight / L >=1: 
+                            print("too heavy")
+                            return -1
+                        phi_rad = np.acos(min(weight/L,0.99))
 
-                        a_centripetal = (L * math.sin(phi_rad)) / self.missionParam.m_takeoff
-                        R = (self.missionParam.m_takeoff * speed**2)/(L * math.sin(phi_rad))
+                        a_centripetal = (L * np.sin(phi_rad)) / self.missionParam.m_takeoff
+                        R = (self.missionParam.m_takeoff * speed**2)/(L * np.sin(phi_rad))
                         omega = speed / R
 
-                        self.state.loadfactor = 1 / math.cos(phi_rad)
+                        self.state.loadfactor = 1 / np.cos(phi_rad)
 
                         CD = float(self.CD_func(alpha_turn))
                         D = CD * dynamic_pressure
@@ -789,8 +800,8 @@ class MissionAnalyzer():
                         self.updateBatteryState(self.state.battery_SoC)
 
                 # Calculate turn center
-                sin_current = math.sin(current_angle_rad)
-                cos_current = math.cos(current_angle_rad)
+                sin_current = np.sin(current_angle_rad)
+                cos_current = np.cos(current_angle_rad)
                 
                 if direction == "CCW":
                     center_x = self.state.position[0] - R * sin_current
@@ -804,8 +815,8 @@ class MissionAnalyzer():
                     turned_angle_rad -= omega * self.dt
 
                 # Update position
-                sin_new = math.sin(current_angle_rad)
-                cos_new = math.cos(current_angle_rad)
+                sin_new = np.sin(current_angle_rad)
+                cos_new = np.cos(current_angle_rad)
                 
                 if direction == "CCW":
                     self.state.position[0] = center_x + R * sin_new
@@ -828,13 +839,15 @@ class MissionAnalyzer():
                 ])
 
                 self.state.AOA = alpha_turn
-                self.state.bank_angle = math.degrees(phi_rad)
+                self.state.bank_angle = np.degrees(phi_rad)
                 self.state.climb_pitch_angle = np.nan
 
                 self.logState() 
             else:
                 break
-            if step==max_steps-1 : return -1
+            if step==max_steps-1 :
+                # print("declined")
+                return -1
         
     
     def logState(self) -> None:
@@ -874,7 +887,7 @@ def RK4_step(v, dt, func):
 
 def fast_norm(v):
     """Faster alternative to np.linalg.norm for 3D vectors"""
-    return math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
+    return np.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
 
 def calculate_acceleration_groundroll(v, m, Weight,
                                       Sref,
@@ -903,7 +916,7 @@ def calculate_acceleration_level(v, m, Sref, CD_func, alpha_deg, T):
     speed = fast_norm(v)
     CD = float(CD_func(alpha_deg))
     D = 0.5 * rho * speed**2 * Sref * CD
-    a_x = (T * math.cos(math.radians(alpha_deg)) - D) / m
+    a_x = (T * np.cos(np.radians(alpha_deg)) - D) / m
     return np.array([a_x, 0, 0])
 
 def calculate_acceleration_climb(v, m, Weight, 
@@ -925,14 +938,14 @@ def calculate_acceleration_climb(v, m, Weight,
     else:
         CL = CL_max_flap
         CD = CD_max_flap
-    theta_deg = math.degrees(gamma_rad) + alpha_deg
-    theta_rad = math.radians(theta_deg)
+    theta_deg = np.degrees(gamma_rad) + alpha_deg
+    theta_rad = np.radians(theta_deg)
     
     D = 0.5 * rho * speed**2 * Sref * CD
     L = 0.5 * rho * speed**2 * Sref * CL
 
-    a_x = (T_climb * math.cos(theta_rad) - L * math.sin(gamma_rad) - D * math.cos(gamma_rad) )/ m
-    a_z = (T_climb * math.sin(theta_rad) + L * math.cos(gamma_rad) - D * math.sin(gamma_rad) - Weight )/ m
+    a_x = (T_climb * np.cos(theta_rad) - L * np.sin(gamma_rad) - D * np.cos(gamma_rad) )/ m
+    a_z = (T_climb * np.sin(theta_rad) + L * np.cos(gamma_rad) - D * np.sin(gamma_rad) - Weight )/ m
     
     return np.array([a_x,0,a_z])
 
@@ -1038,7 +1051,7 @@ def visualize_mission(stateLog):
     ax_aoa.set_xlabel('Time (s)')
     ax_aoa.set_ylabel('AOA (degrees)')
     ax_aoa.set_xlim(0,None)
-    ax_aoa.set_ylim(-0.3,14.3)
+    ax_aoa.set_ylim(-3,14.3)
     ax_aoa.set_yticks(np.arange(0, 14.1, 2))
     ax_aoa.set_yticks(np.arange(0, 14.1, 1),minor=True)
     ax_aoa.set_title('Angle of Attack')

@@ -131,13 +131,19 @@ def runMissionGridSearch(hashVal:str,
         try:
             mission2Analyzer = MissionAnalyzer(analysisResults, mission2Params, presetValues, propulsionSpecs)
             fuel_weight, flight_time = mission2Analyzer.run_mission2()
-            if(fuel_weight == -1 and flight_time == -1):continue
+            
+            if(fuel_weight == -1 and flight_time == -1):
+                print("mission2 fail")
+                continue
             
             obj2 = fuel_weight * 2.204 / flight_time 
 
             mission3Analyzer = MissionAnalyzer(analysisResults, mission3Params, presetValues, propulsionSpecs)
             N_laps = mission3Analyzer.run_mission3()
-            if(N_laps==-1):continue
+            
+            if(N_laps==-1):
+                print("mission3 fail")
+                continue
             obj3 = N_laps - 1 + 2.5 / (presetValues.m_x1 /1000 * 2.204 )
 
             results = {

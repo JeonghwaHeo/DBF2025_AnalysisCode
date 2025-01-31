@@ -1,4 +1,4 @@
-vsp_combination = 10 * 10 * 5 * 5
+vsp_combination = 6*7*9*3
 mission_combination = 2 * 2 * 2 * 2 * 2 * 2 * 2 * 2 * 2
 server_number = 30
 
