@@ -17,8 +17,10 @@ def main():
     
     # Clear the path
     removeAnalysisResults(csvPath = "data/aircraft.csv")
-    removeAnalysisResults(csvPath = "data/total_results.csv")
+    removeAnalysisResults(csvPath = "data/M2_total_results.csv")
+    removeAnalysisResults(csvPath = "data/M3_total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
+    removeAnalysisResults(csvPath = "data/mission_statelog.csv")
 
     ## preset
     presetValues = PresetValues(
@@ -128,7 +130,7 @@ def main():
             
             M2_max_speed_min = 35,
             M2_max_speed_max = 35,
-            M3_max_speed_min = 20,
+            M3_max_speed_min = 30,
             M3_max_speed_max = 30,
             max_speed_analysis_interval = 2,
             
@@ -136,7 +138,7 @@ def main():
             M2_climb_thrust_ratio_min = 0.9,
             M2_climb_thrust_ratio_max = 0.9,
             M2_turn_thrust_ratio_min = 0.7,
-            M2_turn_thrust_ratio_max = 0.7,
+            M2_turn_thrust_ratio_max = 0.8,
             M2_level_thrust_ratio_min = 0.7,
             M2_level_thrust_ratio_max = 0.7,
             M2_thrust_analysis_interval = 0.05,
@@ -144,10 +146,10 @@ def main():
             #Constraints for calculating mission3  
             M3_climb_thrust_ratio_min = 0.9,
             M3_climb_thrust_ratio_max = 0.9,
-            M3_turn_thrust_ratio_min = 0.3,
+            M3_turn_thrust_ratio_min = 0.5,
             M3_turn_thrust_ratio_max = 0.6,
             M3_level_thrust_ratio_min = 0.3,
-            M3_level_thrust_ratio_max = 0.6,
+            M3_level_thrust_ratio_max = 0.3,
             M3_thrust_analysis_interval = 0.05,
             
             wing_loading_min = 5,

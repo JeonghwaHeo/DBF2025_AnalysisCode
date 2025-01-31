@@ -27,15 +27,15 @@ def runMissionGridSearch(hashVal:str,
             missionParamConstraints.MTOW_max + missionParamConstraints.MTOW_analysis_interval/2, 
             missionParamConstraints.MTOW_analysis_interval        
     )
-    
+    print(MTOW_list)
     MTOW_min_condition = max(missionParamConstraints.wing_loading_min * analysisResults.Sref * 1e-6,
                              analysisResults.m_empty/1000)
     MTOW_max_condition = missionParamConstraints.wing_loading_max * analysisResults.Sref * 1e-6
-    
+    print(MTOW_list)
     MTOW_list = MTOW_list[(MTOW_list >= MTOW_min_condition) & (MTOW_list <= MTOW_max_condition)]
-    
+    print(MTOW_list)
     if len(MTOW_list) == 0: return
-    
+
     M2_max_speed_list = np.arange(
             missionParamConstraints.M2_max_speed_min, 
             missionParamConstraints.M2_max_speed_max + missionParamConstraints.max_speed_analysis_interval/2, 
@@ -89,18 +89,21 @@ def runMissionGridSearch(hashVal:str,
     print(f"\nMission 3 max speed list: {M3_max_speed_list}")
     print(f"Mission 3 throttle climb list: {M3_climb_thrust_ratio_list}")
     print(f"Mission 3 throttle turn list: {M3_turn_thrust_ratio_list}")
-    print(f"Mission 3 throttle level list: {M3_level_thrust_ratio_list}\n")
+    print(f"Mission 3 throttle level list: {M3_level_thrust_ratio_list}")
 
     # Create iterator for all combinations
-    combinations = product(MTOW_list, M2_max_speed_list, M2_climb_thrust_ratio_list, M2_turn_thrust_ratio_list, M2_level_thrust_ratio_list, M3_max_speed_list, M3_climb_thrust_ratio_list, M3_turn_thrust_ratio_list, M3_level_thrust_ratio_list)
+    M2_combinations = product(MTOW_list, M2_max_speed_list, M2_climb_thrust_ratio_list, M2_turn_thrust_ratio_list, M2_level_thrust_ratio_list)
+    M3_combinations = product(M3_max_speed_list, M3_climb_thrust_ratio_list, M3_turn_thrust_ratio_list, M3_level_thrust_ratio_list)
 
     # Print total combinations
-    total = len(MTOW_list) * len(M2_max_speed_list) * len(M2_climb_thrust_ratio_list) * len(M2_turn_thrust_ratio_list) * len(M2_level_thrust_ratio_list) * len(M3_max_speed_list) * len(M3_climb_thrust_ratio_list) * len(M3_turn_thrust_ratio_list) * len(M3_level_thrust_ratio_list)
-    print(f"Testing {total} combinations...")
+    M2_total = len(MTOW_list) * len(M2_max_speed_list) * len(M2_climb_thrust_ratio_list) * len(M2_turn_thrust_ratio_list) * len(M2_level_thrust_ratio_list)
+    M3_total = len(M3_max_speed_list) * len(M3_climb_thrust_ratio_list) * len(M3_turn_thrust_ratio_list) * len(M3_level_thrust_ratio_list)
+    
+    print(f"\nTesting {M2_total} combinations...")
 
-    # Test each combination
-    for i, (MTOW, M2_max_speed, M2_climb_thrust_ratio, M2_turn_thrust_ratio, M2_level_thrust_ratio,M3_max_speed, M3_climb_thrust_ratio, M3_turn_thrust_ratio, M3_level_thrust_ratio) in enumerate(combinations):
-        print(f"[{time.strftime('%Y-%m-%d %X')}] Mission Grid Progress: {i+1}/{total} configurations")
+    # Test each M2_combination
+    for i, (MTOW, M2_max_speed, M2_climb_thrust_ratio, M2_turn_thrust_ratio, M2_level_thrust_ratio) in enumerate(M2_combinations):
+        print(f"\n[{time.strftime('%Y-%m-%d %X')}] Mission2 Grid Progress: {i+1}/{M2_total} configurations")
 
         # Create mission 2 parameters for this combination
         mission2Params = MissionParameters(
@@ -114,6 +117,46 @@ def runMissionGridSearch(hashVal:str,
 
             propeller_data_path=propulsionSpecs.M2_propeller_data_path,
         )
+
+        try:
+            mission2Analyzer = MissionAnalyzer(analysisResults, mission2Params, presetValues, propulsionSpecs)
+            fuel_weight, flight_time = mission2Analyzer.run_mission2()
+            
+            if(fuel_weight == -1 and flight_time == -1):
+                print("mission2 fail")
+                continue
+            
+            obj2 = fuel_weight * 2.204 / flight_time 
+
+            results = {
+                'timestamp': time.strftime("%Y-%m-%d %X"),
+                'hash': hashVal,
+                'fuel_weight' : fuel_weight,
+                'flight_time' : flight_time,
+                'objective_2': obj2,
+                'MTOW' : MTOW,
+                'M2_max_speed' : M2_max_speed,
+                'mission2_climb_thrust_ratio': M2_climb_thrust_ratio,
+                'mission2_turn_thrust_ratio': M2_turn_thrust_ratio,
+                'mission2_level_thrust_ratio': M2_level_thrust_ratio
+            }
+    
+            results = pd.DataFrame([results])
+    
+            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = "data/M2_total_results.csv")
+
+        except Exception as e:
+            print(f"\nFailed with throttles M2 : Climb({M2_climb_thrust_ratio:.2f}) Trun({M2_turn_thrust_ratio:.2f}) Level ({M2_level_thrust_ratio:.2f})")
+            print(f"Error : {str(e)}")
+            continue
+   
+    print("\nDone Mission2 Analysis ^_^")
+
+    print(f"\nTesting {M3_total} combinations...")
+
+    # Test each M3_combination
+    for i, (M3_max_speed, M3_climb_thrust_ratio, M3_turn_thrust_ratio, M3_level_thrust_ratio) in enumerate(M3_combinations):
+        print(f"\n[{time.strftime('%Y-%m-%d %X')}] Mission3 Grid Progress: {i+1}/{M3_total} configurations")
 
         # Create mission 3 parameters for this combination
         mission3Params = MissionParameters(
@@ -129,37 +172,20 @@ def runMissionGridSearch(hashVal:str,
         )
 
         try:
-            mission2Analyzer = MissionAnalyzer(analysisResults, mission2Params, presetValues, propulsionSpecs)
-            fuel_weight, flight_time = mission2Analyzer.run_mission2()
-            
-            if(fuel_weight == -1 and flight_time == -1):
-                print("mission2 fail")
-                continue
-            
-            obj2 = fuel_weight * 2.204 / flight_time 
-
             mission3Analyzer = MissionAnalyzer(analysisResults, mission3Params, presetValues, propulsionSpecs)
             N_laps = mission3Analyzer.run_mission3()
             
             if(N_laps==-1):
-                print("mission3 fail")
+                print("mission3 fail (N_laps == 1)")
                 continue
             obj3 = N_laps - 1 + 2.5 / (presetValues.m_x1 /1000 * 2.204 )
 
             results = {
                 'timestamp': time.strftime("%Y-%m-%d %X"),
                 'hash': hashVal,
-                'fuel_weight' : fuel_weight,
-                'flight_time' : flight_time,
                 'N_laps' : N_laps,
-                'objective_2': obj2,
                 'objective_3': obj3,
-                'MTOW' : MTOW,
-                'M2_max_speed' : M2_max_speed,
                 'M3_max_speed' : M3_max_speed,
-                'mission2_climb_thrust_ratio': M2_climb_thrust_ratio,
-                'mission2_turn_thrust_ratio': M2_turn_thrust_ratio,
-                'mission2_level_thrust_ratio': M2_level_thrust_ratio,
                 'mission3_climb_thrust_ratio': M3_climb_thrust_ratio,
                 'mission3_turn_thrust_ratio': M3_turn_thrust_ratio, 
                 'mission3_level_thrust_ratio': M3_level_thrust_ratio
@@ -167,15 +193,14 @@ def runMissionGridSearch(hashVal:str,
     
             results = pd.DataFrame([results])
     
-            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs)
+            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = "data/M3_total_results.csv")
 
         except Exception as e:
-            print(f"Failed with throttles M2 : Climb({M2_climb_thrust_ratio:.2f}) Trun({M2_turn_thrust_ratio:.2f}) Level ({M2_level_thrust_ratio:.2f})")
-            print(f"Failed with throttles M3 : Climb({M3_climb_thrust_ratio:.2f}) Trun({M3_turn_thrust_ratio:.2f}) Level ({M3_level_thrust_ratio:.2f})")
+            print(f"\nFailed with throttles M3 : Climb({M3_climb_thrust_ratio:.2f}) Trun({M3_turn_thrust_ratio:.2f}) Level ({M3_level_thrust_ratio:.2f})")
             print(f"Error : {str(e)}")
             continue
    
-    print("\nDone Mission Analysis ^_^")
+    print("\nDone Mission3 Analysis ^_^")
 
 def writeMissionAnalysisResults(hashVal:str, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/aircraft.csv", writecsvPath:str = "data/total_results.csv"):
     existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
@@ -206,48 +231,60 @@ def format_number(n: float) -> str:
     return f"{n:.6f}"  # 6 decimal places should be sufficient for most cases
 
 def ResultAnalysis(presetValues:PresetValues,
-                   readcsvPath:str = "data/total_results.csv",
+                   readM2csvPath:str = "data/M2_total_results.csv",
+                   readM3csvPath:str = "data/M3_total_results.csv",
                    writecsvPath:str = "data/organized_results.csv"):
     
-    total_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
-    max_obj2 = total_df['objective_2'].max()
-    max_obj3 = total_df['objective_3'].max()
+    if not os.path.isfile(writecsvPath):
+        df = pd.DataFrame(columns=['hash'])
+    else:
+        df = pd.read_csv(writecsvPath, sep='|', encoding='utf-8')
 
-    total_df['score2'] = total_df['objective_2'] / max_obj2 + 1
-    total_df['score3'] = total_df['objective_3'] / max_obj3 + 2
-    total_df['SCORE'] = total_df['score2']*presetValues.score_weight_ratio + total_df['score3']*(1-presetValues.score_weight_ratio)
+    M2_total_df = pd.read_csv(readM2csvPath, sep='|', encoding='utf-8')
+    M3_total_df = pd.read_csv(readM3csvPath, sep='|', encoding='utf-8')
 
-    organized_df = total_df[['resultID',
-                            'hash',
-                            'MTOW',
-                            'fuel_weight',
-                            'span',
-                            'AR',
-                            'taper',
-                            'twist',
-                            'M2_max_speed',
-                            'M3_max_speed',
-                            'mission2_climb_thrust_ratio',
-                            'mission2_turn_thrust_ratio',
-                            'mission2_level_thrust_ratio',
-                            'mission3_climb_thrust_ratio',
-                            'mission3_turn_thrust_ratio',
-                            'mission3_level_thrust_ratio',
-                            'flight_time',
-                            'N_laps',
-                            'score2',
-                            'score3',
-                            'SCORE']]
+    max_obj2 = M2_total_df['objective_2'].max()
+    max_obj3 = M3_total_df['objective_3'].max()
+
+    combinations = list(product(M2_total_df.iterrows(), M3_total_df.iterrows()))
+
+    combined_data = []
+    for (_, row2), (_, row3) in combinations:
+        score2 = row2['objective_2'] / max_obj2 + 1
+        score3 = row3['objective_3'] / max_obj3 + 2
+        SCORE = score2 * presetValues.score_weight_ratio + score3 * (1 - presetValues.score_weight_ratio)
+
+        combined_data.append({
+            'resultID': f"{row2['resultID']}_{row3['resultID']}",  # 근데 resultID는 total에는 필요없고 여기서 처음 만들면 될듯?
+            'hash': f"{row2['hash']}", # hash는 다 같으니까
+            'MTOW': row2['MTOW'],
+            'fuel_weight': row2['fuel_weight'],
+            'span': row2['span'],
+            'AR': row2['AR'],
+            'taper': row2['taper'],
+            'twist': row2['twist'],
+            'M2_max_speed': row2['M2_max_speed'],
+            'M3_max_speed': row3['M3_max_speed'],
+            'mission2_climb_thrust_ratio': row2['mission2_climb_thrust_ratio'],
+            'mission2_turn_thrust_ratio': row2['mission2_turn_thrust_ratio'],
+            'mission2_level_thrust_ratio': row2['mission2_level_thrust_ratio'],
+            'mission3_climb_thrust_ratio': row3['mission3_climb_thrust_ratio'],
+            'mission3_turn_thrust_ratio': row3['mission3_turn_thrust_ratio'],
+            'mission3_level_thrust_ratio': row3['mission3_level_thrust_ratio'],
+            'flight_time': row2['flight_time'],
+            'N_laps': row3['N_laps'],
+            'score2': score2,
+            'score3': score3,
+            'SCORE': SCORE
+        })
     
+    organized_df = pd.DataFrame(combined_data)
+    organized_df = pd.concat([df, organized_df]).drop_duplicates(["resultID"], keep='last')
     organized_df.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
 
     max_SCORE = organized_df['SCORE'].max()
     max_SCORE_row = organized_df[organized_df['SCORE'] == max_SCORE]
-    print('max_SCORE info : \n')
-    print(max_SCORE_row)
-
-    
-
+    print('max_SCORE info : \n', max_SCORE_row)
 
 if __name__=="__main__":
     presetValues = PresetValues(
