@@ -68,7 +68,8 @@ def main():
         twist_max = 0.0,                     
         twist_interval = 1.0,
         
-        airfoil_list = ['e852','mh122','s4062','s9027','hq3010','hq3011']
+        # airfoil_list = ['e852','mh122','s4062','s9027','hq3010','hq3011']
+        airfoil_list = ['s4062', 's9027']
         )
     
     aerodynamicSetup = AerodynamicSetup(
@@ -126,7 +127,7 @@ def main():
 
         missionParamConstraints = MissionParamConstraints (
             
-            MTOW_min = 8,
+            MTOW_min = 7,
             MTOW_max = 8,
             MTOW_analysis_interval = 0.5,
             
@@ -151,7 +152,7 @@ def main():
             M3_turn_thrust_ratio_min = 0.5,
             M3_turn_thrust_ratio_max = 0.6,
             M3_level_thrust_ratio_min = 0.6,
-            M3_level_thrust_ratio_max = 0.3,
+            M3_level_thrust_ratio_max = 0.6,
             M3_thrust_analysis_interval = 0.05,
             
             wing_loading_min = 5,
