@@ -32,8 +32,9 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
                 aircraftParamConstraint.twist_max + aircraftParamConstraint.twist_interval/2, 
                 aircraftParamConstraint.twist_interval
                 )
+        airfoil_list = aircraftParamConstraint.airfoil_list
         
-        total_grid_combinations = list(product(span_list,AR_list,taper_list,twist_list))
+        total_grid_combinations = list(product(span_list,AR_list,taper_list,twist_list,airfoil_list))
         grid_chunks = list(split_into_chunks(total_grid_combinations,total_server))
         vsp_grid_combinations = grid_chunks[server_id-1]
 
@@ -48,10 +49,11 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
         
         vspAnalyzer = VSPAnalyzer(presetValues)
 
-        for i, (span, AR, taper, twist) in enumerate(vsp_grid_combinations):
+        for i, (span, AR, taper, twist, airfoil_name) in enumerate(vsp_grid_combinations):
                 print(f"\n[{time.strftime('%Y-%m-%d %X')}] VSP Grid Progress: {i+1}/{total} configurations")
-                print(f"\n[{span:.2f}, {AR:.2f}, {taper:.2f}, {twist:.1f}]")
-                aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist)   
+                print(f"\n[{span:.2f}, {AR:.2f}, {taper:.2f}, {twist:.1f},{airfoil_name}]")
+                airfoil_datapath = "data/airfoilDAT/" + airfoil_name + ".dat"
+                aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist, mainwing_airfoil_datapath = airfoil_datapath)   
 
                 vspAnalyzer.setup_vsp_model(aircraft)
                 analResults = vspAnalyzer.calculateCoefficients(
@@ -99,7 +101,8 @@ if __name__ == "__main__":
                 taper_interval = 0.05,
                 twist_max = 0.0,                       # degree
                 twist_min = 0.0,
-                twist_interval = 1.0
+                twist_interval = 1.0,
+                airfoil_list = ['E852','MH122','S4062','S9027','HQ3010','HQ3011']
                 ),
             PresetValues(
                     m_x1 = 0.2,                       # kg

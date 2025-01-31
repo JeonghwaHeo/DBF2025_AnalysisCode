@@ -58,6 +58,7 @@ class AircraftParamConstraints:
     twist_max: float
     twist_min: float
     twist_interval: float
+    airfoil_list : list
 
 
 @dataclass
