@@ -442,13 +442,16 @@ class VSPAnalyzer:
         span_Projected = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalProjectedSpan","WingGeom"))
         chord_Mean = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalChord","WingGeom"))
         area_Projected = span_Projected * chord_Mean
-        horizontal_distance = aircraft.horizontal_volume_ratio * chord_Mean / aircraft.horizontal_area_ratio
+        horizontal_area = aircraft.horizontal_area_ratio * area_Projected
+        horizontal_span = math.sqrt(horizontal_area * aircraft.horizontal_AR)
+        horizontal_root = (2 * horizontal_area) / ((1 + aircraft.horizontal_taper) * horizontal_span)
         
         # Parameters related with Main, Horizontal 
         chord_Mean_horizontal = vsp.GetParmVal(vsp.GetParm(self.horizontal_tail_id,"TotalChord","WingGeom"))
         lh = aircraft.horizontal_volume_ratio * chord_Mean / aircraft.horizontal_area_ratio
         vertical_area = aircraft.vertical_volume_ratio * span_Projected * area_Projected / lh # vertical_distance = horizontal_distance
         vertical_c_root = chord_Mean_horizontal
+        horizontal_distance = chord_Mean/4 + lh - horizontal_root/4
         
         # Vertical Tail settings
         vsp.SetDriverGroup(verwing_right_id, 1, vsp.AREA_WSECT_DRIVER, vsp.TAPER_WSECT_DRIVER, vsp.ROOTC_WSECT_DRIVER)
