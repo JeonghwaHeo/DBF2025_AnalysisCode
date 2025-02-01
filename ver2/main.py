@@ -159,11 +159,12 @@ def run_vsp_analysis(server_id: int, total_servers: int):
     
     # Use server-specific output path
     output_path = f"data/aircraft_{server_id}.csv"
+    vsp_path = f"aircraft_{server_id}.vsp3"
     if os.path.exists(output_path):
         os.remove(output_path)
         
     runVSPGridAnalysis(aircraftParamConstraints, aerodynamicSetup, presetValues, 
-                      baseAircraft, server_id, total_servers, csvPath=output_path)
+                      baseAircraft, server_id, total_servers, csvPath=output_path,vspPath=vsp_path)
 
 def run_mission_analysis(server_id: int, total_servers: int):
     (presetValues, propulsionSpecs, _, _, _, missionParamConstraints) = get_config()

@@ -29,7 +29,7 @@ class VSPAnalyzer:
         vsp.VSPRenew()
           
         
-    def setup_vsp_model(self, aircraft: Aircraft,fileName:str = "Mothership.vsp3") -> None:
+    def setup_vsp_model(self, aircraft: Aircraft,vspPath:str = "Mothership.vsp3") -> None:
         """Creates or updates OpenVSP model based on aircraft parameters"""
         self.aircraft = aircraft
         self.wing_id = self.createMainWing(aircraft)
@@ -39,7 +39,7 @@ class VSPAnalyzer:
         self.vertical_tail_R_id,self.vertical_tail_L_id = self.createVerticalTailWings(aircraft)
         
         vsp.Update()
-        vsp.WriteVSPFile(os.path.join(self.outputPath,fileName),vsp.SET_ALL)
+        vsp.WriteVSPFile(os.path.join(self.outputPath,vspPath),vsp.SET_ALL)
         
     def calculateCoefficients(self, fileName:str = "Mothership.vsp3", 
                               alpha_start: float=0, alpha_end: float=1, alpha_step:float=0.5, 

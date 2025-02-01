@@ -9,7 +9,7 @@ from vsp_analysis import VSPAnalyzer, writeAnalysisResults
 from internal_dataclass import *
 
 
-def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodynamicSetup: AerodynamicSetup, presetValues: PresetValues, baseAircraft: Aircraft, server_id : int=1, total_server : int=1,csvPath: str = ""):
+def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodynamicSetup: AerodynamicSetup, presetValues: PresetValues, baseAircraft: Aircraft, server_id : int=1, total_server : int=1,csvPath: str = "",vspPath: str=""):
         
         ## Variable lists using for optimization
         span_list = np.arange(
@@ -54,11 +54,13 @@ def runVSPGridAnalysis(aircraftParamConstraint: AircraftParamConstraints,aerodyn
                 airfoil_datapath = "data/airfoilDAT/" + airfoil_name + ".dat"
                 aircraft = replace(baseAircraft, mainwing_span = span, mainwing_AR = AR , mainwing_taper = taper, mainwing_twist = twist, mainwing_airfoil_datapath = airfoil_datapath)   
 
-                vspAnalyzer.setup_vsp_model(aircraft)
+                vspAnalyzer.setup_vsp_model(aircraft,vspPath=vspPath)
                 analResults = vspAnalyzer.calculateCoefficients(
                         alpha_start = alpha_start, alpha_end = alpha_end, alpha_step = alpha_step,
                         CD_fuse = CD_fuse, fuselage_cross_section_area = fuselage_cross_section_area, 
                         wing_area_blocked_by_fuselage = baseAircraft.wing_area_blocked_by_fuselage,
+
+                        fileName=vspPath,
                         
                         AOA_stall = aerodynamicSetup.AOA_stall,
                         AOA_takeoff_max = aerodynamicSetup.AOA_takeoff_max,

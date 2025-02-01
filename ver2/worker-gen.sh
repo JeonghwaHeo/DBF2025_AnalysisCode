@@ -1,10 +1,10 @@
 #!/bin/bash
 
-TOTAL_WORKERS=10
+TOTAL_WORKERS=4
 
 # Generate the compose file
 cat > docker-compose.yml << EOL
-version: '3.8'
+version: '3.3'
 
 services:
 EOL
