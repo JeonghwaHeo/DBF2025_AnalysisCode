@@ -107,11 +107,7 @@ def determine_max_thrust(speed:float, voltage:float,
     #profiler = cProfile.Profile()
 
     #profiler.enable()
-    try:
-        new= determine_max_thrust_fast(speed,voltage,propulsionSpecs,propeller_array)
-    except Exception as e:
-        print(e)
-
+    new= determine_max_thrust_fast(speed,voltage,propulsionSpecs,propeller_array)
 
     #profiler.disable()
     #   
@@ -294,13 +290,8 @@ def propeller_fixspeed_data(speed,propeller_array):
     #profiler = cProfile.Profile()
 
     #profiler.enable()
-    new = 0
-    try:
-        new = propeller_fixspeed_data_fast(speed,propeller_array)
+    new = propeller_fixspeed_data_fast(speed,propeller_array)
         #return new
-    except Exception as e:
-        print(e)
-    
 
     #profiler.disable()
         

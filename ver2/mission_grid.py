@@ -15,7 +15,9 @@ def runMissionGridSearch(hashVal:str,
                           presetValues:PresetValues,
                           missionParamConstraints:MissionParamConstraints, 
                           propulsionSpecs:PropulsionSpecs,
-                          csvPath:str = "data/aircraft.csv"
+                          csvPath:str = "data/aircraft.csv",
+                         mission2Out:str="",
+                         mission3Out:str=""
                           ) :
 
 
@@ -142,7 +144,7 @@ def runMissionGridSearch(hashVal:str,
     
             results = pd.DataFrame([results])
     
-            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = "data/M2_total_results.csv")
+            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = mission2Out)
 
         except Exception as e:
             print(f"\nFailed with throttles M2 : Climb({M2_climb_thrust_ratio:.2f}) Trun({M2_turn_thrust_ratio:.2f}) Level ({M2_level_thrust_ratio:.2f})")
@@ -192,7 +194,7 @@ def runMissionGridSearch(hashVal:str,
     
             results = pd.DataFrame([results])
     
-            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = "data/M3_total_results.csv")
+            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = mission3Out)
 
         except Exception as e:
             print(f"\nFailed with throttles M3 : Climb({M3_climb_thrust_ratio:.2f}) Trun({M3_turn_thrust_ratio:.2f}) Level ({M3_level_thrust_ratio:.2f})")
