@@ -22,8 +22,10 @@ def main():
     
     # Clear the path
     removeAnalysisResults(csvPath = "data/aircraft.csv")
-    removeAnalysisResults(csvPath = "data/total_results.csv")
+    removeAnalysisResults(csvPath = "data/M2_total_results.csv")
+    removeAnalysisResults(csvPath = "data/M3_total_results.csv")
     removeAnalysisResults(csvPath = "data/organized_results.csv")
+    removeAnalysisResults(csvPath = "data/mission_statelog.csv")
 
     ## preset
     presetValues = PresetValues(
@@ -59,8 +61,8 @@ def main():
         span_max = 1800.0,                   
         span_interval = 100.0,
     
-        AR_min = 5.25,                  
-        AR_max = 5.25,
+        AR_min = 5.30,                  
+        AR_max = 5.30,
         AR_interval = 0.05,
         
         taper_min = 0.65,
@@ -70,13 +72,16 @@ def main():
         twist_min = 0.0,                     # degree
         twist_max = 0.0,                     
         twist_interval = 1.0,
+        
+        # airfoil_list = ['e852','mh122','s4062','s9027','hq3010','hq3011']
+        airfoil_list = ['s4062', 's9027']
         )
     
     aerodynamicSetup = AerodynamicSetup(
         alpha_start = -3,
         alpha_end = 10,
         alpha_step = 1,
-        fuselage_cross_section_area = 19427,
+        fuselage_cross_section_area = 19427,    ##mm2
         fuselage_Cd_datapath = "data/fuselageDragCSV/fuselageDragCoefficients.csv",
         AOA_stall = 13,
         AOA_takeoff_max = 10,
@@ -85,7 +90,7 @@ def main():
     )
     baseAircraft = Aircraft(
         m_fuselage = 3000,
-        wing_area_blocked_by_fuselage = 72640,
+        wing_area_blocked_by_fuselage = 72640,    #mm2
         wing_density = 0.0000852,
 
         mainwing_span = 1800,        
@@ -127,13 +132,13 @@ def main():
 
         missionParamConstraints = MissionParamConstraints (
             
-            MTOW_min = 10,
-            MTOW_max = 10,
+            MTOW_min = 7,
+            MTOW_max = 8,
             MTOW_analysis_interval = 0.5,
             
             M2_max_speed_min = 35,
             M2_max_speed_max = 35,
-            M3_max_speed_min = 20,
+            M3_max_speed_min = 30,
             M3_max_speed_max = 30,
             max_speed_analysis_interval = 2,
             
@@ -141,7 +146,7 @@ def main():
             M2_climb_thrust_ratio_min = 0.9,
             M2_climb_thrust_ratio_max = 0.9,
             M2_turn_thrust_ratio_min = 0.7,
-            M2_turn_thrust_ratio_max = 0.7,
+            M2_turn_thrust_ratio_max = 0.8,
             M2_level_thrust_ratio_min = 0.7,
             M2_level_thrust_ratio_max = 0.7,
             M2_thrust_analysis_interval = 0.05,
@@ -149,14 +154,14 @@ def main():
             #Constraints for calculating mission3  
             M3_climb_thrust_ratio_min = 0.9,
             M3_climb_thrust_ratio_max = 0.9,
-            M3_turn_thrust_ratio_min = 0.3,
+            M3_turn_thrust_ratio_min = 0.5,
             M3_turn_thrust_ratio_max = 0.6,
-            M3_level_thrust_ratio_min = 0.3,
+            M3_level_thrust_ratio_min = 0.6,
             M3_level_thrust_ratio_max = 0.6,
             M3_thrust_analysis_interval = 0.05,
             
             wing_loading_min = 5,
-            wing_loading_max = 30
+            wing_loading_max = 15
             )
         
         runMissionGridSearch(hashVal,presetValues,missionParamConstraints,propulsionSpecs)
