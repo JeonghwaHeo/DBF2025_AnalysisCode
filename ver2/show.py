@@ -113,7 +113,7 @@ if __name__ == "__main__":
             resultID = "'" + args.resultID + "'"
             resultID_df = get_result_by_id(resultID,3)
             hashVal = resultID_df['hash']  
-            aircraft = loadAnalysisResults(hashVal.iloc[0])     
+            aircraft = loadAnalysisResults(hashVal.iloc[0],f"data/aircraft_{args.server_id}.csv")     
 
             param3 = MissionParameters(
                 m_takeoff= resultID_df['m_empty'].iloc[0]/1000,
@@ -166,7 +166,7 @@ if __name__ == "__main__":
             resultID = "'" + args.resultID + "'"
             resultID_df = get_result_by_id(resultID,2)
             hashVal = resultID_df['hash']  
-            aircraft = loadAnalysisResults(hashVal.iloc[0])     
+            aircraft = loadAnalysisResults(hashVal.iloc[0],f"data/aircraft_{args.server_id}.csv")     
             param2 = MissionParameters(
                 m_takeoff= resultID_df['MTOW'].iloc[0],
                 max_speed= resultID_df['M2_max_speed'].iloc[0],                   
@@ -218,7 +218,7 @@ if __name__ == "__main__":
             resultID = "'" + args.resultID + "'"
             resultID_df = get_result_by_id(resultID,3)
             hashVal = resultID_df['hash']  
-            aircraft = loadAnalysisResults(hashVal.iloc[0])     
+            aircraft = loadAnalysisResults(hashVal.iloc[0],f"data/aircraft_{args.server_id}.csv")     
 
             param3 = MissionParameters(
                 m_takeoff= resultID_df['m_empty'].iloc[0]/1000,
