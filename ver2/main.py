@@ -26,7 +26,7 @@ def get_config():
         x1_time_margin = 10,                # sec
         
         throttle_takeoff = 0.9,             # 0~1
-        max_climb_angle=40,                 #deg
+        max_climb_angle = 40,                 #deg
         max_load = 30,                      # kg
         h_flap_transition = 5,              # m
         
@@ -52,9 +52,9 @@ def get_config():
   
         span_min = 1700.0,                   # mm
         span_max = 1800.0,                   
-        span_interval = 100.0,
+        span_interval = 10.0,
     
-        AR_min = 5.35,                  
+        AR_min = 5.45,                  
         AR_max = 5.45,
         AR_interval = 0.05,
         
@@ -74,7 +74,7 @@ def get_config():
         alpha_start = -3,
         alpha_end = 10,
         alpha_step = 1,
-        fuselage_cross_section_area = 19427,    ##mm2
+        fuselage_cross_section_area = 19427,    # mm2
         fuselage_Cd_datapath = "data/fuselageDragCSV/fuselageDragCoefficients.csv",
         AOA_stall = 13,
         AOA_takeoff_max = 10,
@@ -189,7 +189,7 @@ def run_mission_analysis(server_id: int, total_servers: int):
     for hashVal in worker_hashes:
         print(f"\nWorker {server_id} analyzing hash {hashVal}")
         runMissionGridSearch(hashVal, presetValues, missionParamConstraints, 
-                           propulsionSpecs, 
+                             propulsionSpecs, 
                              mission2Out=output2_path,
                              mission3Out=output3_path)
 

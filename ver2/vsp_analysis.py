@@ -210,7 +210,7 @@ class VSPAnalyzer:
         vsp.SetIntAnalysisInput(sweep_analysis, "AlphaNpts", [point_number])
         
         # Number of CPUs
-        vsp.SetIntAnalysisInput(sweep_analysis, "NCPU", [4])
+        vsp.SetIntAnalysisInput(sweep_analysis, "NCPU", [1])
         vsp.SetIntAnalysisInput(sweep_analysis,"FixedWakeFlag",[1])
         vsp.SetIntAnalysisInput(sweep_analysis,"NumWakeNodes",[64])
         
@@ -249,10 +249,6 @@ class VSPAnalyzer:
         CDwing_list = [cd * effective_wing_area_factor for cd in CDwing_list] 
         CDwing_list = np.array(CDwing_list)
 
-        # aircraft=self.aircraft
-        
-
-        
         return {
             'alpha_list': alpha_list,
             'm_empty': m_empty,
