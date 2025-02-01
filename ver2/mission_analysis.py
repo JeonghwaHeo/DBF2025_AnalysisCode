@@ -785,7 +785,7 @@ class MissionAnalyzer():
                         alpha_turn = float(self.alpha_func(CL))
                         L = dynamic_pressure * CL
                         if weight / L >=1: 
-                            print("too heavy")
+                            # print("too heavy")
                             return -1
                         phi_rad = np.acos(min(weight/L,0.99))
                         
@@ -825,7 +825,7 @@ class MissionAnalyzer():
                         alpha_turn = float(self.alpha_func(CL))
                         L = dynamic_pressure * CL
                         if weight / L >=1: 
-                            print("too heavy")
+                            #print("too heavy")
                             return -1
                         phi_rad = np.acos(min(weight/L,0.99))
 

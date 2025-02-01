@@ -56,7 +56,7 @@ class VSPAnalyzer:
                               boom_density_0604:float = 0.042,
                               boom_density_boom:float=0.121,
                               clearModel:bool=True):
-        print("Starting Analysis")
+        #print("Starting Analysis")
         # Calculate coefficients with flaps at zero
         results_no_flap = self._calculate_coeffs_helper(fileName, alpha_start, alpha_end, alpha_step,
                                                         Re, Mach, wing_area_blocked_by_fuselage,boom_density_2624, boom_density_1008,
@@ -80,7 +80,7 @@ class VSPAnalyzer:
         CD_fuse = CD_fuse * (fuselage_cross_section_area / results_no_flap['Sref']) 
         zero_index = int((0-alpha_start)/alpha_step)
         
-        print("Finished Analysis for this configuration.")
+        #print("Finished Analysis for this configuration.")
         
         return AircraftAnalysisResults(
                 aircraft=self.aircraft,
@@ -134,7 +134,7 @@ class VSPAnalyzer:
         # Geometric analysis
         
         if do_geom_analysis:
-            print("> Starting Geometric Analysis")
+            #print("> Starting Geometric Analysis")
             geom_analysis = "VSPAEROComputeGeometry"
             vsp.SetAnalysisInputDefaults(geom_analysis)
             vsp.ExecAnalysis(geom_analysis)
@@ -149,9 +149,9 @@ class VSPAnalyzer:
             Sref = vsp.GetParmVal(vsp.GetParm(self.wing_id,"TotalArea","WingGeom"))
             wing_c_root = vsp.GetParmVal(vsp.GetParm(self.wing_id,"Root_Chord","XSec_1"))
             tail_c_root = vsp.GetParmVal(vsp.GetParm(self.horizontal_tail_id,"Root_Chord","XSec_1"))
-            print("> Finished Geometric Analysis")
+            #print("> Finished Geometric Analysis")
         else:
-            print("> Skipping Geometric Analysis")
+            #print("> Skipping Geometric Analysis")
             span = 0
             AR = 0
             taper = 0
@@ -162,7 +162,7 @@ class VSPAnalyzer:
         
         if do_mass_analysis:
             # Mass Analysis
-            print("> Starting Mass Analysis")
+            #print("> Starting Mass Analysis")
             vsp.ComputeMassProps(0, 100, 0)
             mass_results_id = vsp.FindLatestResultsID("Mass_Properties")
             mass_data = vsp.GetDoubleResults(mass_results_id, "Total_Mass")
@@ -187,15 +187,15 @@ class VSPAnalyzer:
             Lh = h_ac - mass_center_x
             tail_effect = float((Lh-Lw)/Lh)
 
-            print("> Finished Mass Analysis")
+            #print("> Finished Mass Analysis")
         else:
-            print("> Skipping Mass Analysis")
+            #print("> Skipping Mass Analysis")
             m_empty, m_boom, m_wing = 0, 0, 0
             Lw, Lh = 0, 0
             tail_effect = 1
 
         # Configure sweep analysis for coefficient
-        print("> Starting Sweep Analysis")
+        #print("> Starting Sweep Analysis")
         
         sweep_analysis = "VSPAEROSweep"
         vsp.SetAnalysisInputDefaults(sweep_analysis)
@@ -226,7 +226,7 @@ class VSPAnalyzer:
         # Execute sweep analysis
         sweep_results_id = vsp.ExecAnalysis(sweep_analysis)
         
-        print("> Finished Sweep Analysis")
+        #print("> Finished Sweep Analysis")
 
         # Extract coefficient data
         sweepResults = vsp.GetStringResults(sweep_results_id, "ResultsVec")
@@ -510,7 +510,7 @@ def resetAnalysisResults(csvPath:str = "data/aircraft.csv"):
 def removeAnalysisResults(csvPath:str = "data/aircraft.csv"):
     if os.path.exists(csvPath):
         os.remove(csvPath)
-        print(f"{csvPath} file has been deleted.")
+        #print(f"{csvPath} file has been deleted.")
 
 def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "data/aircraft.csv"):
 

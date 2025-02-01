@@ -59,11 +59,11 @@ def runMissionGridSearch(hashVal:str,
             missionParamConstraints.M2_thrust_analysis_interval
         )
     
-    print(f"\nMTOW list: {MTOW_list}")
-    print(f"Mission 2 max speed list: {M2_max_speed_list}")
-    print(f"Mission 2 throttle climb list: {M2_climb_thrust_ratio_list}")
-    print(f"Mission 2 throttle turn list: {M2_turn_thrust_ratio_list}")
-    print(f"Mission 2 throttle level list: {M2_level_thrust_ratio_list}\n")
+    #print(f"\nMTOW list: {MTOW_list}")
+    #print(f"Mission 2 max speed list: {M2_max_speed_list}")
+    #print(f"Mission 2 throttle climb list: {M2_climb_thrust_ratio_list}")
+    #print(f"Mission 2 throttle turn list: {M2_turn_thrust_ratio_list}")
+    #print(f"Mission 2 throttle level list: {M2_level_thrust_ratio_list}\n")
 
     M3_max_speed_list = np.arange(
             missionParamConstraints.M3_max_speed_min, 
@@ -87,10 +87,10 @@ def runMissionGridSearch(hashVal:str,
             missionParamConstraints.M3_thrust_analysis_interval
         )
 
-    print(f"\nMission 3 max speed list: {M3_max_speed_list}")
-    print(f"Mission 3 throttle climb list: {M3_climb_thrust_ratio_list}")
-    print(f"Mission 3 throttle turn list: {M3_turn_thrust_ratio_list}")
-    print(f"Mission 3 throttle level list: {M3_level_thrust_ratio_list}")
+    #print(f"\nMission 3 max speed list: {M3_max_speed_list}")
+    #print(f"Mission 3 throttle climb list: {M3_climb_thrust_ratio_list}")
+    #print(f"Mission 3 throttle turn list: {M3_turn_thrust_ratio_list}")
+    #print(f"Mission 3 throttle level list: {M3_level_thrust_ratio_list}")
 
     # Create iterator for all combinations
     M2_combinations = product(MTOW_list, M2_max_speed_list, M2_climb_thrust_ratio_list, M2_turn_thrust_ratio_list, M2_level_thrust_ratio_list)
@@ -101,10 +101,15 @@ def runMissionGridSearch(hashVal:str,
     M3_total = len(M3_max_speed_list) * len(M3_climb_thrust_ratio_list) * len(M3_turn_thrust_ratio_list) * len(M3_level_thrust_ratio_list)
     
     print(f"\nTesting Mission2: {M2_total} combinations...\n")
+    step2 = max(int(M2_total/100) , 1)
+    step3 = max(int(M3_total/100) , 1)
 
     # Test each M2_combination
     for i, (MTOW, M2_max_speed, M2_climb_thrust_ratio, M2_turn_thrust_ratio, M2_level_thrust_ratio) in enumerate(M2_combinations):
-        print(f"[{time.strftime('%Y-%m-%d %X')}] Mission2 Grid Progress: {i+1}/{M2_total} configurations")
+        
+        
+        if (i+1)%step2==0:
+            print(f"[{time.strftime('%Y-%m-%d %X')}] Mission2 Grid Progress: {i+1}/{M2_total} configurations")
 
         # Create mission 2 parameters for this combination
         mission2Params = MissionParameters(
@@ -124,7 +129,7 @@ def runMissionGridSearch(hashVal:str,
             fuel_weight, flight_time = mission2Analyzer.run_mission2()
             
             if(fuel_weight == -1 and flight_time == -1):
-                print("mission2 fail")
+                #print("mission2 fail")
                 continue
             
             obj2 = fuel_weight * 2.204 / flight_time 
@@ -147,7 +152,7 @@ def runMissionGridSearch(hashVal:str,
             writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = mission2Out)
 
         except Exception as e:
-            print(f"\nFailed with throttles M2 : Climb({M2_climb_thrust_ratio:.2f}) Trun({M2_turn_thrust_ratio:.2f}) Level ({M2_level_thrust_ratio:.2f})")
+            #print(f"\nFailed with throttles M2 : Climb({M2_climb_thrust_ratio:.2f}) Trun({M2_turn_thrust_ratio:.2f}) Level ({M2_level_thrust_ratio:.2f})")
             print(f"Error : {str(e)}")
             continue
    
@@ -157,7 +162,8 @@ def runMissionGridSearch(hashVal:str,
 
     # Test each M3_combination
     for i, (M3_max_speed, M3_climb_thrust_ratio, M3_turn_thrust_ratio, M3_level_thrust_ratio) in enumerate(M3_combinations):
-        print(f"[{time.strftime('%Y-%m-%d %X')}] Mission3 Grid Progress: {i+1}/{M3_total} configurations")
+        if (i+1)%step3==0:
+            print(f"[{time.strftime('%Y-%m-%d %X')}] Mission3 Grid Progress: {i+1}/{M3_total} configurations")
 
         # Create mission 3 parameters for this combination
         mission3Params = MissionParameters(
@@ -197,7 +203,7 @@ def runMissionGridSearch(hashVal:str,
             writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = mission3Out)
 
         except Exception as e:
-            print(f"\nFailed with throttles M3 : Climb({M3_climb_thrust_ratio:.2f}) Trun({M3_turn_thrust_ratio:.2f}) Level ({M3_level_thrust_ratio:.2f})")
+            #print(f"\nFailed with throttles M3 : Climb({M3_climb_thrust_ratio:.2f}) Trun({M3_turn_thrust_ratio:.2f}) Level ({M3_level_thrust_ratio:.2f})")
             print(f"Error : {str(e)}")
             continue
    
