@@ -51,24 +51,24 @@ class VSPAnalyzer:
                               AOA_climb_max:float=8,
                               AOA_turn_max:float=8,
                               Re:float=700000, Mach:float=0,
-                              boom_density_2018:float = 0.098, 
-                              boom_density_1614:float = 0.087,
-                              boom_density_86:float = 0.036,
-                              boom_density_big:float=0.098,
+                              boom_density_2624:float = 0.121, 
+                              boom_density_1008:float = 0.049,
+                              boom_density_0604:float = 0.042,
+                              boom_density_boom:float=0.121,
                               clearModel:bool=True):
         print("Starting Analysis")
         # Calculate coefficients with flaps at zero
         results_no_flap = self._calculate_coeffs_helper(fileName, alpha_start, alpha_end, alpha_step,
-                                                        Re, Mach, wing_area_blocked_by_fuselage,boom_density_2018, boom_density_1614,
-                                                        boom_density_86, boom_density_big, clearModel, 0.0)
+                                                        Re, Mach, wing_area_blocked_by_fuselage,boom_density_2624, boom_density_1008,
+                                                        boom_density_0604, boom_density_boom, clearModel, 0.0)
         
         # Find index closest to AOA_stall and zero
         alpha_list = results_no_flap['alpha_list']
 
         # Calculate coefficients with flaps at max angle
         results_flap_max = self._calculate_coeffs_helper(fileName, 0, AOA_takeoff_max, AOA_takeoff_max,
-                                                        Re, Mach, wing_area_blocked_by_fuselage, boom_density_2018, boom_density_1614,
-                                                        boom_density_86, boom_density_big, False, self.aircraft.flap_angle[0],
+                                                        Re, Mach, wing_area_blocked_by_fuselage, boom_density_2624, boom_density_1008,
+                                                        boom_density_0604, boom_density_boom, False, self.aircraft.flap_angle[0],
                                                         do_mass_analysis=False)
 
         # Get corresponding CL/CD values
@@ -110,8 +110,8 @@ class VSPAnalyzer:
         )
 
     def _calculate_coeffs_helper(self, fileName, alpha_start, alpha_end, alpha_step,
-                                Re, Mach, wing_area_blocked_by_fuselage, boom_density_2018, boom_density_1614,
-                                boom_density_86, boom_density_big, clearModel, flap_angle, 
+                                Re, Mach, wing_area_blocked_by_fuselage, boom_density_2624, boom_density_1008,
+                                boom_density_0604, boom_density_boom, clearModel, flap_angle, 
                                 do_mass_analysis=True, do_geom_analysis=True):
         """Helper method to calculate coefficients for a given flap angle"""
         
@@ -172,9 +172,9 @@ class VSPAnalyzer:
             lh = self.aircraft.horizontal_volume_ratio * chord_Mean / self.aircraft.horizontal_area_ratio
             horizontal_distance = chord_Mean/4 + lh - tail_c_root/4
 
-            m_wing = mass_data[0] + span * (boom_density_1614 + boom_density_2018 + boom_density_86)
+            m_wing = mass_data[0] + span * (boom_density_1008 + boom_density_2624 + boom_density_0604)
             
-            m_boom = horizontal_distance * boom_density_big * 2
+            m_boom = horizontal_distance * boom_density_boom * 2
             
             m_empty = m_wing + m_boom + self.aircraft.m_fuselage + self.presets.m_x1
             

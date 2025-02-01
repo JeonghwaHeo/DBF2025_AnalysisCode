@@ -50,24 +50,24 @@ def get_config():
     
     aircraftParamConstraints = AircraftParamConstraints (
   
-        span_min = 1800.0,                   # mm
+        span_min = 1700.0,                   # mm
         span_max = 1800.0,                   
         span_interval = 100.0,
     
-        AR_min = 5.50,                  
-        AR_max = 5.55,
+        AR_min = 5.35,                  
+        AR_max = 5.45,
         AR_interval = 0.05,
         
-        taper_min = 0.55,
+        taper_min = 0.65,
         taper_max = 0.65,                      
         taper_interval = 0.1,
         
         twist_min = 0.0,                     # degree
-        twist_max = 1.0,                     
+        twist_max = 0.0,                     
         twist_interval = 1.0,
         
         # airfoil_list = ['sg6043','mh122','s4062','s9027','hq3010','hq3011']
-        airfoil_list = ['sg6043','hq3010']
+        airfoil_list = ['sg6043','mh122']
         )
     
     aerodynamicSetup = AerodynamicSetup(
@@ -82,9 +82,9 @@ def get_config():
         AOA_turn_max = 8  
     )
     baseAircraft = Aircraft(
-        m_fuselage = 3000,
+        m_fuselage = 2500,
         wing_area_blocked_by_fuselage = 72640,    #mm2
-        wing_density = 0.0000852,
+        wing_density = 0.0000588,
 
         mainwing_span = 1800,        
         mainwing_AR = 5.45,           
@@ -94,8 +94,8 @@ def get_config():
         mainwing_dihedral = 5.0,     
         mainwing_incidence = 0.0,    
 
-        flap_start = [0.05, 0.4],            
-        flap_end = [0.25, 0.6],              
+        flap_start = [0.182, 0.402],            
+        flap_end = [0.335, 0.628],              
         flap_angle = [20.0, 20.0],           
         flap_c_ratio = [0.35, 0.35],         
 
@@ -117,13 +117,13 @@ def get_config():
 
     missionParamConstraints = MissionParamConstraints (
                 
-                MTOW_min = 7,
-                MTOW_max = 10,
+                MTOW_min = 7.5,
+                MTOW_max = 8,
                 MTOW_analysis_interval = 0.5,
                 
                 M2_max_speed_min = 34,
-                M2_max_speed_max = 38,
-                M3_max_speed_min = 16,
+                M2_max_speed_max = 34,
+                M3_max_speed_min = 20,
                 M3_max_speed_max = 20,
                 max_speed_analysis_interval = 2,
                 
@@ -131,7 +131,7 @@ def get_config():
                 M2_climb_thrust_ratio_min = 0.9,
                 M2_climb_thrust_ratio_max = 0.9,
                 M2_turn_thrust_ratio_min = 0.7,
-                M2_turn_thrust_ratio_max = 0.9,
+                M2_turn_thrust_ratio_max = 0.7,
                 M2_level_thrust_ratio_min = 0.8,
                 M2_level_thrust_ratio_max = 0.9,
                 M2_thrust_analysis_interval = 0.05,
@@ -140,9 +140,9 @@ def get_config():
                 M3_climb_thrust_ratio_min = 0.9,
                 M3_climb_thrust_ratio_max = 0.9,
                 M3_turn_thrust_ratio_min = 0.7,
-                M3_turn_thrust_ratio_max = 0.8,
+                M3_turn_thrust_ratio_max = 0.7,
                 M3_level_thrust_ratio_min = 0.7,
-                M3_level_thrust_ratio_max = 0.8,
+                M3_level_thrust_ratio_max = 0.7,
                 M3_thrust_analysis_interval = 0.05,
                 
                 wing_loading_min = 5,

@@ -21,6 +21,8 @@ def get_result_by_id(resultID:str, mission_number : int) ->pd.DataFrame:
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="module that displays the result screen which user wants.")
+    parser.add_argument("--server_id", type=int, required=True, help="Specify the server ID")
+
     subparsers = parser.add_subparsers(dest="main_command", required=True)
     show_parser = subparsers.add_parser("show", help="Show results for specific resultID.")
     
@@ -43,14 +45,17 @@ if __name__ == "__main__":
     
     save_mission_parser = save_subparsers.add_parser("mission3", help="Save mission2 analysis results.")
     save_mission_parser.add_argument("resultID", type=str, help="Enter the resultID which you want to save.")
+
     
-    
+   
     
     args = parser.parse_args()
+
+ 
     if args.main_command == "show":
         if args.type == "aircraft":
             hashVal = "'" + args.hashVal +"'"
-            aircraft_result = loadAnalysisResults(hashVal)
+            aircraft_result = loadAnalysisResults(hashVal,f"data/aircraft_{args.server_id}.csv")
             visualize_results(aircraft_result)
             
         elif args.type == "mission2":

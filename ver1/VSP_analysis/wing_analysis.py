@@ -325,13 +325,13 @@ def calculate_coefficient(vsp_file, alpha_start, alpha_end, alpha_step, flap_ang
     sweep_results_id = vsp.ExecAnalysis(sweep_analysis)
     
     # Mass
-    boom_density_2018 = 0.098 # 단위길이 당 질량 (g/mm)
-    boom_density_1614 = 0.087 # 단위길이 당 질량 (g/mm)
-    boom_density_86 = 0.036 # 단위길이 당 질량 (g/mm)
+    boom_density_2624 = 0.098 # 단위길이 당 질량 (g/mm)
+    boom_density_1008 = 0.087 # 단위길이 당 질량 (g/mm)
+    boom_density_0604 = 0.036 # 단위길이 당 질량 (g/mm)
     vsp.ComputeMassProps(0, 100, 0)
     mass_results_id = vsp.FindLatestResultsID("Mass_Properties")
     mass_data = vsp.GetDoubleResults(mass_results_id, "Total_Mass")
-    m_wing = mass_data[0] + 2 * (span - 50.0) * (boom_density_1614 + boom_density_2018 + boom_density_86)
+    m_wing = mass_data[0] + 2 * (span - 50.0) * (boom_density_1008 + boom_density_2624 + boom_density_0604)
     m_total = m_wing + m_fuselage + m_payload
     mass_center_x = 120 # Calculated by CG Calculater, static margin 10%
     
