@@ -170,9 +170,9 @@ def main():
     ResultAnalysis(presetValues)
 
     return
-def main2():
 
-    a=loadAnalysisResults('2843180587264577993')
+def main2(a):
+
     
     ## preset
     presetValues = PresetValues(
@@ -232,11 +232,15 @@ if __name__== "__main__":
     profiler = cProfile.Profile()
     profiler.enable()
     
+    a=loadAnalysisResults('2843180587264577993')
     # Run the function
-    main2()
+    main2(a)
+    main2(a)
+    main2(a)
+    main2(a)
     profiler.disable()
     
     # Print stats sorted by cumulative time
     stats = pstats.Stats(profiler)
-    stats.sort_stats(SortKey.TIME)
+    stats.sort_stats(SortKey.CUMULATIVE)
     stats.print_stats(40)  # Show top 20 time-consuming lines
