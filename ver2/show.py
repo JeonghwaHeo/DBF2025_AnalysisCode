@@ -6,9 +6,15 @@ from internal_dataclass import MissionParameters
 from setup_dataclass import PresetValues, PropulsionSpecs
 import numpy as np
 
-def get_result_by_id(resultID:str, csvPath: str="data/total_results.csv")->pd.DataFrame:
+def get_result_by_id(resultID:str, mission_number : int) ->pd.DataFrame:
+    
+    if mission_number == 2:
+        csvPath = "data/M2_total_results.csv"
+    elif mission_number == 3: 
+        csvPath = "data/M3_total_results.csv"
+
     resultID_df = pd.read_csv(csvPath, sep='|',encoding='utf-8')
-    resultID_df = resultID_df[resultID_df['resultID'] == resultID]
+    resultID_df = resultID_df[resultID_df['resultID'] == resultID ]
     return resultID_df
     
 
@@ -49,7 +55,7 @@ if __name__ == "__main__":
             
         elif args.type == "mission2":
             resultID = "'" + args.resultID + "'"
-            resultID_df = get_result_by_id(resultID)
+            resultID_df = get_result_by_id(resultID,2)
             hashVal = resultID_df['hash']  
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
             param2 = MissionParameters(
@@ -100,7 +106,7 @@ if __name__ == "__main__":
 
         elif args.type == "mission3":
             resultID = "'" + args.resultID + "'"
-            resultID_df = get_result_by_id(resultID)
+            resultID_df = get_result_by_id(resultID,3)
             hashVal = resultID_df['hash']  
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
 
@@ -153,7 +159,7 @@ if __name__ == "__main__":
     if args.main_command == "save":    
         if args.type == "mission2":
             resultID = "'" + args.resultID + "'"
-            resultID_df = get_result_by_id(resultID)
+            resultID_df = get_result_by_id(resultID,2)
             hashVal = resultID_df['hash']  
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
             param2 = MissionParameters(
@@ -205,7 +211,7 @@ if __name__ == "__main__":
 
         elif args.type == "mission3":
             resultID = "'" + args.resultID + "'"
-            resultID_df = get_result_by_id(resultID)
+            resultID_df = get_result_by_id(resultID,3)
             hashVal = resultID_df['hash']  
             aircraft = loadAnalysisResults(hashVal.iloc[0])     
 

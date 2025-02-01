@@ -544,7 +544,7 @@ def writeAnalysisResults(anaResults: AircraftAnalysisResults, csvPath:str = "dat
 
 def loadAnalysisResults(hashValue:str, csvPath:str = "data/aircraft.csv")-> AircraftAnalysisResults:
     df = pd.read_csv(csvPath, sep='|', encoding='utf-8')
-    df = df.loc[df['hash']=="'"+hashValue+"'"]
+    df = df.loc[df['hash']==hashValue]
    
     for col in df.columns:
        df[col] = df[col].apply(lambda x: 

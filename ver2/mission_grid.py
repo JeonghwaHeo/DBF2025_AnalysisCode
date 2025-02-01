@@ -252,10 +252,10 @@ def ResultAnalysis(presetValues:PresetValues,
         score2 = row2['objective_2'] / max_obj2 + 1
         score3 = row3['objective_3'] / max_obj3 + 2
         SCORE = score2 * presetValues.score_weight_ratio + score3 * (1 - presetValues.score_weight_ratio)
-
+        N_laps_for_score = row3['N_laps']-1     # N-laps before executing X-1
         combined_data.append({
-            'resultID': f"{row2['resultID']}_{row3['resultID']}",  # 근데 resultID는 total에는 필요없고 여기서 처음 만들면 될듯?
-            'hash': f"{row2['hash']}", # hash는 다 같으니까
+            'resultID': f"{row2['resultID']}_{row3['resultID']}",  
+            'hash': f"{row2['hash']}", 
             'MTOW': row2['MTOW'],
             'fuel_weight': row2['fuel_weight'],
             'span': row2['span'],
@@ -271,7 +271,7 @@ def ResultAnalysis(presetValues:PresetValues,
             'mission3_turn_thrust_ratio': row3['mission3_turn_thrust_ratio'],
             'mission3_level_thrust_ratio': row3['mission3_level_thrust_ratio'],
             'flight_time': row2['flight_time'],
-            'N_laps': row3['N_laps'],
+            'N_laps': N_laps_for_score,
             'score2': score2,
             'score3': score3,
             'SCORE': SCORE
