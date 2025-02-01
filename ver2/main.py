@@ -73,7 +73,7 @@ def main():
         twist_max = 0.0,                     
         twist_interval = 1.0,
         
-        # airfoil_list = ['e852','mh122','s4062','s9027','hq3010','hq3011']
+        # airfoil_list = ['sg6043','mh122','s4062','s9027','hq3010','hq3011']
         airfoil_list = ['s4062', 's9027']
         )
     

@@ -838,7 +838,7 @@ class MissionAnalyzer():
                                                         0#graphFlag
                         ) #kg
                         
-                        T = min(D, T_turn_max_per_motor*self.presetValues.number_of_motor*g)
+                        T = min(D, T_turn_max_per_motor*self.presetValues.number_of_motor*self.missionParam.turn_thrust_ratio*g)
                         self.state.thrust = T/g
                         thrust_per_motor = self.state.thrust / self.presetValues.number_of_motor
                         _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
