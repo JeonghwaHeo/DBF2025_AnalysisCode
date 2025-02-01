@@ -66,8 +66,7 @@ def get_config():
         twist_max = 0.0,                     
         twist_interval = 1.0,
         
-        # airfoil_list = ['sg6043','mh122','s4062','s9027','hq3010','hq3011']
-        airfoil_list = ['sg6043','mh122']
+        airfoil_list = ['sg6043','s9027','hq3011','e216','s4022']
         )
     
     aerodynamicSetup = AerodynamicSetup(
@@ -182,7 +181,7 @@ def run_mission_analysis(server_id: int, total_servers: int):
     if os.path.exists(output2_path):
         os.remove(output2_path)
     
-    if os.path.exists(output2_path):
+    if os.path.exists(output3_path):
         os.remove(output3_path)
 
     # Run mission analysis for this worker's hashes

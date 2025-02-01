@@ -6,12 +6,12 @@ from internal_dataclass import MissionParameters
 from setup_dataclass import PresetValues, PropulsionSpecs
 import numpy as np
 
-def get_result_by_id(resultID:str, mission_number : int) ->pd.DataFrame:
+def get_result_by_id(resultID:str, mission_number : int, server_id : int) ->pd.DataFrame:
     
     if mission_number == 2:
-        csvPath = "data/M2_total_results.csv"
+        csvPath = f"data/mission2_results_{server_id}.csv"
     elif mission_number == 3: 
-        csvPath = "data/M3_total_results.csv"
+        csvPath = f"data/mission3_results_{server_id}.csv"
 
     resultID_df = pd.read_csv(csvPath, sep='|',encoding='utf-8')
     resultID_df = resultID_df[resultID_df['resultID'] == resultID ]
@@ -60,9 +60,9 @@ if __name__ == "__main__":
             
         elif args.type == "mission2":
             resultID = "'" + args.resultID + "'"
-            resultID_df = get_result_by_id(resultID,2)
+            resultID_df = get_result_by_id(resultID,2,args.server_id)
             hashVal = resultID_df['hash']  
-            aircraft = loadAnalysisResults(hashVal.iloc[0])     
+            aircraft = loadAnalysisResults(hashVal.iloc[0],"data/aircraft.csv")     
             param2 = MissionParameters(
                 m_takeoff= resultID_df['MTOW'].iloc[0],
                 max_speed= resultID_df['M2_max_speed'].iloc[0],                   
@@ -111,9 +111,9 @@ if __name__ == "__main__":
 
         elif args.type == "mission3":
             resultID = "'" + args.resultID + "'"
-            resultID_df = get_result_by_id(resultID,3)
+            resultID_df = get_result_by_id(resultID,3,args.server_id)
             hashVal = resultID_df['hash']  
-            aircraft = loadAnalysisResults(hashVal.iloc[0],f"data/aircraft_{args.server_id}.csv")     
+            aircraft = loadAnalysisResults(hashVal.iloc[0],"data/aircraft.csv")     
 
             param3 = MissionParameters(
                 m_takeoff= resultID_df['m_empty'].iloc[0]/1000,
@@ -164,9 +164,9 @@ if __name__ == "__main__":
     if args.main_command == "save":    
         if args.type == "mission2":
             resultID = "'" + args.resultID + "'"
-            resultID_df = get_result_by_id(resultID,2)
+            resultID_df = get_result_by_id(resultID,2,args.server_id)
             hashVal = resultID_df['hash']  
-            aircraft = loadAnalysisResults(hashVal.iloc[0],f"data/aircraft_{args.server_id}.csv")     
+            aircraft = loadAnalysisResults(hashVal.iloc[0],"data/aircraft.csv")     
             param2 = MissionParameters(
                 m_takeoff= resultID_df['MTOW'].iloc[0],
                 max_speed= resultID_df['M2_max_speed'].iloc[0],                   
@@ -216,9 +216,9 @@ if __name__ == "__main__":
 
         elif args.type == "mission3":
             resultID = "'" + args.resultID + "'"
-            resultID_df = get_result_by_id(resultID,3)
+            resultID_df = get_result_by_id(resultID,3,args.server_id)
             hashVal = resultID_df['hash']  
-            aircraft = loadAnalysisResults(hashVal.iloc[0],f"data/aircraft_{args.server_id}.csv")     
+            aircraft = loadAnalysisResults(hashVal.iloc[0],"data/aircraft.csv")     
 
             param3 = MissionParameters(
                 m_takeoff= resultID_df['m_empty'].iloc[0]/1000,

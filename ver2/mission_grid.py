@@ -204,27 +204,28 @@ def runMissionGridSearch(hashVal:str,
     print("\nDone Mission3 Analysis ^_^")
 
 def writeMissionAnalysisResults(hashVal:str, results, presetValues:PresetValues, propulsionSpecs:PropulsionSpecs, readcsvPath:str = "data/aircraft.csv", writecsvPath:str = "data/total_results.csv"):
-    existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
-    base_row = existing_df[existing_df['hash'] == hashVal]
-    base_row_dict = base_row.to_dict(orient="records")[0]
-    preset_dict = vars(presetValues)
-    propulsion_dict = vars(propulsionSpecs)
+    # existing_df = pd.read_csv(readcsvPath, sep='|', encoding='utf-8')
+    # base_row = existing_df[existing_df['hash'] == hashVal]
+    # base_row_dict = base_row.to_dict(orient="records")[0]
+    # preset_dict = vars(presetValues)
+    # propulsion_dict = vars(propulsionSpecs)
     
-    combined_dict = {**base_row_dict, **preset_dict, **propulsion_dict}
-    common_row = pd.DataFrame([combined_dict])
+    # combined_dict = {**base_row_dict, **preset_dict, **propulsion_dict}
+    # common_row = pd.DataFrame([combined_dict])
  
-    new_row_df = pd.merge(common_row, results, on = 'hash')
-    resultID = pd.util.hash_pandas_object(new_row_df, index=False)
-    new_row_df['resultID'] = str(resultID.iloc[0])
-    new_row_df['resultID'] = "'" + new_row_df['resultID'] + "'"
+    # new_row_df = pd.merge(common_row, results, on = 'hash')
+
+    resultID = pd.util.hash_pandas_object(results, index=False)
+    results['resultID'] = str(resultID.iloc[0])
+    results['resultID'] = "'" + results['resultID'] + "'"
     
 
     if not os.path.isfile(writecsvPath):
-        df_copy = new_row_df.copy()
+        df_copy = results.copy()
         df_copy.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
     else:
         df = pd.read_csv(writecsvPath, sep='|', encoding='utf-8')
-        df= pd.concat([df,new_row_df])
+        df= pd.concat([df,results])
         df_copy = df.copy()
         df_copy.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
 

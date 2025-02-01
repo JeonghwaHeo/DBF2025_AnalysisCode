@@ -549,15 +549,15 @@ class MissionAnalyzer():
                         alpha_w_deg = float(self.alpha_func((2 * self.weight * self.missionParam.max_load_factor)/
                                                           (rho * fast_norm(self.state.velocity)**2 * self.analResult.Sref)))
                     else:
-                        alpha_w_deg -= 1
+                        alpha_w_deg -= 3
                         alpha_w_deg = max(alpha_w_deg, -5)
                 else:
                     break_flag = True
                     if gamma_rad > np.radians(self.presetValues.max_climb_angle):
-                        alpha_w_deg -= 1
+                        alpha_w_deg -= 2
                         alpha_w_deg = max(alpha_w_deg, -5)
                     else:
-                        alpha_w_deg -= 1
+                        alpha_w_deg -= 2
                         alpha_w_deg = max(alpha_w_deg, -5)            
                     
                     
@@ -567,15 +567,23 @@ class MissionAnalyzer():
                 CL = float(self.CL_func(alpha_w_deg))
                 
             speed = fast_norm(self.state.velocity)  
-              
+
             T_climb_max_per_motor = determine_max_thrust(speed,
-                                               self.state.battery_voltage,
-                                               self.propulsionSpecs,
-                                               self.propeller_array,
-                                               0#graphFlag
+                                            self.state.battery_voltage,
+                                            self.propulsionSpecs,
+                                            self.propeller_array,
+                                            0#graphFlag
             ) #kg
-            thrust_per_motor = T_climb_max_per_motor * self.missionParam.climb_thrust_ratio #kg
-            
+            thrust_per_motor = T_climb_max_per_motor * self.missionParam.climb_thrust_ratio #kg    
+
+            if speed >= self.missionParam.max_speed * 0.95:
+
+                D = 0.5 * rho * speed**2 * self.analResult.Sref * self.CD_func(alpha_w_deg)
+                T_desired = (D + self.weight * np.sin(gamma_rad)) / np.cos(np.deg2rad(alpha_w_deg))
+                thrust_per_motor_desired = T_desired / (2*g)
+                thrust_per_motor = min(thrust_per_motor, thrust_per_motor_desired)
+
+
             _,_,self.state.Amps,self.state.motor_input_power,self.state.throttle = thrust_reverse_solve(thrust_per_motor, speed,self.state.battery_voltage, self.propulsionSpecs.Kv, self.propulsionSpecs.R, self.propeller_array)
             
             T_climb = thrust_per_motor * self.presetValues.number_of_motor * g # total N

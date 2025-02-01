@@ -5,3 +5,4 @@ ver2/data/mission_statelog.csv
 testfunctions.py
 .vscode/settings.json
 test.py
+data/
