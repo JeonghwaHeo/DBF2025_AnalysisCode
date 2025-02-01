@@ -1,10 +1,15 @@
 import pandas as pd
 from vsp_grid import runVSPGridAnalysis
 from mission_grid import runMissionGridSearch, ResultAnalysis
-from vsp_analysis import removeAnalysisResults
+from mission_analysis import MissionAnalyzer
+from vsp_analysis import removeAnalysisResults, loadAnalysisResults
 from internal_dataclass import *
 from setup_dataclass import *
 import argparse
+
+import cProfile
+import pstats
+from pstats import SortKey
 
 def main():
     
@@ -160,7 +165,73 @@ def main():
     ResultAnalysis(presetValues)
 
     return
+def main2():
 
+    a=loadAnalysisResults('2843180587264577993')
+    
+    ## preset
+    presetValues = PresetValues(
+        m_x1 = 200,                         # g
+        x1_time_margin = 10,                # sec
+        
+        throttle_takeoff = 0.9,             # 0~1
+        max_climb_angle=40,                 #deg
+        max_load = 30,                      # kg
+        h_flap_transition = 5,              # m
+        
+        number_of_motor = 2,                 
+        min_battery_voltage = 21.8,         # V 
+        score_weight_ratio = 0.5            # mission2/3 score weight ratio (0~1)
+        )
+    
+    propulsionSpecs = PropulsionSpecs(
+        M2_propeller_data_path = "data/propDataCSV/PER3_8x6E.csv",
+        M3_propeller_data_path = "data/propDataCSV/PER3_8x6E.csv",
+        battery_data_path = "data/batteryDataCSV/Maxamps_2250mAh_6S.csv",
+        Kv = 109.91,
+        R = 0.062,
+        number_of_battery = 2,
+        n_cell = 6,
+        battery_Wh = 49.95,
+        max_current = 60,
+        max_power = 1332    
+    )
+    param = MissionParameters(
+        max_speed= 40,                       # Fixed
+        max_load_factor = 4.0,               # Fixed
+        m_takeoff = 6,
+        climb_thrust_ratio = 0.9,
+        level_thrust_ratio = 0.5,
+        turn_thrust_ratio = 0.5,               
+        propeller_data_path = "data/propDataCSV/PER3_8x6E.csv", 
+    )
+        
+    propulsionSpecs = PropulsionSpecs(
+        M2_propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
+        M3_propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
+        battery_data_path = "data/batteryDataCSV/Maxamps_2250mAh_6S.CSV",
+        Kv = 109.91,
+        R = 0.062,
+        number_of_battery = 2,
+        n_cell = 6,
+        battery_Wh = 49.95,
+        max_current = 60,
+        max_power = 1332    
+    )
+        
+    missionAnalyzer = MissionAnalyzer(a, param, presetValues, propulsionSpecs)
+    missionAnalyzer.run_mission2()
+    missionAnalyzer.run_mission3()
 
 if __name__== "__main__":
-    main()
+    profiler = cProfile.Profile()
+    profiler.enable()
+    
+    # Run the function
+    main2()
+    profiler.disable()
+    
+    # Print stats sorted by cumulative time
+    stats = pstats.Stats(profiler)
+    stats.sort_stats(SortKey.TIME)
+    stats.print_stats(40)  # Show top 20 time-consuming lines

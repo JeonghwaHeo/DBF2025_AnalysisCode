@@ -174,12 +174,33 @@ class MissionAnalyzer():
         CL_table = CL_interp1d(alpha_extended)
         CD_table = CD_interp1d(alpha_extended)
         
+        self._cl_cache = {}
+        self._cd_cache = {}
+
         # Create lambda functions for faster lookup
-        self.CL_func = lambda alpha: np.interp(alpha, alpha_extended, CL_table)
-        self.CD_func = lambda alpha: np.interp(alpha, alpha_extended, CD_table)
+        self._cl_func_original = lambda alpha: np.interp(alpha, alpha_extended, CL_table)
+        self._cd_func_original = lambda alpha: np.interp(alpha, alpha_extended, CD_table)
         self.alpha_func = lambda CL: np.interp(CL, CL_table, alpha_extended)
         return
-    
+
+    def CL_func(self,alpha):
+        key = int(alpha*1000+0.5)  # Reduce precision for better cache hits
+        if key not in self._cl_cache:
+            self._cl_cache[key] = self._cl_func_original(alpha)
+
+        #print(self._cl_cache[key] - self._cl_func_original(alpha))
+        return self._cl_cache[key]
+        #return np.interp(alpha, alpha_extended, CL_table)
+
+    def CD_func(self,alpha):
+        key = int(alpha*1000+0.5)  # Reduce precision for better cache hits
+        if key not in self._cd_cache:
+            self._cd_cache[key] = self._cd_func_original(alpha)
+
+        #print(self._cl_cache[key] - self._cl_func_original(alpha))
+        return self._cd_cache[key]
+        #return np.interp(alpha, alpha_extended, CL_table)
+
     
     def run_mission(self, missionPlan: List[MissionConfig],clearState = True) -> int:
 
@@ -209,6 +230,7 @@ class MissionAnalyzer():
                     return -1
                 
             except Exception as e:
+                print(e)
                 return -1        
     
         return 0
@@ -310,6 +332,7 @@ class MissionAnalyzer():
         
     def calculate_level_alpha(self, v):
         #  Function that calculates the AOA required for level flight using the velocity vector and thrust
+        return self.calculate_level_alpha_fast(v)
         speed = fast_norm(v)
         def equation(alpha:float):
 
@@ -318,13 +341,39 @@ class MissionAnalyzer():
             return float(L-self.weight)
 
         alpha_solution = fsolve(equation, 5, xtol=1e-4, maxfev=1000)
+
+        fast_sol = self.calculate_level_alpha_fast(v)
+        print(fast_sol - alpha_solution[0])
         return alpha_solution[0]
     
+    # Use the fact that CL is quadratic(increasing) and do binary search instead
+    def calculate_level_alpha_fast(self,v):
+        speed = fast_norm(v)
+        # Pre-calculate shared values
+        dynamic_pressure = 0.5 * PhysicalConstants.rho * speed**2 * self.analResult.Sref
+        weight = self.missionParam.m_takeoff * PhysicalConstants.g
+        
+        # Binary search instead of fsolve
+        alpha_min, alpha_max = -3, 13
+        tolerance = 1e-4
+        
+        while (alpha_max - alpha_min) > tolerance:
+            alpha = (alpha_min + alpha_max) / 2
+            CL = float(self.CL_func(alpha))
+            L = dynamic_pressure * CL
+            
+            if L > weight:
+                alpha_max = alpha
+            else:
+                alpha_min = alpha
+                
+        return (alpha_min + alpha_max) / 2
+
     def calculate_Lift_and_Loadfactor(self, CL, speed:float=-1):
         if(speed == -1): speed = fast_norm(self.state.velocity)
         L = 0.5 * rho * speed**2 * self.analResult.Sref * CL
         return L, L/self.weight 
-
+    
     def isBelowFlapTransition(self):
         return self.state.position[2] < self.presetValues.h_flap_transition  
     

@@ -251,14 +251,19 @@ def ResultAnalysis(presetValues:PresetValues,
 
 if __name__=="__main__":
     presetValues = PresetValues(
-            m_x1 = 0.2,                       # kg
-            x1_time_margin = 30,              # sec
-            number_of_motor= 1,
-            min_battery_voltage = 20,         # V (원래는 3 x 6 = 18 V 인데 안전하게 20 V)
-            Thrust_max = 6.0,
-            score_weight_ratio = 0.5            # mission2/3 score weight ratio
-            )
-    a=loadAnalysisResults(6941088787683630519)
+        m_x1 = 200,                         # g
+        x1_time_margin = 10,                # sec
+        
+        throttle_takeoff = 0.9,             # 0~1
+        max_climb_angle=40,                 #deg
+        max_load = 30,                      # kg
+        h_flap_transition = 5,              # m
+        
+        number_of_motor = 2,                 
+        min_battery_voltage = 21.8,         # V 
+        score_weight_ratio = 0.5            # mission2/3 score weight ratio (0~1)
+        )
+    #a=loadAnalysisResults(6941088787683630519)
     score, param = runMissionGridSearch(6941088787683630519,
                           MissionParamConstraints (
                               climb_thrust_ratio_min = 0.9,
@@ -272,12 +277,12 @@ if __name__=="__main__":
                           presetValues
                           )
 
-    missionAnalyzer = MissionAnalyzer(a,param[0],presetValues) 
-    missionAnalyzer.run_mission2()
-    visualize_mission(missionAnalyzer.stateLog)
-    missionAnalyzer = MissionAnalyzer(a,param[1],presetValues) 
-    missionAnalyzer.run_mission3()
-    visualize_mission(missionAnalyzer.stateLog)
+    #missionAnalyzer = MissionAnalyzer(a,param[0],presetValues) 
+    #missionAnalyzer.run_mission2()
+    #visualize_mission(missionAnalyzer.stateLog)
+    #missionAnalyzer = MissionAnalyzer(a,param[1],presetValues) 
+    #missionAnalyzer.run_mission3()
+    #visualize_mission(missionAnalyzer.stateLog)
 
 
 
