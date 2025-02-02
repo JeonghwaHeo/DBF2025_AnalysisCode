@@ -67,8 +67,8 @@ def get_config():
         twist_interval = 1.0,
         
         #airfoil_list = ['sg6043','s9027','hq3011','e216','s4022']
-        airfoil_list = ['sg6043']
-        #airfoil_list = ['s9027','hq3011','e216','s4022']
+        airfoil_list = ['sg6043','s9027','hq3011','s4022']
+ 
         )
     
     aerodynamicSetup = AerodynamicSetup(
@@ -120,7 +120,7 @@ def get_config():
                 
                 MTOW_min = 7.0,
                 MTOW_max = 10.0,
-                MTOW_analysis_interval = 0.25,
+                MTOW_analysis_interval = 0.2,
                 
                 M2_max_speed_min = 28,
                 M2_max_speed_max = 40,
