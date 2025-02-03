@@ -230,10 +230,10 @@ def writeMissionAnalysisResults(hashVal:str, results, presetValues:PresetValues,
         df_copy = results.copy()
         df_copy.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
     else:
-        df = pd.read_csv(writecsvPath, sep='|', encoding='utf-8')
-        df= pd.concat([df,results])
-        df_copy = df.copy()
-        df_copy.to_csv(writecsvPath, sep='|', encoding='utf-8', index=False, quoting=csv.QUOTE_NONE)
+        #df = pd.read_csv(writecsvPath, sep='|', encoding='utf-8')
+        #df= pd.concat([df,results])
+        df_copy = results.copy()
+        df_copy.to_csv(writecsvPath, sep='|', encoding='utf-8',mode='a',header=False, index=False, quoting=csv.QUOTE_NONE)
 
 def format_number(n: float) -> str:
     return f"{n:.6f}"  # 6 decimal places should be sufficient for most cases
