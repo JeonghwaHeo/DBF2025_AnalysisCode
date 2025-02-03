@@ -1,8 +1,18 @@
 import pandas as pd
 import glob
 import os
+import sys
 
-csv_files = glob.glob(r"data/mission3_results_*.csv")
+# 명령줄 인자로 mission과 server 값 받기
+if len(sys.argv) != 3:
+    print("Usage: python3 mission_combiner.py <s1> <m2>     (server1의 mission2일 때)")
+    sys.exit(1)
+
+server = sys.argv[1]   # 예: "s1", "s2"
+mission = sys.argv[2]  # 예: "m2", "m3"
+
+# 파일 경로 설정
+csv_files = glob.glob(f"data/server{server[-1]}/mission{mission[-1]}_results_*.csv")
 csv_files.sort()
 
 df_list = []
@@ -22,8 +32,9 @@ for i, csv_file in enumerate(csv_files):
 
 # 데이터가 있을 때만 병합 및 저장
 if df_list:
+    output_file = f"data/server{server[-1]}/mission{mission[-1]}_results.csv"
     df_merged = pd.concat(df_list, ignore_index=True)
-    df_merged.to_csv(r"data/mission3_results.csv", sep='|', index=False, encoding='utf-8')
-    print("Merged CSV file saved.")
+    df_merged.to_csv(output_file, sep='|', index=False, encoding='utf-8')
+    print(f"Merged CSV file saved: {output_file}")
 else:
     print("No valid CSV files found. Merging skipped.")
