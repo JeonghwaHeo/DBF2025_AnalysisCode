@@ -171,28 +171,27 @@ def run_vsp_analysis(server_id: int, total_servers: int):
 def run_mission_analysis(server_id: int, total_servers: int):
     (presetValues, propulsionSpecs, _, _, _, missionParamConstraints) = get_config()
     
-    final_hash_list = []
-    hash_list ={2:[],3:[]} 
-    for j in range(2,4):    
-        csv_files = glob.glob(f"./data/mission{j}_results*.csv")
-        for k, csv_file in enumerate(csv_files):
-            if os.path.getsize(csv_file) == 0:  # 빈 파일이면 건너뛰기
-                print(f"Skipping empty file: {csv_file}")
-                continue
-            
-            df_temp = pd.read_csv(csv_file, sep='|', header=0, encoding='utf-8')
-            try:
-                hash_list[j]=[*hash_list[j], *df_temp['hash'].unique()[:-1]] # 마지막 hash 지우기
-            except Exception as e:
-                print("error")
-    final_hash_list = list(set(hash_list[2])&set(hash_list[3])) # mission2/3 같이 나타나는 hash만
+    #final_hash_list = []
+    #hash_list ={2:[],3:[]} 
+    #for j in range(2,4):    
+    #    csv_files = glob.glob(f"./data/mission{j}_results*.csv")
+    #    for k, csv_file in enumerate(csv_files):
+    #        if os.path.getsize(csv_file) == 0:  # 빈 파일이면 건너뛰기
+    #            print(f"Skipping empty file: {csv_file}")
+    #            continue
+    #        
+    #        df_temp = pd.read_csv(csv_file, sep='|', header=0, encoding='utf-8')
+    #        try:
+    #            hash_list[j]=[*hash_list[j], *df_temp['hash'].unique()[:-1]] # 마지막 hash 지우기
+    #        except Exception as e:
+    #            print("error")
+    #final_hash_list = list(set(hash_list[2])&set(hash_list[3])) # mission2/3 같이 나타나는 hash만
 
     df_saved = pd.read_csv(f"./data/aircraft.csv", sep='|', header=0, encoding='utf-8')
-    df_saved = df_saved[~df_saved["hash"].isin(final_hash_list)]
+    #df_saved = df_saved[~df_saved["hash"].isin(final_hash_list)]
 
     # Read from combined aircraft.csv (assumed to be already merged)
     results = df_saved
-    time.sleep(20000) # worker마다 충돌 방치를 위해 20초 기다리기
 
     # Divide hash values among servers
     all_hashes = results["hash"].tolist()
