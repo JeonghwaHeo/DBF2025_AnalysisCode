@@ -20,3 +20,10 @@ DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
 mkdir -p $DOCKER_CONFIG/cli-plugins
 curl -SL https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
 chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+#
+
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDreHGoe6DlNJvXo07Yw4JsHNkEidh0lxikU1XjCI9mKrk6HZ2Pg0vNEko8EVw6jmj66rGssXnkSTq9ecwctzeCWMYoNKZXo34a/yk2LgWzXpJ8rh9XOsUpXD0QNJj3SKt7X8kDdCL+r3w/solVu5DELMnUK2jDoG5p8VoZ0hErCDIXGZpMF43W/xJN/GzLuVt4HyJSsYpVVVIwFUmVxk0G+Ba9pUBn4jZAv7Wnr2fjkmYnMLaPsw2XzxX+eZArpBnkcKlCJttUD4AYPwaS5ij1rd0eLjyc+1ngPHZEfPh1gKaKfRCblLs+BHNAG/RRVQT0iK1iFLTKi0bVomzL/PgX KT 서버 test"
+
+chmod 600 /root/.ssh/authorized_keys
+/sbin/restorecon ~/.ssh ~/.ssh/authorized_keys
