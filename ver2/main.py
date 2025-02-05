@@ -19,6 +19,7 @@ from internal_dataclass import *
 from setup_dataclass import *
 import argparse
 import os
+import glob, time
 
 def get_config():
     presetValues = PresetValues(
@@ -170,9 +171,28 @@ def run_vsp_analysis(server_id: int, total_servers: int):
 def run_mission_analysis(server_id: int, total_servers: int):
     (presetValues, propulsionSpecs, _, _, _, missionParamConstraints) = get_config()
     
+    #final_hash_list = []
+    #hash_list ={2:[],3:[]} 
+    #for j in range(2,4):    
+    #    csv_files = glob.glob(f"./data/mission{j}_results*.csv")
+    #    for k, csv_file in enumerate(csv_files):
+    #        if os.path.getsize(csv_file) == 0:  # 빈 파일이면 건너뛰기
+    #            print(f"Skipping empty file: {csv_file}")
+    #            continue
+    #        
+    #        df_temp = pd.read_csv(csv_file, sep='|', header=0, encoding='utf-8')
+    #        try:
+    #            hash_list[j]=[*hash_list[j], *df_temp['hash'].unique()[:-1]] # 마지막 hash 지우기
+    #        except Exception as e:
+    #            print("error")
+    #final_hash_list = list(set(hash_list[2])&set(hash_list[3])) # mission2/3 같이 나타나는 hash만
+
+    df_saved = pd.read_csv(f"./data/aircraft.csv", sep='|', header=0, encoding='utf-8')
+    #df_saved = df_saved[~df_saved["hash"].isin(final_hash_list)]
+
     # Read from combined aircraft.csv (assumed to be already merged)
-    results = pd.read_csv("data/aircraft.csv", sep='|', encoding='utf-8')
-    
+    results = df_saved
+
     # Divide hash values among servers
     all_hashes = results["hash"].tolist()
     worker_hashes = all_hashes[server_id-1::total_servers]
@@ -180,11 +200,6 @@ def run_mission_analysis(server_id: int, total_servers: int):
     # Use server-specific output path for mission results
     output2_path = f"data/mission2_results_{server_id}.csv"
     output3_path = f"data/mission3_results_{server_id}.csv"
-    if os.path.exists(output2_path):
-        os.remove(output2_path)
-    
-    if os.path.exists(output3_path):
-        os.remove(output3_path)
 
     # Run mission analysis for this worker's hashes
     for hashVal in worker_hashes:

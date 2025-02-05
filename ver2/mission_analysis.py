@@ -205,6 +205,7 @@ class MissionAnalyzer():
     def run_mission(self, missionPlan: List[MissionConfig],clearState = True) -> int:
 
         flag = 0
+        M3_time_limit = 300 - self.presetValues.x1_time_margin 
         if(clearState): self.clearState()
 
         for phase in missionPlan:
@@ -224,6 +225,8 @@ class MissionAnalyzer():
                         # print(f"turn = {flag}")
                     case _: 
                         raise ValueError("Didn't provide a correct PhaseType!")
+                if (self.state.time > M3_time_limit or self.state.battery_voltage < self.presetValues.min_battery_voltage):
+                    return -2
                 self.state.phase += 1
                 
                 if flag==-1: 
@@ -273,7 +276,7 @@ class MissionAnalyzer():
         last_battery_voltage = last_state.battery_voltage 
         if(result == -1 or last_z_pos < 20 or last_battery_voltage < self.presetValues.min_battery_voltage): return -1,-1
         
-        return self.m_fuel, self.state.time
+        return self.m_fuel, self.state.phase
 
     def run_mission3(self) -> float:
         result = 0
@@ -318,6 +321,9 @@ class MissionAnalyzer():
             
             result = self.run_mission(lap2,clearState=False)
             if(result == -1): return -1
+            if(result == -2):
+                self.state.N_laps -= 1
+                return self.state.N_laps, self.state.phase, self.state.time
             
             # Check if we've exceeded time limit or voltage limit
             if (self.state.time > time_limit or 
@@ -328,7 +334,7 @@ class MissionAnalyzer():
                 self.state.N_laps -= 1
                 break
         
-        return self.state.N_laps
+        return self.state.N_laps, self.state.phase, self.state.time
         
     def calculate_level_alpha(self, v):
         #  Function that calculates the AOA required for level flight using the velocity vector and thrust
@@ -1037,7 +1043,7 @@ def visualize_mission(stateLog):
     stateLog = get_state_df(stateLog)
 
     fig = plt.figure(figsize=(15, 8))
-    gs = fig.add_gridspec(3, 4)
+    gs = fig.add_gridspec(4, 4)
     
     # Get phases and colors
     phases = stateLog['phase'].unique()
@@ -1214,6 +1220,15 @@ def visualize_mission(stateLog):
     ax_amps.set_title('Current')
     ax_amps.grid(True)
 
+    # Graph12 : Phase
+    ax_phase = fig.add_subplot(gs[3, :])
+    ax_phase.step(stateLog['time'], stateLog['phase'], where='post', color='purple')
+    ax_phase.set_xlabel('Time (s)')
+    ax_phase.set_ylabel('Phase')
+    ax_phase.set_title('Mission Phases')
+    ax_phase.set_yticks(phases)
+    ax_phase.grid(True, which='major', linestyle='-', linewidth=1)
+    ax_phase.grid(True, which='minor', linestyle=':', linewidth=0.5)
 
     plt.suptitle(f"Mission : {stateLog['mission'].iloc[0]}        Total flight time : {stateLog['time'].iloc[-1]:.2f}s        N_laps : {stateLog['N_laps'].iloc[-1]}", fontsize = 16, y = 0.95)
 
@@ -1224,9 +1239,10 @@ def visualize_mission(stateLog):
 
 if __name__=="__main__":
 
-    a=loadAnalysisResults(1963897528543531429)
+    a=loadAnalysisResults("'700773271413233544'")
     
     param = MissionParameters(
+        m_takeoff= 10,
         max_speed= 40,                       # Fixed
         max_load_factor = 4.0,               # Fixed
         climb_thrust_ratio = 0.9,
@@ -1237,17 +1253,23 @@ if __name__=="__main__":
     )
     
     presetValues = PresetValues(
-        m_x1 = 0.25,                        # kg
-        x1_time_margin = 30,                # sec
+        m_x1 = 200,                         # g
+        x1_time_margin = 150,                # sec
+        
+        throttle_takeoff = 0.9,             # 0~1
+        max_climb_angle = 40,                 #deg
+        max_load = 30,                      # kg
+        h_flap_transition = 5,              # m
+        
         number_of_motor = 2,                 
         min_battery_voltage = 21.8,         # V 
-        score_weight_ratio = 0.5            # mission2/3 score weight ratio            
-    )
+        score_weight_ratio = 0.5            # mission2/3 score weight ratio (0~1)
+        )
         
     propulsionSpecs = PropulsionSpecs(
-        M2_propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
-        M3_propeller_data_path = "data/propDataCSV/PER3_10x6E.csv",
-        battery_data_path = "data/batteryDataCSV/Maxamps_2250mAh_6S.CSV",
+        M2_propeller_data_path = "data/propDataCSV/PER3_8x6E.csv",
+        M3_propeller_data_path = "data/propDataCSV/PER3_8x6E.csv",
+        battery_data_path = "data/batteryDataCSV/Maxamps_2250mAh_6S.csv",
         Kv = 109.91,
         R = 0.062,
         number_of_battery = 2,
@@ -1258,6 +1280,6 @@ if __name__=="__main__":
     )
         
     missionAnalyzer = MissionAnalyzer(a, param, presetValues, propulsionSpecs)
-    missionAnalyzer.run_mission3()
+    print(missionAnalyzer.run_mission3())
     visualize_mission(missionAnalyzer.stateLog)
  
