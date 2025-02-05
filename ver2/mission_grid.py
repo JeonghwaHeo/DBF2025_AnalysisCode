@@ -100,63 +100,63 @@ def runMissionGridSearch(hashVal:str,
     M2_total = len(MTOW_list) * len(M2_max_speed_list) * len(M2_climb_thrust_ratio_list) * len(M2_turn_thrust_ratio_list) * len(M2_level_thrust_ratio_list)
     M3_total = len(M3_max_speed_list) * len(M3_climb_thrust_ratio_list) * len(M3_turn_thrust_ratio_list) * len(M3_level_thrust_ratio_list)
     
-    print(f"\nTesting Mission2: {M2_total} combinations...\n")
-    step2 = max(int(M2_total/100) , 1)
+    # print(f"\nTesting Mission2: {M2_total} combinations...\n")
+    # step2 = max(int(M2_total/100) , 1)
     step3 = max(int(M3_total/100) , 1)
 
-    # Test each M2_combination
-    for i, (MTOW, M2_max_speed, M2_climb_thrust_ratio, M2_turn_thrust_ratio, M2_level_thrust_ratio) in enumerate(M2_combinations):
+    # # Test each M2_combination
+    # for i, (MTOW, M2_max_speed, M2_climb_thrust_ratio, M2_turn_thrust_ratio, M2_level_thrust_ratio) in enumerate(M2_combinations):
         
         
-        if (i+1)%step2==0:
-            print(f"[{time.strftime('%Y-%m-%d %X')}] Mission2 Grid Progress: {i+1}/{M2_total} configurations")
+    #     if (i+1)%step2==0:
+    #         print(f"[{time.strftime('%Y-%m-%d %X')}] Mission2 Grid Progress: {i+1}/{M2_total} configurations")
 
-        # Create mission 2 parameters for this combination
-        mission2Params = MissionParameters(
-            m_takeoff = MTOW,
-            max_speed= M2_max_speed,                      
-            max_load_factor = presetValues.max_load / MTOW,          
+    #     # Create mission 2 parameters for this combination
+    #     mission2Params = MissionParameters(
+    #         m_takeoff = MTOW,
+    #         max_speed= M2_max_speed,                      
+    #         max_load_factor = presetValues.max_load / MTOW,          
                   
-            climb_thrust_ratio = M2_climb_thrust_ratio,
-            level_thrust_ratio = M2_level_thrust_ratio,
-            turn_thrust_ratio = M2_turn_thrust_ratio,   
+    #         climb_thrust_ratio = M2_climb_thrust_ratio,
+    #         level_thrust_ratio = M2_level_thrust_ratio,
+    #         turn_thrust_ratio = M2_turn_thrust_ratio,   
 
-            propeller_data_path=propulsionSpecs.M2_propeller_data_path,
-        )
+    #         propeller_data_path=propulsionSpecs.M2_propeller_data_path,
+    #     )
 
-        try:
-            mission2Analyzer = MissionAnalyzer(analysisResults, mission2Params, presetValues, propulsionSpecs)
-            fuel_weight, flight_time = mission2Analyzer.run_mission2()
+    #     try:
+    #         mission2Analyzer = MissionAnalyzer(analysisResults, mission2Params, presetValues, propulsionSpecs)
+    #         fuel_weight, flight_time = mission2Analyzer.run_mission2()
             
-            if(fuel_weight == -1 and flight_time == -1):
-                #print("mission2 fail")
-                continue
+    #         if(fuel_weight == -1 and flight_time == -1):
+    #             #print("mission2 fail")
+    #             continue
             
-            obj2 = fuel_weight * 2.204 / flight_time 
+    #         obj2 = fuel_weight * 2.204 / flight_time 
 
-            results = {
-                'timestamp': time.strftime("%Y-%m-%d %X"),
-                'hash': hashVal,
-                'fuel_weight' : fuel_weight,
-                'flight_time' : flight_time,
-                'objective_2': obj2,
-                'MTOW' : MTOW,
-                'M2_max_speed' : M2_max_speed,
-                'mission2_climb_thrust_ratio': M2_climb_thrust_ratio,
-                'mission2_turn_thrust_ratio': M2_turn_thrust_ratio,
-                'mission2_level_thrust_ratio': M2_level_thrust_ratio
-            }
+    #         results = {
+    #             'timestamp': time.strftime("%Y-%m-%d %X"),
+    #             'hash': hashVal,
+    #             'fuel_weight' : fuel_weight,
+    #             'flight_time' : flight_time,
+    #             'objective_2': obj2,
+    #             'MTOW' : MTOW,
+    #             'M2_max_speed' : M2_max_speed,
+    #             'mission2_climb_thrust_ratio': M2_climb_thrust_ratio,
+    #             'mission2_turn_thrust_ratio': M2_turn_thrust_ratio,
+    #             'mission2_level_thrust_ratio': M2_level_thrust_ratio
+    #         }
     
-            results = pd.DataFrame([results])
+    #         results = pd.DataFrame([results])
     
-            writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = mission2Out)
+    #         writeMissionAnalysisResults(hashVal, results, presetValues, propulsionSpecs, writecsvPath = mission2Out)
 
-        except Exception as e:
-            #print(f"\nFailed with throttles M2 : Climb({M2_climb_thrust_ratio:.2f}) Trun({M2_turn_thrust_ratio:.2f}) Level ({M2_level_thrust_ratio:.2f})")
-            print(f"Error : {str(e)}")
-            continue
+    #     except Exception as e:
+    #         #print(f"\nFailed with throttles M2 : Climb({M2_climb_thrust_ratio:.2f}) Trun({M2_turn_thrust_ratio:.2f}) Level ({M2_level_thrust_ratio:.2f})")
+    #         print(f"Error : {str(e)}")
+    #         continue
    
-    print("\nDone Mission2 Analysis ^_^")
+    # print("\nDone Mission2 Analysis ^_^")
 
     print(f"\nTesting Mission3: {M3_total} combinations...\n")
 
@@ -180,7 +180,7 @@ def runMissionGridSearch(hashVal:str,
 
         try:
             mission3Analyzer = MissionAnalyzer(analysisResults, mission3Params, presetValues, propulsionSpecs)
-            N_laps, phase = mission3Analyzer.run_mission3()
+            N_laps, phase, final_time = mission3Analyzer.run_mission3()
             
             if(N_laps==-1):
                 print("mission3 fail (N_laps == 1)")
@@ -196,7 +196,8 @@ def runMissionGridSearch(hashVal:str,
                 'mission3_climb_thrust_ratio': M3_climb_thrust_ratio,
                 'mission3_turn_thrust_ratio': M3_turn_thrust_ratio, 
                 'mission3_level_thrust_ratio': M3_level_thrust_ratio,
-                'phase' : phase
+                'phase' : phase,
+                'final_time' : final_time
             }
     
             results = pd.DataFrame([results])
