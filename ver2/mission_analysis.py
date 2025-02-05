@@ -273,7 +273,7 @@ class MissionAnalyzer():
         last_battery_voltage = last_state.battery_voltage 
         if(result == -1 or last_z_pos < 20 or last_battery_voltage < self.presetValues.min_battery_voltage): return -1,-1
         
-        return self.m_fuel, self.state.time
+        return self.m_fuel, self.state.phase
 
     def run_mission3(self) -> float:
         result = 0
@@ -328,7 +328,7 @@ class MissionAnalyzer():
                 self.state.N_laps -= 1
                 break
         
-        return self.state.N_laps
+        return self.state.N_laps, self.state.phase
         
     def calculate_level_alpha(self, v):
         #  Function that calculates the AOA required for level flight using the velocity vector and thrust

@@ -180,7 +180,7 @@ def runMissionGridSearch(hashVal:str,
 
         try:
             mission3Analyzer = MissionAnalyzer(analysisResults, mission3Params, presetValues, propulsionSpecs)
-            N_laps = mission3Analyzer.run_mission3()
+            N_laps, phase = mission3Analyzer.run_mission3()
             
             if(N_laps==-1):
                 print("mission3 fail (N_laps == 1)")
@@ -195,7 +195,8 @@ def runMissionGridSearch(hashVal:str,
                 'M3_max_speed' : M3_max_speed,
                 'mission3_climb_thrust_ratio': M3_climb_thrust_ratio,
                 'mission3_turn_thrust_ratio': M3_turn_thrust_ratio, 
-                'mission3_level_thrust_ratio': M3_level_thrust_ratio
+                'mission3_level_thrust_ratio': M3_level_thrust_ratio,
+                'phase' : phase
             }
     
             results = pd.DataFrame([results])
