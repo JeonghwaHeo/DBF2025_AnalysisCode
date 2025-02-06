@@ -24,7 +24,7 @@ class MissionAnalyzer():
                  propulsionSpecs : PropulsionSpecs,
                  dt:float=0.1):
 
-        self.analResult = self._convert_units(analResult)
+        self.analResult = self._convert_units(analResult, presetValues)
         self.aircraft = self.analResult.aircraft
         self.missionParam = missionParam
         self.presetValues = presetValues
@@ -37,7 +37,7 @@ class MissionAnalyzer():
         self.clearState()
         self.setAuxVals()
 
-    def _convert_units(self, results: AircraftAnalysisResults) -> AircraftAnalysisResults:
+    def _convert_units(self, results: AircraftAnalysisResults, presetValues:PresetValues) -> AircraftAnalysisResults:
         # Create new aircraft instance with converted units
         new_aircraft = Aircraft(
             # Mass conversions (g to kg)
@@ -120,7 +120,9 @@ class MissionAnalyzer():
             CL_flap_max=results.CL_flap_max,
             CL_flap_zero=results.CL_flap_zero,
             CD_flap_max=results.CD_flap_max,
-            CD_flap_zero=results.CD_flap_zero
+            CD_flap_zero=results.CD_flap_zero,
+
+            max_load=presetValues.max_load
         )
 
     def convert_propellerCSV_to_ndarray(self, csvPath):

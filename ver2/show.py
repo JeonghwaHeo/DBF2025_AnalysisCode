@@ -21,7 +21,7 @@ def get_result_by_id(resultID:str, mission_number : int, server_id : int) ->pd.D
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="module that displays the result screen which user wants.")
-    parser.add_argument("--server_id", type=int, required=True, help="Specify the server ID")
+    parser.add_argument("--server_id", type=int, required=False, help="Specify the server ID")
 
     subparsers = parser.add_subparsers(dest="main_command", required=True)
     show_parser = subparsers.add_parser("show", help="Show results for specific resultID.")
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     if args.main_command == "show":
         if args.type == "aircraft":
             hashVal = "'" + args.hashVal +"'"
-            aircraft_result = loadAnalysisResults(hashVal,f"data/aircraft_{args.server_id}.csv")
+            aircraft_result = loadAnalysisResults(hashVal,f"data/aircraft.csv")
             visualize_results(aircraft_result)
             
         elif args.type == "mission2":

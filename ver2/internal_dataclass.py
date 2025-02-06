@@ -140,6 +140,8 @@ class AircraftAnalysisResults:
     CD_flap_max: float
     CD_flap_zero: float
 
+    max_load: float
+
     @classmethod
     def fromDict(cls, datadict):
         aircraft = Aircraft(**{k.replace('aircraft.',''):v for k,v in datadict.items() if  ('aircraft.' in k)})

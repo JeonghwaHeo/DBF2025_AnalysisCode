@@ -106,7 +106,8 @@ class VSPAnalyzer:
                 CL_flap_max=CL_flap_max,
                 CL_flap_zero=CL_flap_zero,
                 CD_flap_max=CD_flap_max + CD_fuse[-1],
-                CD_flap_zero=CD_flap_zero + CD_fuse[zero_index]
+                CD_flap_zero=CD_flap_zero + CD_fuse[zero_index],
+                max_load=self.presets.max_load
         )
 
     def _calculate_coeffs_helper(self, fileName, alpha_start, alpha_end, alpha_step,
