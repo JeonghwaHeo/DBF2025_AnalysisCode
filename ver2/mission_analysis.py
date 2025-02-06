@@ -478,7 +478,7 @@ class MissionAnalyzer():
                 _, loadfactor = self.calculate_Lift_and_Loadfactor(self.analResult.CL_flap_max)
                 self.state.loadfactor = loadfactor
 
-                self.state.AOA=0
+                self.state.AOA=10
                 self.state.climb_pitch_angle=np.nan
                 self.state.bank_angle = np.nan
 
