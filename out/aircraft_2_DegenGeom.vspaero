@@ -1,0 +1,38 @@
+Sref = 682105.263158 
+Cref = 378.947368 
+Bref = 1800.000000 
+X_cg = 0.000000 
+Y_cg = 0.000000 
+Z_cg = 0.000000 
+Mach = 0.000000 
+AoA = 0.000000, 10.000000 
+Beta = 0.000000 
+Vinf = 100.000000 
+Rho = 0.002377 
+ReCref = 700000.000000 
+ClMax = -1.000000 
+MaxTurningAngle = -1.000000 
+Symmetry = NO 
+FarDist = -1.000000 
+NumWakeNodes = 64 
+WakeIters = 0 
+NumberOfControlGroups = 4 
+Flap1_l
+Main_Wing_Surf0_Flaps1
+1
+20
+Flap1_r
+Main_Wing_Surf1_Flaps1
+1
+-20
+Flap2_l
+Main_Wing_Surf0_Flaps2
+1
+20
+Flap2_r
+Main_Wing_Surf1_Flaps2
+1
+-20
+Preconditioner = Matrix 
+Karman-Tsien Correction = N 
+Stability Type = 0 
