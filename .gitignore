@@ -1,0 +1,6 @@
+data/*
+__pycache__/
+out/*
+!out/.gitkeep
+runContainer.sh
+tools/
