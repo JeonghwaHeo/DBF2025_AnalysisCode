@@ -1,9 +1,6 @@
-ver2/data/M2_total_results.csv
-ver2/data/M3_total_results.csv
-ver2/data/organized_results.csv
-ver2/data/mission_statelog.csv
-testfunctions.py
-.vscode/settings.json
-test.py
-data/
-runtime_estimator.py
+data/*
+__pycache__/
+out/*
+!out/.gitkeep
+runContainer.sh
+tools/
