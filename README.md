@@ -47,11 +47,9 @@ Aerodynamic analysis for a single design configuration takes approximately **15 
 
 ### ❔ How to use
 
-**Instructions for Window**
+**[Instructions for Window + Docker](https://imaginary-spatula-125.notion.site/Instructions-for-Window-Docker-195bc109e8c4802f81dfc81afa3d7d09)**
 <br>
-**Instructions for Linux**
-<br>
-**Instructions for Server Environment**
+**[Instructions for Linux + High Performance Server](https://imaginary-spatula-125.notion.site/Instructions-for-Linux-High-Performance-Server-195bc109e8c480efa8cdcb3af39ccc06)**
 <br></br>
 
 ## 👪 Contributors
