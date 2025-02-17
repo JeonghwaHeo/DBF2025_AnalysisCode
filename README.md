@@ -61,12 +61,12 @@ Aerodynamic analysis for a single design configuration takes approximately **15 
 | Developer (Flight Analysis)  | [Gyeongrak Choi](https://github.com/Gyeong-Rak)      | Seoul National University                     | rudfkr5978@snu.ac.kr         |
 | Developer (Code Structure)    |  [Jaewon Chung](https://github.com/PresidentPlant)      | Seoul National University             | jaewonchung7@snu.ac.kr         |
 | Developer (Score Analysis)    |  [Hyeonjung Na](https://github.com/efq3)     | Gyeongsang National University             | nahj183@gnu.ac.kr         |
-| Researcher (Propulsion Analysis)    |  백정흠     | Seoul National University             | jamesb0103@snu.ac.kr       |
+| Researcher (Propulsion Analysis)    |  Jeongheum Baek     | Seoul National University             | jamesb0103@snu.ac.kr       |
 | Researcher (Propulsion Analysis)    |  [Sungil Son](https://github.com/One-star11)     | Seoul National University             | aldridge99@snu.ac.kr      |
 | Researcher (Aerodynamic Analysis)    |  Seongwon Jang     | Seoul National University             | jsw0616wwn@snu.ac.kr      |
-| Researcher (Aerodynamic Analysis)    |  권현창     | Seoul National University             | thomas426789@gmail.com      |
+| Researcher (Aerodynamic Analysis)    |  Hyunchang Kweon     | Seoul National University             | thomas426789@gmail.com      |
 | Researcher (Flight Analysis)    |  [Jeonghwa Heo](https://github.com/JeonghwaHeo)     | Seoul National University             | hjhcnn23@snu.ac.kr   |
 | Researcher (Flight Analysis)    |  Junyeong Koo     | Seoul National University             | junyeongkoo@snu.ac.kr    |
-| Researcher (Flight Analysis)    |  하승훈     | Seoul National University             |   kerosene1@snu.ac.kr |
+| Researcher (Flight Analysis)    |  Seunghoon Ha     | Seoul National University             |   kerosene1@snu.ac.kr |
 | Researcher (Flight Analysis)    |  Seojin Kim     | Gyeongsang National University            |   jingseo2@gnu.ac.kr |
-| Researcher (Flight Analysis)    |  이준영     | Seoul National University             |   99andrewlee@snu.ac.kr |
+| Researcher (Flight Analysis)    |  Junyoung Lee     | Seoul National University             |   99andrewlee@snu.ac.kr |
