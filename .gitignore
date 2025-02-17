@@ -4,3 +4,4 @@ out/*
 !out/.gitkeep
 runContainer.sh
 tools/
+**/*.pyc
