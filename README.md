@@ -1,8 +1,8 @@
-<h1 align="center">K-FORCAST <br><br>
+<h1 align="center">FORCAST <br><br>
 <i>Team Korea - Flight Optimized RC Aircraft Sizing Tool</i></h1> 
 <br>
 
-`K-FORCAST` is a aircraft sizing tool for the RC fixed-wing aircraft developed by  
+`FORCAST` is a aircraft sizing tool for the RC fixed-wing aircraft developed by  
 **Team Korea** (`Seoul National University`, `Gyeongsang National University`, `Konkuk University`) for the [AIAA DBF 2025 competition](https://www.aiaa.org/dbf).
 <p align="center">
 <img src="https://cdn.discordapp.com/attachments/1253108078488977551/1337800696208298014/Screenshot_from_2025-02-09_00-02-10.png?ex=67a8c37d&is=67a771fd&hm=5127ef6cc3dd8cafc763c59367af041a66cfb41d446ab15a56011a17bda4b910&" alt="DBF Logo" width="300" height="100" hspace="50">  <img src="https://cdn.discordapp.com/attachments/1253108078488977551/1337802641392275587/image.png?ex=67a8c54c&is=67a773cc&hm=ceb281c9456fe2e931933929845599e5ba1a3246a33efd6edf525534e2c96b17&" alt="DBF Logo" width="100" height="100" hspace="50">
@@ -22,7 +22,7 @@ Although the code is structured for the AIAA DBF 2025 mission, it can be easily 
 
 ## 🔎 About Our Algorithm
 
-Overall algorithm of K-FORCAST is presented below.
+Overall algorithm of FORCAST is presented below.
 <br>
 <p align="center">
 <img src="https://cdn.discordapp.com/attachments/1253108078488977551/1337805803528126524/image.png?ex=67a8c83e&is=67a776be&hm=cbf793db3f869d69effad896616b22e86dab690b79869e0a5fce86b4cd586419&" alt="Sizing Tool Flowchart" width="650" height="550" >
